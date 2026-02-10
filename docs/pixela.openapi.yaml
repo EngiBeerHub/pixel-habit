@@ -1,0 +1,1034 @@
+openapi: 3.1.0
+info:
+  title: Pixela API (derived from docs.pixe.la)
+  version: "2026-02-09"
+  description: |
+    OpenAPI specification generated from https://docs.pixe.la/ API documents.
+    Note: The endpoint docs for DELETE /v1/users/{username}/graphs/{graphID} and
+    PUT /v1/users/{username}/graphs/{graphID}/{yyyyMMdd}/{add|subtract}
+    were not directly retrievable from the document pages at generation time,
+    so those operations are modeled from API Index and neighboring official docs.
+servers:
+  - url: https://pixe.la
+security:
+  - UserTokenAuth: []
+
+tags:
+  - name: User
+  - name: User Profile
+  - name: Graph
+  - name: Pixel
+  - name: Retina
+  - name: Instant Recording
+  - name: Webhook
+
+paths:
+  /v1/users:
+    post:
+      tags: [User]
+      summary: Create a user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}:
+    parameters:
+      - $ref: '#/components/parameters/Username'
+    put:
+      tags: [User]
+      summary: Update a user token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags: [User]
+      summary: Delete a user
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /@{username}:
+    parameters:
+      - $ref: '#/components/parameters/Username'
+    get:
+      tags: [User Profile]
+      summary: View user profile HTML
+      security: []
+      responses:
+        '200':
+          description: HTML profile
+          content:
+            text/html:
+              schema:
+                type: string
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    put:
+      tags: [User Profile]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs:
+    parameters:
+      - $ref: '#/components/parameters/Username'
+    post:
+      tags: [Graph]
+      summary: Create a graph definition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphCreateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    get:
+      tags: [Graph]
+      summary: Get graph definitions
+      responses:
+        '200':
+          description: Graph definitions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphListResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}:
+    parameters:
+      - $ref: '#/components/parameters/Username'
+      - $ref: '#/components/parameters/GraphID'
+    get:
+      tags: [Graph]
+      summary: Get a graph SVG
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/DateQuery'
+        - $ref: '#/components/parameters/GraphMode'
+        - $ref: '#/components/parameters/Appearance'
+        - $ref: '#/components/parameters/Transparent'
+        - $ref: '#/components/parameters/LessThan'
+        - $ref: '#/components/parameters/GreaterThan'
+      responses:
+        '200':
+          description: SVG graph
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+            text/plain:
+              schema:
+                type: string
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    put:
+      tags: [Graph]
+      summary: Update a graph definition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GraphUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags: [Graph]
+      summary: Delete a graph definition
+      description: Derived from API Index + cached docs snippet.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      tags: [Pixel]
+      summary: Post a pixel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PixelWriteRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/graph-def:
+    get:
+      tags: [Graph]
+      summary: Get a graph definition
+      parameters:
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/GraphID'
+      responses:
+        '200':
+          description: Graph definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphDefinition'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}.html:
+    get:
+      tags: [Graph]
+      summary: View graph detail HTML
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/GraphID'
+        - $ref: '#/components/parameters/GraphHtmlMode'
+        - $ref: '#/components/parameters/Transparent'
+      responses:
+        '200':
+          description: HTML graph detail
+          content:
+            text/html:
+              schema:
+                type: string
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/pixels:
+    parameters:
+      - $ref: '#/components/parameters/Username'
+      - $ref: '#/components/parameters/GraphID'
+    get:
+      tags: [Graph]
+      summary: Get graph pixels list
+      parameters:
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - $ref: '#/components/parameters/WithBody'
+      responses:
+        '200':
+          description: Pixel list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pixels:
+                    oneOf:
+                      - type: array
+                        items:
+                          type: string
+                          pattern: '^\\d{8}$'
+                      - type: array
+                        items:
+                          $ref: '#/components/schemas/Pixel'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      tags: [Pixel]
+      summary: Post multiple pixels
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/PixelWriteRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/stats:
+    get:
+      tags: [Graph]
+      summary: Get graph stats
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/GraphID'
+      responses:
+        '200':
+          description: Graph stats
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GraphStats'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/latest:
+    get:
+      tags: [Pixel]
+      summary: Get latest pixel
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/GraphID'
+      responses:
+        '200':
+          description: Latest pixel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pixel'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/today:
+    get:
+      tags: [Pixel]
+      summary: Get today's pixel
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/GraphID'
+        - $ref: '#/components/parameters/ReturnEmpty'
+      responses:
+        '200':
+          description: Today's pixel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pixel'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/{yyyyMMdd}:
+    parameters:
+      - $ref: '#/components/parameters/Username'
+      - $ref: '#/components/parameters/GraphID'
+      - $ref: '#/components/parameters/DatePath'
+    get:
+      tags: [Pixel]
+      summary: Get a pixel
+      responses:
+        '200':
+          description: Pixel data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PixelGetResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    put:
+      tags: [Pixel]
+      summary: Update a pixel (upsert)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PixelUpdateRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags: [Pixel]
+      summary: Delete a pixel
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/{yyyyMMdd}/add:
+    put:
+      tags: [Pixel]
+      summary: Add to a specific pixel
+      description: Derived from API Index entry (page body unavailable at generation time).
+      parameters:
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/GraphID'
+        - $ref: '#/components/parameters/DatePath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PixelAdjustRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/{yyyyMMdd}/subtract:
+    put:
+      tags: [Pixel]
+      summary: Subtract from a specific pixel
+      description: Derived from API Index entry (page body unavailable at generation time).
+      parameters:
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/GraphID'
+        - $ref: '#/components/parameters/DatePath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PixelAdjustRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/{yyyyMMdd}/retina:
+    get:
+      tags: [Retina]
+      summary: Get retina view of a pixel
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/GraphID'
+        - $ref: '#/components/parameters/DatePath'
+        - $ref: '#/components/parameters/Appearance'
+      responses:
+        '200':
+          description: SVG retina graph
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+            text/plain:
+              schema:
+                type: string
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/increment:
+    put:
+      tags: [Instant Recording]
+      summary: Increment a pixel for today
+      parameters:
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/GraphID'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/decrement:
+    put:
+      tags: [Instant Recording]
+      summary: Decrement a pixel for today
+      parameters:
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/GraphID'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/add:
+    put:
+      tags: [Instant Recording]
+      summary: Add to today's pixel
+      parameters:
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/GraphID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PixelAdjustRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/subtract:
+    put:
+      tags: [Instant Recording]
+      summary: Subtract from today's pixel
+      parameters:
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/GraphID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PixelAdjustRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/graphs/{graphID}/stopwatch:
+    post:
+      tags: [Instant Recording]
+      summary: Measure and record time
+      parameters:
+        - $ref: '#/components/parameters/Username'
+        - $ref: '#/components/parameters/GraphID'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/webhooks:
+    parameters:
+      - $ref: '#/components/parameters/Username'
+    post:
+      tags: [Webhook]
+      summary: Create a webhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookCreateRequest'
+      responses:
+        '200':
+          description: Webhook created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessWithWebhookHashResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    get:
+      tags: [Webhook]
+      summary: Get webhooks
+      responses:
+        '200':
+          description: Webhook definitions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WebhookDefinition'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /v1/users/{username}/webhooks/{webhookHash}:
+    parameters:
+      - $ref: '#/components/parameters/Username'
+      - $ref: '#/components/parameters/WebhookHash'
+    post:
+      tags: [Webhook]
+      summary: Invoke webhook
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags: [Webhook]
+      summary: Delete webhook
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+components:
+  securitySchemes:
+    UserTokenAuth:
+      type: apiKey
+      in: header
+      name: X-USER-TOKEN
+
+  parameters:
+    Username:
+      name: username
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Pixela username.
+    GraphID:
+      name: graphID
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Graph ID.
+    DatePath:
+      name: yyyyMMdd
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^\\d{8}$'
+      description: Date in yyyyMMdd.
+    WebhookHash:
+      name: webhookHash
+      in: path
+      required: true
+      schema:
+        type: string
+    DateQuery:
+      name: date
+      in: query
+      required: false
+      schema:
+        type: string
+        pattern: '^\\d{8}$'
+      description: Start date in yyyyMMdd.
+    GraphMode:
+      name: mode
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [short, badge, line]
+    GraphHtmlMode:
+      name: mode
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [simple, simple-short]
+    Appearance:
+      name: appearance
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [dark]
+    Transparent:
+      name: transparent
+      in: query
+      required: false
+      schema:
+        type: boolean
+    LessThan:
+      name: lessThan
+      in: query
+      required: false
+      schema:
+        type: string
+    GreaterThan:
+      name: greaterThan
+      in: query
+      required: false
+      schema:
+        type: string
+    From:
+      name: from
+      in: query
+      required: false
+      schema:
+        type: string
+        pattern: '^\\d{8}$'
+    To:
+      name: to
+      in: query
+      required: false
+      schema:
+        type: string
+        pattern: '^\\d{8}$'
+    WithBody:
+      name: withBody
+      in: query
+      required: false
+      schema:
+        type: boolean
+    ReturnEmpty:
+      name: returnEmpty
+      in: query
+      required: false
+      schema:
+        type: boolean
+
+  responses:
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    SuccessResponse:
+      type: object
+      required: [message, isSuccess]
+      properties:
+        message:
+          type: string
+        isSuccess:
+          type: boolean
+
+    SuccessWithWebhookHashResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessResponse'
+        - type: object
+          required: [webhookHash]
+          properties:
+            webhookHash:
+              type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        isSuccess:
+          type: boolean
+        isRejected:
+          type: boolean
+      additionalProperties: true
+
+    UserCreateRequest:
+      type: object
+      required: [token, username, agreeTermsOfService, notMinor]
+      properties:
+        token:
+          type: string
+          minLength: 8
+          maxLength: 128
+        username:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{1,32}$'
+        agreeTermsOfService:
+          type: string
+          enum: [yes, no]
+        notMinor:
+          type: string
+          enum: [yes, no]
+        thanksCode:
+          type: string
+
+    UserUpdateRequest:
+      type: object
+      required: [newToken]
+      properties:
+        newToken:
+          type: string
+          minLength: 8
+          maxLength: 128
+        thanksCode:
+          type: string
+
+    UserProfileUpdateRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+        gravatarIconEmail:
+          type: string
+          format: email
+        title:
+          type: string
+        timezone:
+          type: string
+        aboutURL:
+          type: string
+          format: uri
+        contributeURLs:
+          type: array
+          items:
+            type: string
+            format: uri
+        pinnedGraphID:
+          type: string
+
+    GraphDefinition:
+      type: object
+      required: [id, name, unit, type, color]
+      properties:
+        id:
+          type: string
+          pattern: '^[a-z][a-z0-9-]{1,16}$'
+        name:
+          type: string
+        unit:
+          type: string
+        type:
+          type: string
+          enum: [int, float]
+        color:
+          type: string
+          enum: [shibafu, momiji, sora, ichou, ajisai, kuro]
+        timezone:
+          type: string
+        startOnMonday:
+          type: boolean
+        selfSufficient:
+          type: string
+          enum: [increment, decrement, none]
+        isSecret:
+          type: boolean
+        publishOptionalData:
+          type: boolean
+        purgeCacheURLs:
+          type: array
+          maxItems: 5
+          items:
+            type: string
+            format: uri
+
+    GraphCreateRequest:
+      allOf:
+        - $ref: '#/components/schemas/GraphDefinition'
+
+    GraphUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        unit:
+          type: string
+        color:
+          type: string
+          enum: [shibafu, momiji, sora, ichou, ajisai, kuro]
+        timezone:
+          type: string
+        startOnMonday:
+          type: boolean
+        selfSufficient:
+          type: string
+          enum: [increment, decrement, none]
+        isSecret:
+          type: boolean
+        publishOptionalData:
+          type: boolean
+        purgeCacheURLs:
+          type: array
+          maxItems: 5
+          items:
+            type: string
+            format: uri
+
+    GraphListResponse:
+      type: object
+      required: [graphs]
+      properties:
+        graphs:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphDefinition'
+
+    Pixel:
+      type: object
+      required: [date, quantity]
+      properties:
+        date:
+          type: string
+          pattern: '^\\d{8}$'
+        quantity:
+          type: string
+        optionalData:
+          type: string
+          description: JSON string up to 10KB.
+
+    PixelGetResponse:
+      type: object
+      required: [quantity]
+      properties:
+        quantity:
+          type: string
+        optionalData:
+          type: string
+
+    PixelWriteRequest:
+      type: object
+      required: [date, quantity]
+      properties:
+        date:
+          type: string
+          pattern: '^\\d{8}$'
+        quantity:
+          type: string
+        optionalData:
+          type: string
+          description: JSON string up to 10KB.
+
+    PixelUpdateRequest:
+      type: object
+      properties:
+        quantity:
+          type: string
+        optionalData:
+          type: string
+          description: JSON string up to 10KB.
+
+    PixelAdjustRequest:
+      type: object
+      required: [quantity]
+      properties:
+        quantity:
+          type: string
+          description: Supports int/float string.
+
+    GraphStats:
+      type: object
+      properties:
+        totalPixelsCount:
+          type: integer
+        maxQuantity:
+          type: number
+        minQuantity:
+          type: number
+        maxDate:
+          type: string
+        minDate:
+          type: string
+        totalQuantity:
+          type: number
+        avgQuantity:
+          type: number
+        todaysQuantity:
+          type: number
+        yesterdayQuantity:
+          type: number
+      additionalProperties: true
+
+    WebhookCreateRequest:
+      type: object
+      required: [graphID, type]
+      properties:
+        graphID:
+          type: string
+        type:
+          type: string
+          enum: [increment, decrement, add, subtract, stopwatch]
+        quantity:
+          type: string
+          description: Used for add/subtract webhooks.
+
+    WebhookDefinition:
+      type: object
+      required: [webhookHash, graphID, type]
+      properties:
+        webhookHash:
+          type: string
+        graphID:
+          type: string
+        type:
+          type: string
+        quantity:
+          type: string
