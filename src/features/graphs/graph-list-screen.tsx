@@ -448,6 +448,7 @@ export const GraphListScreen = () => {
 
   return (
     <View className="flex-1 bg-white px-6 pt-16 pb-6">
+      {/* 画面ヘッダー: タイトル、グラフ追加、表示モード切替 */}
       <View className="mb-4 gap-3">
         <View className="flex-row items-center justify-between">
           <Text className="font-bold text-2xl text-neutral-900">
@@ -475,6 +476,7 @@ export const GraphListScreen = () => {
         </View>
       </View>
 
+      {/* 初回ロード時の全画面ローディング */}
       {query.isLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
@@ -482,18 +484,21 @@ export const GraphListScreen = () => {
         </View>
       ) : null}
 
+      {/* 一覧取得失敗時の全画面エラー。再試行で一覧を再取得 */}
       {!query.isLoading && errorMessage ? (
         <View className="rounded-xl border border-red-200 bg-red-50 p-4">
           <Text className="mb-3 text-red-700">{errorMessage}</Text>
           <Button onPress={onRetry}>再試行</Button>
         </View>
       ) : null}
+      {/* 記録追加成功後に一定時間表示するトースト */}
       {toastMessage ? (
         <View className="mb-3 rounded-lg border border-green-200 bg-green-50 p-3">
           <Text className="text-green-700 text-sm">{toastMessage}</Text>
         </View>
       ) : null}
 
+      {/* 正常取得かつ0件時の空状態 */}
       {!(query.isLoading || errorMessage) && query.data?.length === 0 ? (
         <View className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
           <Text className="text-neutral-700">
@@ -502,6 +507,7 @@ export const GraphListScreen = () => {
         </View>
       ) : null}
 
+      {/* 正常取得時のグラフ一覧。カードごとの状態管理はGraphCardへ委譲 */}
       {!(query.isLoading || errorMessage) &&
       query.data &&
       query.data.length > 0 ? (
@@ -534,6 +540,7 @@ export const GraphListScreen = () => {
         />
       ) : null}
 
+      {/* クイック記録追加用Bottom Sheet */}
       <BottomSheet
         backdropComponent={renderBackdrop}
         enablePanDownToClose
@@ -548,6 +555,7 @@ export const GraphListScreen = () => {
         snapPoints={snapPoints}
       >
         <BottomSheetView className="flex-1 gap-3 px-6 pt-4">
+          {/* シート見出し: 対象グラフ名を文脈として表示 */}
           <Text className="font-semibold text-lg text-neutral-900">
             {selectedGraph ? `${selectedGraph.name} に記録追加` : "記録追加"}
           </Text>
@@ -555,6 +563,7 @@ export const GraphListScreen = () => {
             日付と数量を入力して保存してください。
           </Text>
 
+          {/* 日付入力: yyyyMMdd形式。入力時に正規化してフォーム値へ反映 */}
           <Text className="mt-2 text-neutral-800">日付 (yyyyMMdd)</Text>
           <Controller
             control={control}
@@ -571,12 +580,14 @@ export const GraphListScreen = () => {
               />
             )}
           />
+          {/* 日付バリデーションエラー */}
           {pixelFormErrors.date?.message ? (
             <Text className="text-red-600 text-sm">
               {pixelFormErrors.date.message}
             </Text>
           ) : null}
 
+          {/* 数量入力 */}
           <Text className="mt-1 text-neutral-800">数量</Text>
           <Controller
             control={control}
@@ -591,20 +602,24 @@ export const GraphListScreen = () => {
               />
             )}
           />
+          {/* 数量バリデーションエラー */}
           {pixelFormErrors.quantity?.message ? (
             <Text className="text-red-600 text-sm">
               {pixelFormErrors.quantity.message}
             </Text>
           ) : null}
+          {/* API失敗時のフォーム共通エラー */}
           {pixelFormErrors.root?.message ? (
             <Text className="text-red-600 text-sm">
               {pixelFormErrors.root.message}
             </Text>
           ) : null}
+          {/* API成功時のメッセージ */}
           {sheetMessage ? (
             <Text className="text-green-700 text-sm">{sheetMessage}</Text>
           ) : null}
 
+          {/* シート内アクション: 直接保存 or 詳細入力画面へ遷移 */}
           <View className="mt-2 gap-2">
             <Button
               isDisabled={addPixelMutation.isPending}

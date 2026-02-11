@@ -35,6 +35,7 @@ export const AuthGateScreen = () => {
 
   return (
     <View className="flex-1 items-center justify-center bg-white px-6">
+      {/* 起動時の認証判定中インジケーター */}
       <ActivityIndicator />
       <Text className="mt-3 text-neutral-600">起動準備中...</Text>
     </View>

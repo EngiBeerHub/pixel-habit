@@ -99,11 +99,13 @@ export const GraphEditScreen = () => {
 
   return (
     <ScrollView className="flex-1 bg-white px-6 pt-16 pb-6">
+      {/* 画面ヘッダー: 編集対象グラフの文脈情報 */}
       <Text className="mb-2 font-bold text-2xl text-neutral-900">
         グラフ編集
       </Text>
       <Text className="mb-6 text-neutral-600">ID: {graphId || "-"}</Text>
 
+      {/* グラフ名入力 */}
       <Text className="mb-2 text-neutral-800">グラフ名</Text>
       <Controller
         control={control}
@@ -118,12 +120,14 @@ export const GraphEditScreen = () => {
           />
         )}
       />
+      {/* グラフ名バリデーションエラー */}
       {errors.name?.message ? (
         <Text className="mb-4 text-red-600 text-sm">{errors.name.message}</Text>
       ) : (
         <View className="mb-4" />
       )}
 
+      {/* 単位入力 */}
       <Text className="mb-2 text-neutral-800">単位</Text>
       <Controller
         control={control}
@@ -138,12 +142,14 @@ export const GraphEditScreen = () => {
           />
         )}
       />
+      {/* 単位バリデーションエラー */}
       {errors.unit?.message ? (
         <Text className="mb-4 text-red-600 text-sm">{errors.unit.message}</Text>
       ) : (
         <View className="mb-4" />
       )}
 
+      {/* タイムゾーン入力 */}
       <Text className="mb-2 text-neutral-800">タイムゾーン</Text>
       <Controller
         control={control}
@@ -158,6 +164,7 @@ export const GraphEditScreen = () => {
           />
         )}
       />
+      {/* タイムゾーンバリデーションエラー */}
       {errors.timezone?.message ? (
         <Text className="mb-4 text-red-600 text-sm">
           {errors.timezone.message}
@@ -166,6 +173,7 @@ export const GraphEditScreen = () => {
         <View className="mb-4" />
       )}
 
+      {/* テーマ色選択 */}
       <Text className="mb-2 text-neutral-800">テーマ色</Text>
       <Controller
         control={control}
@@ -187,16 +195,20 @@ export const GraphEditScreen = () => {
         )}
       />
 
+      {/* 事前チェックエラー（不正なgraphId等） */}
       {authError ? (
         <Text className="mb-4 text-red-600 text-sm">{authError}</Text>
       ) : null}
+      {/* API失敗時のフォーム共通エラー */}
       {errors.root?.message ? (
         <Text className="mb-4 text-red-600 text-sm">{errors.root.message}</Text>
       ) : null}
+      {/* API成功メッセージ */}
       {successMessage ? (
         <Text className="mb-4 text-green-700 text-sm">{successMessage}</Text>
       ) : null}
 
+      {/* 画面アクション: 保存実行 / Homeへ戻る */}
       <View className="gap-3">
         <Button
           isDisabled={mutation.isPending || Boolean(authError)}

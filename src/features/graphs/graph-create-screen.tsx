@@ -84,6 +84,7 @@ export const GraphCreateScreen = () => {
 
   return (
     <ScrollView className="flex-1 bg-white px-6 pt-16 pb-6">
+      {/* 画面ヘッダー: 作成目的の説明 */}
       <Text className="mb-2 font-bold text-2xl text-neutral-900">
         グラフ作成
       </Text>
@@ -91,6 +92,7 @@ export const GraphCreateScreen = () => {
         必須項目を入力して新しいグラフを作成します。
       </Text>
 
+      {/* ID入力 */}
       <Text className="mb-2 text-neutral-800">ID</Text>
       <Controller
         control={control}
@@ -107,12 +109,14 @@ export const GraphCreateScreen = () => {
           />
         )}
       />
+      {/* IDバリデーションエラー */}
       {errors.id?.message ? (
         <Text className="mb-4 text-red-600 text-sm">{errors.id.message}</Text>
       ) : (
         <View className="mb-4" />
       )}
 
+      {/* グラフ名入力 */}
       <Text className="mb-2 text-neutral-800">グラフ名</Text>
       <Controller
         control={control}
@@ -127,12 +131,14 @@ export const GraphCreateScreen = () => {
           />
         )}
       />
+      {/* グラフ名バリデーションエラー */}
       {errors.name?.message ? (
         <Text className="mb-4 text-red-600 text-sm">{errors.name.message}</Text>
       ) : (
         <View className="mb-4" />
       )}
 
+      {/* 単位入力 */}
       <Text className="mb-2 text-neutral-800">単位</Text>
       <Controller
         control={control}
@@ -147,12 +153,14 @@ export const GraphCreateScreen = () => {
           />
         )}
       />
+      {/* 単位バリデーションエラー */}
       {errors.unit?.message ? (
         <Text className="mb-4 text-red-600 text-sm">{errors.unit.message}</Text>
       ) : (
         <View className="mb-4" />
       )}
 
+      {/* タイムゾーン入力 */}
       <Text className="mb-2 text-neutral-800">タイムゾーン</Text>
       <Controller
         control={control}
@@ -167,6 +175,7 @@ export const GraphCreateScreen = () => {
           />
         )}
       />
+      {/* タイムゾーンバリデーションエラー */}
       {errors.timezone?.message ? (
         <Text className="mb-4 text-red-600 text-sm">
           {errors.timezone.message}
@@ -175,6 +184,7 @@ export const GraphCreateScreen = () => {
         <View className="mb-4" />
       )}
 
+      {/* 種別選択 */}
       <Text className="mb-2 text-neutral-800">種別</Text>
       <Controller
         control={control}
@@ -196,6 +206,7 @@ export const GraphCreateScreen = () => {
         )}
       />
 
+      {/* テーマ色選択 */}
       <Text className="mb-2 text-neutral-800">テーマ色</Text>
       <Controller
         control={control}
@@ -217,13 +228,16 @@ export const GraphCreateScreen = () => {
         )}
       />
 
+      {/* API失敗時のフォーム共通エラー */}
       {errors.root?.message ? (
         <Text className="mb-4 text-red-600 text-sm">{errors.root.message}</Text>
       ) : null}
+      {/* API成功メッセージ */}
       {successMessage ? (
         <Text className="mb-4 text-green-700 text-sm">{successMessage}</Text>
       ) : null}
 
+      {/* 画面アクション: 作成実行 / Homeへ戻る */}
       <View className="gap-3">
         <Button isDisabled={mutation.isPending} onPress={onSubmit}>
           作成

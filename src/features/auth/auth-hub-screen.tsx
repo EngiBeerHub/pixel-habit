@@ -10,6 +10,7 @@ export const AuthHubScreen = () => {
 
   return (
     <View className="flex-1 justify-center bg-white px-6">
+      {/* 画面ヘッダー: 認証フローの入口説明 */}
       <Text className="mb-2 font-bold text-3xl text-neutral-900">
         Pixel Habit
       </Text>
@@ -17,6 +18,7 @@ export const AuthHubScreen = () => {
         ログインまたはアカウント作成を選択してください。
       </Text>
 
+      {/* 認証導線: ログイン / アカウント作成 */}
       <View className="gap-3">
         <Button
           onPress={() => {

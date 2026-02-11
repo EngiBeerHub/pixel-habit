@@ -103,6 +103,7 @@ export const PixelListScreen = () => {
 
   return (
     <View className="flex-1 bg-white px-6 pt-16 pb-6">
+      {/* 画面ヘッダー: 対象グラフ情報 */}
       <Text className="font-bold text-2xl text-neutral-900">
         {graphName || "ピクセル一覧"}
       </Text>
@@ -110,6 +111,7 @@ export const PixelListScreen = () => {
         グラフID: {graphId || "-"}
       </Text>
 
+      {/* 主要導線: 記録追加画面 */}
       <View className="mb-4">
         <Button
           onPress={() => {
@@ -125,6 +127,7 @@ export const PixelListScreen = () => {
           記録を追加
         </Button>
       </View>
+      {/* 補助導線: Homeへ戻る */}
       <View className="mb-4">
         <Button
           onPress={() => {
@@ -135,6 +138,7 @@ export const PixelListScreen = () => {
         </Button>
       </View>
 
+      {/* 一覧取得中のローディング */}
       {query.isLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
@@ -142,6 +146,7 @@ export const PixelListScreen = () => {
         </View>
       ) : null}
 
+      {/* 一覧取得失敗時のエラー表示 */}
       {!query.isLoading && errorMessage ? (
         <View className="rounded-xl border border-red-200 bg-red-50 p-4">
           <Text className="mb-3 text-red-700">{errorMessage}</Text>
@@ -155,6 +160,7 @@ export const PixelListScreen = () => {
         </View>
       ) : null}
 
+      {/* 正常取得かつ0件時の空状態 */}
       {!(query.isLoading || errorMessage) && query.data?.length === 0 ? (
         <View className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
           <Text className="text-neutral-700">
@@ -163,6 +169,7 @@ export const PixelListScreen = () => {
         </View>
       ) : null}
 
+      {/* 正常取得時の一覧。各行から編集/削除画面へ遷移 */}
       {!(query.isLoading || errorMessage) &&
       query.data &&
       query.data.length > 0 ? (

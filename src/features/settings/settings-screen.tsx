@@ -191,11 +191,13 @@ export const SettingsScreen = () => {
 
   return (
     <ScrollView className="flex-1 bg-white px-6 pt-16 pb-6">
+      {/* 画面ヘッダー: Settings概要 */}
       <Text className="mb-2 font-bold text-2xl text-neutral-900">Settings</Text>
       <Text className="mb-6 text-neutral-600">
         アカウントとアプリ情報を管理します。
       </Text>
 
+      {/* ユーザーセクション: トークン更新とプロフィール導線 */}
       <View className="mb-6 rounded-xl border border-neutral-200 p-4">
         <Text className="mb-3 font-semibold text-lg text-neutral-900">
           ユーザー
@@ -226,6 +228,7 @@ export const SettingsScreen = () => {
         </View>
       </View>
 
+      {/* アプリセクション: アプリ関連リンク（現時点は準備中） */}
       <View className="mb-6 rounded-xl border border-neutral-200 p-4">
         <Text className="mb-3 font-semibold text-lg text-neutral-900">
           アプリ
@@ -236,6 +239,7 @@ export const SettingsScreen = () => {
         </View>
       </View>
 
+      {/* Pixelaセクション: 外部サイト/規約リンク */}
       <View className="mb-6 rounded-xl border border-neutral-200 p-4">
         <Text className="mb-3 font-semibold text-lg text-neutral-900">
           Pixela
@@ -265,6 +269,7 @@ export const SettingsScreen = () => {
         </View>
       </View>
 
+      {/* 危険操作セクション: アカウント削除とログアウト */}
       <View className="rounded-xl border border-red-200 bg-red-50 p-4">
         <Text className="mb-3 font-semibold text-lg text-red-700">
           危険操作
@@ -279,9 +284,11 @@ export const SettingsScreen = () => {
         </View>
       </View>
 
+      {/* API成功メッセージ */}
       {message ? (
         <Text className="mt-4 text-green-700 text-sm">{message}</Text>
       ) : null}
+      {/* API失敗メッセージ */}
       {errorMessage ? (
         <Text className="mt-4 text-red-600 text-sm">{errorMessage}</Text>
       ) : null}

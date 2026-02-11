@@ -88,6 +88,7 @@ export const CompactHeatmap = ({
   return (
     <View className="mt-3 items-center">
       <View style={{ width: calculateGridWidth(weeks) }}>
+        {/* 上段: 週カラムに対応した月ラベル */}
         <View
           className="mb-1 flex-row"
           style={{ width: calculateGridWidth(weeks) }}
@@ -109,6 +110,7 @@ export const CompactHeatmap = ({
         </View>
 
         <View style={{ width: calculateGridWidth(weeks) }}>
+          {/* 左側: 曜日ラベル。グリッドの左外側へ重ねて配置する */}
           <View
             className="absolute"
             style={{
@@ -131,6 +133,7 @@ export const CompactHeatmap = ({
             ))}
           </View>
 
+          {/* 本体: 7行xN列のヒートマップセル */}
           <View style={{ rowGap: CELL_GAP }}>
             {rows.map((row) => (
               <View

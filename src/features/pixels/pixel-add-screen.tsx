@@ -101,11 +101,13 @@ export const PixelAddScreen = () => {
 
   return (
     <View className="flex-1 bg-white px-6 pt-16 pb-6">
+      {/* 画面ヘッダー: 対象グラフと追加対象の文脈を表示 */}
       <Text className="font-bold text-2xl text-neutral-900">{headingText}</Text>
       <Text className="mt-2 mb-6 text-neutral-600">
         グラフID: {graphId || "-"}
       </Text>
 
+      {/* 日付入力 */}
       <Text className="mb-2 text-neutral-800">日付 (yyyyMMdd)</Text>
       <Controller
         control={control}
@@ -126,12 +128,14 @@ export const PixelAddScreen = () => {
           />
         )}
       />
+      {/* 日付バリデーションエラー */}
       {errors.date?.message ? (
         <Text className="mb-4 text-red-600 text-sm">{errors.date.message}</Text>
       ) : (
         <View className="mb-4" />
       )}
 
+      {/* 数量入力 */}
       <Text className="mb-2 text-neutral-800">数量</Text>
       <Controller
         control={control}
@@ -149,6 +153,7 @@ export const PixelAddScreen = () => {
           />
         )}
       />
+      {/* 数量バリデーションエラー */}
       {errors.quantity?.message ? (
         <Text className="mb-4 text-red-600 text-sm">
           {errors.quantity.message}
@@ -157,13 +162,16 @@ export const PixelAddScreen = () => {
         <View className="mb-4" />
       )}
 
+      {/* API失敗時のフォーム共通エラー */}
       {errors.root?.message ? (
         <Text className="mb-4 text-red-600 text-sm">{errors.root.message}</Text>
       ) : null}
+      {/* API成功メッセージ */}
       {submitMessage ? (
         <Text className="mb-4 text-green-700 text-sm">{submitMessage}</Text>
       ) : null}
 
+      {/* 画面アクション: 追加実行 / 一覧へ戻る */}
       <View className="gap-3">
         <Button isDisabled={mutation.isPending} onPress={onSubmit}>
           記録を追加

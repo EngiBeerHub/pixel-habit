@@ -67,6 +67,7 @@ export const GraphCard = ({
 
   return (
     <View className="mb-3 rounded-xl border border-neutral-200 p-4">
+      {/* カード上部: タイトルと操作メニュー */}
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-4">
           <View className="mb-2 flex-row items-center gap-2">
@@ -90,12 +91,14 @@ export const GraphCard = ({
           ...
         </Button>
       </View>
+      {/* グラフ基本情報 */}
       <Text className="mt-1 text-neutral-600">ID: {graph.id}</Text>
       <Text className="text-neutral-600">
         単位: {graph.unit} / タイムゾーン: {graph.timezone}
       </Text>
       {viewMode === "compact" ? (
         <View>
+          {/* Compact表示: カード内ヒートマップ取得中のプレースホルダー */}
           {pixelQuery.isLoading ? (
             <View className="mt-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
               <Text className="text-neutral-600 text-sm">
@@ -103,6 +106,7 @@ export const GraphCard = ({
               </Text>
             </View>
           ) : null}
+          {/* Compact表示: カード単位エラー。再取得だけを局所的に実行する */}
           {!pixelQuery.isLoading && pixelQuery.error ? (
             <View className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3">
               <Text className="mb-2 text-red-700 text-sm">
@@ -111,6 +115,7 @@ export const GraphCard = ({
               <Button onPress={onRetryPixels}>再取得</Button>
             </View>
           ) : null}
+          {/* Compact表示: 取得成功時のみヒートマップを描画 */}
           {pixelQuery.isLoading || pixelQuery.error ? null : (
             <CompactHeatmap
               graphColor={graph.color}
@@ -121,6 +126,7 @@ export const GraphCard = ({
         </View>
       ) : null}
       {viewMode === "full" ? (
+        /* Full表示: MVP中はPixelaのWebページへ遷移する導線を表示 */
         <View className="mt-3 rounded-lg bg-neutral-50 p-3">
           <Text className="mb-2 text-neutral-700 text-sm">
             Fullビューは現在Pixelaページを開く方式です。
@@ -134,6 +140,7 @@ export const GraphCard = ({
           </Button>
         </View>
       ) : null}
+      {/* 主操作: クイック記録追加 */}
       <View className="mt-3">
         <Button
           isDisabled={isActionDisabled}
@@ -144,6 +151,7 @@ export const GraphCard = ({
           記録する
         </Button>
       </View>
+      {/* 補助操作: 記録一覧画面へ遷移 */}
       <View className="mt-2">
         <Button
           isDisabled={isActionDisabled}

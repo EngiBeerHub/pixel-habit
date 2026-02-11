@@ -72,11 +72,13 @@ export const AuthSettingsScreen = () => {
 
   return (
     <View className="flex-1 justify-center bg-white px-6">
+      {/* 画面ヘッダー: ログイン入力の案内 */}
       <Text className="mb-2 font-bold text-2xl text-neutral-900">ログイン</Text>
       <Text className="mb-6 text-neutral-600">
         Pixelaのusernameとtokenを入力してください。
       </Text>
 
+      {/* Username入力 */}
       <Text className="mb-2 text-neutral-800">Username</Text>
       <Controller
         control={control}
@@ -93,6 +95,7 @@ export const AuthSettingsScreen = () => {
           />
         )}
       />
+      {/* Usernameバリデーションエラー */}
       {errors.username ? (
         <Text className="mb-4 text-red-600 text-sm">
           {errors.username.message}
@@ -101,6 +104,7 @@ export const AuthSettingsScreen = () => {
         <View className="mb-4" />
       )}
 
+      {/* Token入力 */}
       <Text className="mb-2 text-neutral-800">Token</Text>
       <Controller
         control={control}
@@ -118,6 +122,7 @@ export const AuthSettingsScreen = () => {
           />
         )}
       />
+      {/* Tokenバリデーションエラー */}
       {errors.token ? (
         <Text className="mb-4 text-red-600 text-sm">
           {errors.token.message}
@@ -126,13 +131,16 @@ export const AuthSettingsScreen = () => {
         <View className="mb-4" />
       )}
 
+      {/* 保存済み認証情報の読込失敗エラー */}
       {loadError ? (
         <Text className="mb-4 text-red-600 text-sm">{loadError}</Text>
       ) : null}
+      {/* API失敗時のフォーム共通エラー */}
       {errors.root?.message ? (
         <Text className="mb-4 text-red-600 text-sm">{errors.root.message}</Text>
       ) : null}
 
+      {/* 画面アクション: ログイン実行 / サインアップ画面へ遷移 */}
       <View className="gap-3">
         <Button isDisabled={signInMutation.isPending} onPress={onSubmit}>
           ログイン
