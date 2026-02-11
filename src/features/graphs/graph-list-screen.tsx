@@ -4,7 +4,9 @@ import { Button } from "heroui-native";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  Linking,
   RefreshControl,
   Text,
   View,
@@ -16,12 +18,30 @@ import {
 } from "../../shared/storage/auth-storage";
 
 /**
+ * Home画面で利用する表示モード。
+ */
+type GraphViewMode = "compact" | "full";
+
+/**
+ * Pixelaの色名をUIで使う色コードへ変換するマップ。
+ */
+const graphThemeColorMap: Record<GraphDefinition["color"], string> = {
+  ajisai: "#7c3aed",
+  ichou: "#ca8a04",
+  kuro: "#171717",
+  momiji: "#dc2626",
+  shibafu: "#16a34a",
+  sora: "#0284c7",
+};
+
+/**
  * 認証情報を使って Pixela のグラフ一覧を表示する画面。
  */
 export const GraphListScreen = () => {
   const router = useRouter();
   const [credentials, setCredentials] = useState<AuthCredentials | null>(null);
   const [authLoadError, setAuthLoadError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<GraphViewMode>("compact");
 
   useEffect(() => {
     let isMounted = true;
@@ -92,10 +112,75 @@ export const GraphListScreen = () => {
     });
   };
 
+  /**
+   * グラフカードの追加操作メニューを表示する。
+   */
+  const onPressGraphMenu = (graph: GraphDefinition) => {
+    Alert.alert(graph.name, "操作を選択してください。", [
+      {
+        onPress: () => {
+          Alert.alert("準備中", "グラフ編集は次のステップで実装します。");
+        },
+        text: "編集",
+      },
+      {
+        onPress: () => {
+          Alert.alert("準備中", "統計表示は次のステップで実装します。");
+        },
+        text: "統計",
+      },
+      {
+        onPress: () => {
+          Alert.alert("準備中", "グラフ削除は次のステップで実装します。");
+        },
+        style: "destructive",
+        text: "削除",
+      },
+      {
+        style: "cancel",
+        text: "キャンセル",
+      },
+    ]);
+  };
+
+  /**
+   * Full表示用のPixelaグラフURLを開く。
+   */
+  const onPressOpenFullView = async (graphId: string) => {
+    if (!credentials) {
+      return;
+    }
+    const url = buildPixelaGraphUrl(credentials.username, graphId);
+    const canOpen = await Linking.canOpenURL(url);
+    if (!canOpen) {
+      Alert.alert("エラー", "グラフURLを開けませんでした。");
+      return;
+    }
+    await Linking.openURL(url);
+  };
+
   return (
     <View className="flex-1 bg-white px-6 pt-16 pb-6">
-      <View className="mb-4">
+      <View className="mb-4 gap-3">
         <Text className="font-bold text-2xl text-neutral-900">グラフ一覧</Text>
+        <View className="flex-row gap-2">
+          <Button
+            isDisabled={viewMode === "compact"}
+            onPress={() => {
+              setViewMode("compact");
+            }}
+          >
+            Compact
+          </Button>
+          <Button
+            isDisabled={viewMode === "full"}
+            onPress={() => {
+              setViewMode("full");
+            }}
+          >
+            Full
+          </Button>
+        </View>
       </View>
 
       {query.isLoading ? (
@@ -135,13 +220,46 @@ export const GraphListScreen = () => {
           }
           renderItem={({ item }) => (
             <View className="mb-3 rounded-xl border border-neutral-200 p-4">
-              <Text className="font-semibold text-lg text-neutral-900">
-                {item.name}
-              </Text>
+              <View className="flex-row items-start justify-between">
+                <View className="flex-1 pr-4">
+                  <View className="mb-2 flex-row items-center gap-2">
+                    <View
+                      className="h-2 w-2 rounded-full"
+                      style={{
+                        backgroundColor: graphThemeColorMap[item.color],
+                      }}
+                    />
+                    <Text className="font-semibold text-lg text-neutral-900">
+                      {item.name}
+                    </Text>
+                  </View>
+                </View>
+                <Button
+                  onPress={() => {
+                    onPressGraphMenu(item);
+                  }}
+                >
+                  ...
+                </Button>
+              </View>
               <Text className="mt-1 text-neutral-600">ID: {item.id}</Text>
               <Text className="text-neutral-600">
                 単位: {item.unit} / タイムゾーン: {item.timezone}
               </Text>
+              {viewMode === "full" ? (
+                <View className="mt-3 rounded-lg bg-neutral-50 p-3">
+                  <Text className="mb-2 text-neutral-700 text-sm">
+                    Fullビューは現在Pixelaページを開く方式です。
+                  </Text>
+                  <Button
+                    onPress={() => {
+                      onPressOpenFullView(item.id);
+                    }}
+                  >
+                    Fullビューを開く
+                  </Button>
+                </View>
+              ) : null}
               <View className="mt-3">
                 <Button onPress={() => onPressAddPixel(item)}>記録する</Button>
               </View>
@@ -151,4 +269,11 @@ export const GraphListScreen = () => {
       ) : null}
     </View>
   );
+};
+
+/**
+ * PixelaグラフページのURLを生成する。
+ */
+const buildPixelaGraphUrl = (username: string, graphId: string): string => {
+  return `https://pixe.la/v1/users/${username}/graphs/${graphId}.html`;
 };
