@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useEffect, useMemo, useState } from "react";
@@ -11,7 +11,12 @@ import {
   Text,
   View,
 } from "react-native";
-import { type GraphDefinition, getGraphs } from "../../shared/api/graph";
+import {
+  deleteGraph,
+  type GraphDefinition,
+  getGraphStats,
+  getGraphs,
+} from "../../shared/api/graph";
 import {
   type AuthCredentials,
   loadAuthCredentials,
@@ -94,14 +99,76 @@ export const GraphListScreen = () => {
     return "グラフ一覧の取得に失敗しました。";
   }, [authLoadError, query.error]);
 
+  const statsMutation = useMutation({
+    mutationFn: (graph: GraphDefinition) => {
+      if (!credentials) {
+        throw new Error("認証情報が見つかりません。再ログインしてください。");
+      }
+      return getGraphStats({
+        graphId: graph.id,
+        username: credentials.username,
+      });
+    },
+    onError: (error) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "統計の取得に失敗しました。再度お試しください。";
+      Alert.alert("統計取得エラー", message);
+    },
+    onSuccess: (stats, graph) => {
+      const lines = [
+        `総記録数: ${stats.totalPixelsCount ?? "-"}`,
+        `合計: ${stats.totalQuantity ?? "-"}`,
+        `平均: ${stats.avgQuantity ?? "-"}`,
+        `今日: ${stats.todaysQuantity ?? "-"}`,
+        `昨日: ${stats.yesterdayQuantity ?? "-"}`,
+      ];
+      Alert.alert(`${graph.name} の統計`, lines.join("\n"));
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (graph: GraphDefinition) => {
+      if (!credentials) {
+        throw new Error("認証情報が見つかりません。再ログインしてください。");
+      }
+      return deleteGraph({
+        graphId: graph.id,
+        token: credentials.token,
+        username: credentials.username,
+      });
+    },
+    onError: (error) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "グラフ削除に失敗しました。再度お試しください。";
+      Alert.alert("削除エラー", message);
+    },
+    onSuccess: async (response) => {
+      Alert.alert("削除完了", response.message);
+      await query.refetch();
+    },
+  });
+
+  /**
+   * グラフ一覧を再取得する。
+   */
   const onRetry = () => {
     query.refetch();
   };
 
+  /**
+   * pull-to-refreshでグラフ一覧を再取得する。
+   */
   const onRefresh = () => {
     query.refetch();
   };
 
+  /**
+   * 記録追加画面へ遷移する。
+   */
   const onPressAddPixel = (graph: GraphDefinition) => {
     router.push({
       params: {
@@ -113,25 +180,70 @@ export const GraphListScreen = () => {
   };
 
   /**
+   * グラフ編集画面へ遷移する。
+   */
+  const onPressEditGraph = (graph: GraphDefinition) => {
+    router.push({
+      params: {
+        color: graph.color,
+        graphId: graph.id,
+        graphName: graph.name,
+        unit: graph.unit,
+      },
+      pathname: "/graphs/[graphId]/edit",
+    });
+  };
+
+  /**
+   * グラフ統計を取得してダイアログ表示する。
+   */
+  const onPressShowStats = (graph: GraphDefinition) => {
+    statsMutation.mutate(graph);
+  };
+
+  /**
+   * グラフ削除確認ダイアログを表示する。
+   */
+  const onPressDeleteGraph = (graph: GraphDefinition) => {
+    Alert.alert(
+      "グラフ削除",
+      `${graph.name} を削除しますか？この操作は取り消せません。`,
+      [
+        {
+          style: "cancel",
+          text: "キャンセル",
+        },
+        {
+          onPress: () => {
+            deleteMutation.mutate(graph);
+          },
+          style: "destructive",
+          text: "削除する",
+        },
+      ]
+    );
+  };
+
+  /**
    * グラフカードの追加操作メニューを表示する。
    */
   const onPressGraphMenu = (graph: GraphDefinition) => {
     Alert.alert(graph.name, "操作を選択してください。", [
       {
         onPress: () => {
-          Alert.alert("準備中", "グラフ編集は次のステップで実装します。");
+          onPressEditGraph(graph);
         },
         text: "編集",
       },
       {
         onPress: () => {
-          Alert.alert("準備中", "統計表示は次のステップで実装します。");
+          onPressShowStats(graph);
         },
         text: "統計",
       },
       {
         onPress: () => {
-          Alert.alert("準備中", "グラフ削除は次のステップで実装します。");
+          onPressDeleteGraph(graph);
         },
         style: "destructive",
         text: "削除",
@@ -235,6 +347,9 @@ export const GraphListScreen = () => {
                   </View>
                 </View>
                 <Button
+                  isDisabled={
+                    statsMutation.isPending || deleteMutation.isPending
+                  }
                   onPress={() => {
                     onPressGraphMenu(item);
                   }}
@@ -261,7 +376,16 @@ export const GraphListScreen = () => {
                 </View>
               ) : null}
               <View className="mt-3">
-                <Button onPress={() => onPressAddPixel(item)}>記録する</Button>
+                <Button
+                  isDisabled={
+                    statsMutation.isPending || deleteMutation.isPending
+                  }
+                  onPress={() => {
+                    onPressAddPixel(item);
+                  }}
+                >
+                  記録する
+                </Button>
               </View>
             </View>
           )}
