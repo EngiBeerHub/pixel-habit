@@ -64,7 +64,7 @@ export const AuthSettingsScreen = () => {
         username: values.username.trim(),
       };
       await saveAuthCredentials(credentials);
-      router.push("/graphs");
+      router.replace("/(tabs)/home");
     } catch {
       setError("root", {
         message: "接続情報の保存に失敗しました。再度お試しください。",

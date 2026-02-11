@@ -12,7 +12,6 @@ import {
 import { type GraphDefinition, getGraphs } from "../../shared/api/graph";
 import {
   type AuthCredentials,
-  clearAuthCredentials,
   loadAuthCredentials,
 } from "../../shared/storage/auth-storage";
 
@@ -35,9 +34,8 @@ export const GraphListScreen = () => {
         }
         setCredentials(stored);
         if (!stored) {
-          setAuthLoadError(
-            "接続情報がありません。先に接続設定を行ってください。"
-          );
+          setAuthLoadError("接続情報がありません。接続設定画面へ移動します。");
+          router.replace("/auth");
         }
       } catch {
         if (isMounted) {
@@ -50,7 +48,7 @@ export const GraphListScreen = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [router]);
 
   const query = useQuery({
     enabled: Boolean(credentials),
@@ -76,11 +74,6 @@ export const GraphListScreen = () => {
     return "グラフ一覧の取得に失敗しました。";
   }, [authLoadError, query.error]);
 
-  const onResetCredentials = async () => {
-    await clearAuthCredentials();
-    router.replace("/");
-  };
-
   const onRetry = () => {
     query.refetch();
   };
@@ -89,9 +82,6 @@ export const GraphListScreen = () => {
     query.refetch();
   };
 
-  const onPressReset = () => {
-    onResetCredentials();
-  };
   const onPressAddPixel = (graph: GraphDefinition) => {
     router.push({
       params: {
@@ -104,9 +94,8 @@ export const GraphListScreen = () => {
 
   return (
     <View className="flex-1 bg-white px-6 pt-16 pb-6">
-      <View className="mb-4 flex-row items-center justify-between">
+      <View className="mb-4">
         <Text className="font-bold text-2xl text-neutral-900">グラフ一覧</Text>
-        <Button onPress={onPressReset}>接続解除</Button>
       </View>
 
       {query.isLoading ? (

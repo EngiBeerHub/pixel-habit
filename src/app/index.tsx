@@ -1,5 +1,5 @@
-import { AuthSettingsScreen } from "../features/auth/auth-settings-screen";
+import { AuthGateScreen } from "../features/auth/auth-gate-screen";
 
 export default function IndexRoute() {
-  return <AuthSettingsScreen />;
+  return <AuthGateScreen />;
 }

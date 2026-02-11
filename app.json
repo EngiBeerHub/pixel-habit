@@ -8,9 +8,7 @@
     },
     "name": "pixel-habit",
     "slug": "pixel-habit",
-    "plugins": [
-      "expo-secure-store"
-    ],
+    "plugins": ["expo-secure-store"],
     "android": {
       "package": "com.engibeer.pixelhabit"
     },
