@@ -1,82 +1,75 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Button } from "heroui-native";
-import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, TextInput, View } from "react-native";
+import { createUser } from "../../shared/api/user";
 import {
   type AuthCredentials,
-  loadAuthCredentials,
   saveAuthCredentials,
 } from "../../shared/storage/auth-storage";
 import {
-  type AuthSettingsFormValues,
-  authSettingsSchema,
-} from "./auth-settings-schema";
+  type AuthSignUpFormValues,
+  authSignUpSchema,
+} from "./auth-sign-up-schema";
 
 /**
- * Pixela の接続情報（username/token）を入力・保存する画面。
+ * Pixelaアカウントを作成してログイン状態へ遷移する画面。
  */
-export const AuthSettingsScreen = () => {
+export const AuthSignUpScreen = () => {
   const router = useRouter();
-  const [loadError, setLoadError] = useState<string | null>(null);
   const {
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     handleSubmit,
-    reset,
     setError,
-  } = useForm<AuthSettingsFormValues>({
+  } = useForm<AuthSignUpFormValues>({
     defaultValues: {
       token: "",
       username: "",
     },
-    resolver: zodResolver(authSettingsSchema),
+    resolver: zodResolver(authSignUpSchema),
   });
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const hydrate = async () => {
-      try {
-        const credentials = await loadAuthCredentials();
-        if (isMounted && credentials) {
-          reset(credentials);
-        }
-      } catch {
-        if (isMounted) {
-          setLoadError("保存済みの接続情報を読み込めませんでした。");
-        }
-      }
-    };
-
-    hydrate();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [reset]);
-
-  const onSubmit = handleSubmit(async (values) => {
-    try {
+  const mutation = useMutation({
+    mutationFn: async (values: AuthSignUpFormValues) => {
       const credentials: AuthCredentials = {
         token: values.token.trim(),
         username: values.username.trim(),
       };
-      await saveAuthCredentials(credentials);
-      router.replace("/(tabs)/home");
-    } catch {
-      setError("root", {
-        message: "接続情報の保存に失敗しました。再度お試しください。",
+      await createUser({
+        token: credentials.token,
+        username: credentials.username,
       });
-    }
+      await saveAuthCredentials(credentials);
+    },
+    onError: (error) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "アカウント作成に失敗しました。再度お試しください。";
+      setError("root", { message });
+    },
+    onSuccess: () => {
+      router.replace("/(tabs)/home");
+    },
+  });
+
+  /**
+   * アカウント作成処理を実行する。
+   */
+  const onSubmit = handleSubmit((values) => {
+    mutation.mutate(values);
   });
 
   return (
     <View className="flex-1 justify-center bg-white px-6">
-      <Text className="mb-2 font-bold text-2xl text-neutral-900">ログイン</Text>
+      <Text className="mb-2 font-bold text-2xl text-neutral-900">
+        アカウント作成
+      </Text>
       <Text className="mb-6 text-neutral-600">
-        Pixelaのusernameとtokenを入力してください。
+        username と token を入力して作成します。
       </Text>
 
       <Text className="mb-2 text-neutral-800">Username</Text>
@@ -128,23 +121,20 @@ export const AuthSettingsScreen = () => {
         <View className="mb-4" />
       )}
 
-      {loadError ? (
-        <Text className="mb-4 text-red-600 text-sm">{loadError}</Text>
-      ) : null}
       {errors.root?.message ? (
         <Text className="mb-4 text-red-600 text-sm">{errors.root.message}</Text>
       ) : null}
 
       <View className="gap-3">
-        <Button isDisabled={isSubmitting} onPress={onSubmit}>
-          ログイン
+        <Button isDisabled={mutation.isPending} onPress={onSubmit}>
+          作成して開始
         </Button>
         <Button
           onPress={() => {
-            router.replace("/auth/sign-up");
+            router.replace("/auth/sign-in");
           }}
         >
-          アカウント作成へ
+          ログインへ
         </Button>
       </View>
     </View>

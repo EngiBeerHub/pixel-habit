@@ -1,6 +1,14 @@
 import { pixelaRequest } from "./client";
 
 /**
+ * ユーザー作成APIのリクエストパラメータ。
+ */
+interface CreateUserParams {
+  token: string;
+  username: string;
+}
+
+/**
  * トークン更新APIのリクエストパラメータ。
  */
 interface UpdateUserTokenParams {
@@ -24,6 +32,25 @@ interface SuccessResponse {
   isSuccess: boolean;
   message: string;
 }
+
+/**
+ * Pixelaユーザーを新規作成する。
+ */
+export const createUser = ({
+  token,
+  username,
+}: CreateUserParams): Promise<SuccessResponse> => {
+  return pixelaRequest<SuccessResponse>({
+    body: {
+      agreeTermsOfService: "yes",
+      notMinor: "yes",
+      token,
+      username,
+    },
+    method: "POST",
+    path: "/v1/users",
+  });
+};
 
 /**
  * 指定ユーザーのトークンを更新する。
