@@ -1,3 +1,45 @@
+# Repository Guidelines
+
+## Project Structure & Module Organization
+- App source lives in `src/`.
+- Route screens follow Expo Router conventions under `src/app/` (for example, `src/app/index.tsx` and `src/app/_layout.tsx`).
+- Global styling is in `src/global.css`; Uniwind type declarations are in `src/uniwind-types.d.ts`.
+- API contract references live in `docs/` (`docs/pixela.openapi.yaml`).
+- Root config files include `app.json`, `metro.config.js`, `tsconfig.json`, and `biome.jsonc`.
+
+## Build, Test, and Development Commands
+- `npm install`: install dependencies.
+- `npm run start`: start Expo dev server.
+- `npm run ios` / `npm run android` / `npm run web`: launch the app on a target platform.
+- `npm run check`: run Ultracite lint/format checks.
+- `npm run fix`: auto-fix formatting and lint issues.
+- Optional diagnostics: `npm exec -- ultracite doctor`.
+
+## Coding Style & Naming Conventions
+- Language: TypeScript + React Native (Expo Router).
+- Use 2-space indentation and keep code Biome/Ultracite-clean before submitting.
+- Prefer explicit, readable names (`HabitCard.tsx`, `fetchPixelaGraph`), `const` by default, and `unknown` over `any`.
+- Keep components functional, hooks at top level, and avoid nested component definitions.
+- Follow file naming by role:
+  - Routes: Expo Router names (`index.tsx`, `_layout.tsx`, segment folders).
+  - Shared modules/components: `PascalCase` for components, `camelCase` for utilities.
+
+## Testing Guidelines
+- No formal test suite is configured yet. If you add tests, use `*.test.ts` / `*.test.tsx` naming and colocate near source or under `src/__tests__/`.
+- Prefer React Native Testing Library + Jest for UI logic.
+- Keep tests deterministic; avoid `.only`/`.skip`; use async/await over done-callback patterns.
+
+## Commit & Pull Request Guidelines
+- Current history uses short, imperative messages (for example, `installed ultracite`, `pixela api openapi yaml`).
+- Recommended commit format: imperative summary with optional scope, e.g. `feat(router): add habit detail route`.
+- PR checklist: clear purpose and key changes, linked issue/task when available, screenshots/recordings for UI work (iOS/Android/Web as relevant), and confirmation that `npm run check` (plus tests, if added) pass.
+
+## Security & Configuration Tips
+- Do not commit secrets or tokens; use Expo environment configuration for runtime values.
+- Validate external API inputs (especially Pixela-related payloads) and surface failures with descriptive errors.
+
+---
+
 # Ultracite Code Standards
 
 This project uses **Ultracite**, a zero-config preset that enforces strict code quality standards through automated formatting and linting.
@@ -9,8 +51,6 @@ This project uses **Ultracite**, a zero-config preset that enforces strict code 
 - **Diagnose setup**: `npm exec -- ultracite doctor`
 
 Biome (the underlying engine) provides robust linting and formatting. Most issues are automatically fixable.
-
----
 
 ## Core Principles
 
@@ -98,8 +138,6 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 **Solid/Svelte/Vue/Qwik:**
 - Use `class` and `for` attributes (not `className` or `htmlFor`)
 
----
-
 ## Testing
 
 - Write assertions inside `it()` or `test()` blocks
@@ -117,7 +155,5 @@ Biome's linter will catch most issues automatically. Focus your attention on:
 4. **Edge cases** - Handle boundary conditions and error states
 5. **User experience** - Accessibility, performance, and usability considerations
 6. **Documentation** - Add comments for complex logic, but prefer self-documenting code
-
----
 
 Most formatting and common issues are automatically fixed by Biome. Run `npm exec -- ultracite fix` before committing to ensure compliance.
