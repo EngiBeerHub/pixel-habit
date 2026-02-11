@@ -191,6 +191,19 @@ export const GraphListScreen = () => {
   };
 
   /**
+   * ピクセル一覧画面へ遷移する。
+   */
+  const onPressOpenPixels = (graph: GraphDefinition) => {
+    router.push({
+      params: {
+        graphId: graph.id,
+        graphName: graph.name,
+      },
+      pathname: "/graphs/[graphId]/pixels",
+    });
+  };
+
+  /**
    * グラフ作成画面へ遷移する。
    */
   const onPressCreateGraph = () => {
@@ -409,6 +422,18 @@ export const GraphListScreen = () => {
                   }}
                 >
                   記録する
+                </Button>
+              </View>
+              <View className="mt-2">
+                <Button
+                  isDisabled={
+                    statsMutation.isPending || deleteMutation.isPending
+                  }
+                  onPress={() => {
+                    onPressOpenPixels(item);
+                  }}
+                >
+                  記録一覧
                 </Button>
               </View>
             </View>
