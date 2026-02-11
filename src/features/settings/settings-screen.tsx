@@ -1,10 +1,19 @@
 import { useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useEffect, useState } from "react";
-import { Alert, Linking, ScrollView, Text, View } from "react-native";
+import {
+  Alert,
+  Linking,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { deleteUser, updateUserToken } from "../../shared/api/user";
 import {
   clearAuthCredentials,
   loadAuthCredentials,
+  saveAuthCredentials,
 } from "../../shared/storage/auth-storage";
 
 /**
@@ -13,11 +22,17 @@ import {
 export const SettingsScreen = () => {
   const router = useRouter();
   const [profileUrl, setProfileUrl] = useState<string>("https://pixe.la");
+  const [username, setUsername] = useState<string | null>(null);
+  const [currentToken, setCurrentToken] = useState<string | null>(null);
+  const [newToken, setNewToken] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
-    const hydrateProfileUrl = async () => {
+    const hydrateProfile = async () => {
       const credentials = await loadAuthCredentials();
       if (!isMounted) {
         return;
@@ -25,10 +40,12 @@ export const SettingsScreen = () => {
 
       if (credentials) {
         setProfileUrl(`https://pixe.la/@${credentials.username}`);
+        setUsername(credentials.username);
+        setCurrentToken(credentials.token);
       }
     };
 
-    hydrateProfileUrl();
+    hydrateProfile();
 
     return () => {
       isMounted = false;
@@ -74,6 +91,104 @@ export const SettingsScreen = () => {
     ]);
   };
 
+  /**
+   * トークン更新APIを実行し、成功時はローカル保存済みトークンを同期する。
+   */
+  const onPressUpdateToken = async () => {
+    if (!(username && currentToken)) {
+      setErrorMessage("認証情報が見つかりません。再ログインしてください。");
+      return;
+    }
+
+    const normalizedToken = newToken.trim();
+    if (normalizedToken.length < 8) {
+      setErrorMessage("新しいトークンは8文字以上で入力してください。");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setErrorMessage(null);
+      setMessage(null);
+      const response = await updateUserToken({
+        newToken: normalizedToken,
+        token: currentToken,
+        username,
+      });
+      await saveAuthCredentials({
+        token: normalizedToken,
+        username,
+      });
+      setCurrentToken(normalizedToken);
+      setNewToken("");
+      setMessage(response.message);
+    } catch (error) {
+      const messageText =
+        error instanceof Error
+          ? error.message
+          : "トークン更新に失敗しました。再度お試しください。";
+      setErrorMessage(messageText);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /**
+   * ユーザー削除確認ダイアログを表示する。
+   */
+  const onPressDeleteUser = () => {
+    if (!(username && currentToken)) {
+      setErrorMessage("認証情報が見つかりません。再ログインしてください。");
+      return;
+    }
+
+    Alert.alert(
+      "ユーザー削除",
+      "この操作は取り消せません。ユーザーを削除しますか？",
+      [
+        {
+          style: "cancel",
+          text: "キャンセル",
+        },
+        {
+          onPress: () => {
+            onConfirmDeleteUser(username, currentToken);
+          },
+          style: "destructive",
+          text: "削除する",
+        },
+      ]
+    );
+  };
+
+  /**
+   * ユーザー削除APIを実行し、成功時は認証画面へ遷移する。
+   */
+  const onConfirmDeleteUser = async (
+    currentUsername: string,
+    token: string
+  ) => {
+    try {
+      setIsSubmitting(true);
+      setErrorMessage(null);
+      setMessage(null);
+      await deleteUser({
+        token,
+        username: currentUsername,
+      });
+      await clearAuthCredentials();
+      router.replace("/auth");
+    } catch (error) {
+      const messageText =
+        error instanceof Error
+          ? error.message
+          : "ユーザー削除に失敗しました。再度お試しください。";
+      setErrorMessage(messageText);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <ScrollView className="flex-1 bg-white px-6 pt-16 pb-6">
       <Text className="mb-2 font-bold text-2xl text-neutral-900">Settings</Text>
@@ -85,20 +200,28 @@ export const SettingsScreen = () => {
         <Text className="mb-3 font-semibold text-lg text-neutral-900">
           ユーザー
         </Text>
+        <View className="mb-3">
+          <Text className="mb-2 text-neutral-800">新しいトークン</Text>
+          <TextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            className="rounded-xl border border-neutral-300 px-4 py-3 text-base"
+            onChangeText={setNewToken}
+            placeholder="new-token"
+            secureTextEntry
+            value={newToken}
+          />
+        </View>
         <View className="gap-3">
+          <Button isDisabled={isSubmitting} onPress={onPressUpdateToken}>
+            トークン変更
+          </Button>
           <Button
             onPress={() => {
               onOpenExternalLink(profileUrl);
             }}
           >
             プロフィールを開く
-          </Button>
-          <Button
-            onPress={() => {
-              onOpenExternalLink("https://pixe.la");
-            }}
-          >
-            Pixelaサイト
           </Button>
         </View>
       </View>
@@ -146,8 +269,22 @@ export const SettingsScreen = () => {
         <Text className="mb-3 font-semibold text-lg text-red-700">
           危険操作
         </Text>
-        <Button onPress={onPressLogout}>ログアウト</Button>
+        <View className="gap-3">
+          <Button isDisabled={isSubmitting} onPress={onPressDeleteUser}>
+            ユーザー削除
+          </Button>
+          <Button isDisabled={isSubmitting} onPress={onPressLogout}>
+            ログアウト
+          </Button>
+        </View>
       </View>
+
+      {message ? (
+        <Text className="mt-4 text-green-700 text-sm">{message}</Text>
+      ) : null}
+      {errorMessage ? (
+        <Text className="mt-4 text-red-600 text-sm">{errorMessage}</Text>
+      ) : null}
     </ScrollView>
   );
 };
