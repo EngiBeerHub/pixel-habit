@@ -2,11 +2,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, TextInput, View } from "react-native";
 import { addPixel } from "../../shared/api/pixel";
-import { getTodayAsYyyyMmDd } from "../../shared/lib/date";
+import {
+  getTodayAsYyyyMmDd,
+  normalizeYyyyMmDdInput,
+} from "../../shared/lib/date";
 import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 import { type PixelAddFormValues, pixelAddSchema } from "./pixel-add-schema";
 
@@ -16,10 +19,18 @@ import { type PixelAddFormValues, pixelAddSchema } from "./pixel-add-schema";
 export const PixelAddScreen = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{
+    date?: string;
     graphId?: string;
     graphName?: string;
+    quantity?: string;
   }>();
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const defaultDate =
+    typeof params.date === "string"
+      ? normalizeYyyyMmDdInput(params.date)
+      : getTodayAsYyyyMmDd();
+  const defaultQuantity =
+    typeof params.quantity === "string" ? params.quantity : "";
   const graphId = typeof params.graphId === "string" ? params.graphId : "";
   const graphName =
     typeof params.graphName === "string" ? params.graphName : "";
@@ -27,14 +38,22 @@ export const PixelAddScreen = () => {
     control,
     formState: { errors },
     handleSubmit,
+    reset,
     setError,
   } = useForm<PixelAddFormValues>({
     defaultValues: {
-      date: getTodayAsYyyyMmDd(),
-      quantity: "",
+      date: defaultDate,
+      quantity: defaultQuantity,
     },
     resolver: zodResolver(pixelAddSchema),
   });
+
+  useEffect(() => {
+    reset({
+      date: defaultDate,
+      quantity: defaultQuantity,
+    });
+  }, [defaultDate, defaultQuantity, reset]);
 
   const mutation = useMutation({
     mutationFn: async (values: PixelAddFormValues) => {
@@ -60,7 +79,7 @@ export const PixelAddScreen = () => {
       const message =
         error instanceof Error
           ? error.message
-          : "記録の追加に失敗しました。再度お試しください。";
+          : "記録追加に失敗しました。再度お試しください。";
       setError("root", { message });
       setSubmitMessage(null);
     },
@@ -99,7 +118,9 @@ export const PixelAddScreen = () => {
             keyboardType="number-pad"
             maxLength={8}
             onBlur={onBlur}
-            onChangeText={onChange}
+            onChangeText={(text) => {
+              onChange(normalizeYyyyMmDdInput(text));
+            }}
             placeholder="20260211"
             value={value}
           />

@@ -26,7 +26,10 @@ import {
   getGraphs,
 } from "../../shared/api/graph";
 import { addPixel } from "../../shared/api/pixel";
-import { getTodayAsYyyyMmDd } from "../../shared/lib/date";
+import {
+  getTodayAsYyyyMmDd,
+  normalizeYyyyMmDdInput,
+} from "../../shared/lib/date";
 import {
   type AuthCredentials,
   loadAuthCredentials,
@@ -62,14 +65,17 @@ export const GraphListScreen = () => {
   const [credentials, setCredentials] = useState<AuthCredentials | null>(null);
   const [authLoadError, setAuthLoadError] = useState<string | null>(null);
   const [sheetMessage, setSheetMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selectedGraph, setSelectedGraph] = useState<GraphDefinition | null>(
     null
   );
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [viewMode, setViewMode] = useState<GraphViewMode>("compact");
   const snapPoints = useMemo(() => ["50%"], []);
   const {
     control,
     formState: { errors: pixelFormErrors },
+    getValues,
     handleSubmit,
     reset,
     setError,
@@ -80,6 +86,14 @@ export const GraphListScreen = () => {
     },
     resolver: zodResolver(pixelAddSchema),
   });
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -196,6 +210,20 @@ export const GraphListScreen = () => {
     },
   });
 
+  /**
+   * 一定時間だけ表示する成功トーストを表示する。
+   */
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+    toastTimerRef.current = setTimeout(() => {
+      setToastMessage(null);
+      toastTimerRef.current = null;
+    }, 2500);
+  };
+
   const addPixelMutation = useMutation({
     mutationFn: (values: PixelAddFormValues) => {
       if (!credentials) {
@@ -223,6 +251,8 @@ export const GraphListScreen = () => {
     onSuccess: async (response) => {
       setSheetMessage(response.message);
       await query.refetch();
+      bottomSheetRef.current?.close();
+      showToast(response.message);
     },
   });
 
@@ -394,10 +424,16 @@ export const GraphListScreen = () => {
     if (!selectedGraph) {
       return;
     }
+    const values = {
+      date: normalizeYyyyMmDdInput(getValues("date")),
+      quantity: getValues("quantity"),
+    };
     router.push({
       params: {
+        date: values.date,
         graphId: selectedGraph.id,
         graphName: selectedGraph.name,
+        quantity: values.quantity,
       },
       pathname: "/graphs/[graphId]/add",
     });
@@ -444,6 +480,11 @@ export const GraphListScreen = () => {
         <View className="rounded-xl border border-red-200 bg-red-50 p-4">
           <Text className="mb-3 text-red-700">{errorMessage}</Text>
           <Button onPress={onRetry}>再試行</Button>
+        </View>
+      ) : null}
+      {toastMessage ? (
+        <View className="mb-3 rounded-lg border border-green-200 bg-green-50 p-3">
+          <Text className="text-green-700 text-sm">{toastMessage}</Text>
         </View>
       ) : null}
 
@@ -571,7 +612,9 @@ export const GraphListScreen = () => {
               <BottomSheetTextInput
                 className="rounded-xl border border-neutral-300 px-4 py-3 text-base"
                 onBlur={onBlur}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  onChange(normalizeYyyyMmDdInput(text));
+                }}
                 placeholder="20260211"
                 value={value}
               />
