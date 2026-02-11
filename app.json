@@ -7,6 +7,7 @@
       "output": "static"
     },
     "name": "pixel-habit",
-    "slug": "pixel-habit"
+    "slug": "pixel-habit",
+    "plugins": ["expo-secure-store"]
   }
 }
