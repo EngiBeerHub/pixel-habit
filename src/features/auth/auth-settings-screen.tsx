@@ -4,6 +4,7 @@ import { Button } from "heroui-native";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, TextInput, View } from "react-native";
+import { getGraphs } from "../../shared/api/graph";
 import {
   type AuthCredentials,
   loadAuthCredentials,
@@ -63,11 +64,20 @@ export const AuthSettingsScreen = () => {
         token: values.token.trim(),
         username: values.username.trim(),
       };
+      // 資格情報が有効かを先にAPIで検証してから保存する。
+      await getGraphs({
+        token: credentials.token,
+        username: credentials.username,
+      });
       await saveAuthCredentials(credentials);
       router.replace("/(tabs)/home");
-    } catch {
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "ログインに失敗しました。username/tokenを確認して再度お試しください。";
       setError("root", {
-        message: "接続情報の保存に失敗しました。再度お試しください。",
+        message,
       });
     }
   });
