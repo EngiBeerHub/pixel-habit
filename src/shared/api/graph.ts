@@ -18,13 +18,23 @@ export const graphColorOptions = [
 export type GraphColor = (typeof graphColorOptions)[number];
 
 /**
+ * Pixelaで利用できるグラフ種別。
+ */
+export const graphTypeOptions = ["float", "int"] as const;
+
+/**
+ * Pixelaで利用できるグラフ種別の型。
+ */
+export type GraphType = (typeof graphTypeOptions)[number];
+
+/**
  * Pixela のグラフ定義レスポンス。
  */
 export interface GraphDefinition {
   color: GraphColor;
   id: string;
   name: string;
-  type: "float" | "int";
+  type: GraphType;
   timezone: string;
   unit: string;
 }
@@ -41,6 +51,20 @@ interface GraphListResponse {
  */
 interface GetGraphsParams {
   token: string;
+  username: string;
+}
+
+/**
+ * グラフ作成APIのパラメータ。
+ */
+interface CreateGraphParams {
+  color: GraphColor;
+  id: string;
+  name: string;
+  timezone: string;
+  token: string;
+  type: GraphType;
+  unit: string;
   username: string;
 }
 
@@ -110,6 +134,34 @@ export const getGraphs = async ({
     token,
   });
   return response.graphs;
+};
+
+/**
+ * 新しいグラフを作成する。
+ */
+export const createGraph = ({
+  color,
+  id,
+  name,
+  timezone,
+  token,
+  type,
+  unit,
+  username,
+}: CreateGraphParams): Promise<SuccessResponse> => {
+  return pixelaRequest<SuccessResponse>({
+    body: {
+      color,
+      id,
+      name,
+      timezone,
+      type,
+      unit,
+    },
+    method: "POST",
+    path: `/v1/users/${username}/graphs`,
+    token,
+  });
 };
 
 /**

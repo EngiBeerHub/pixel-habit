@@ -191,6 +191,13 @@ export const GraphListScreen = () => {
   };
 
   /**
+   * グラフ作成画面へ遷移する。
+   */
+  const onPressCreateGraph = () => {
+    router.push("/graphs/create");
+  };
+
+  /**
    * グラフ編集画面へ遷移する。
    */
   const onPressEditGraph = (graph: GraphDefinition) => {
@@ -286,7 +293,12 @@ export const GraphListScreen = () => {
   return (
     <View className="flex-1 bg-white px-6 pt-16 pb-6">
       <View className="mb-4 gap-3">
-        <Text className="font-bold text-2xl text-neutral-900">グラフ一覧</Text>
+        <View className="flex-row items-center justify-between">
+          <Text className="font-bold text-2xl text-neutral-900">
+            グラフ一覧
+          </Text>
+          <Button onPress={onPressCreateGraph}>グラフ追加</Button>
+        </View>
         <View className="flex-row gap-2">
           <Button
             isDisabled={viewMode === "compact"}
