@@ -124,7 +124,11 @@
 
 - `Compact`:
   - 自前描画を基本とし、必要データはピクセル一覧APIで取得
-  - API候補: `GET /v1/users/{username}/graphs/{graphID}/pixels`
+  - API: `GET /v1/users/{username}/graphs/{graphID}/pixels?withBody=true&from={yyyyMMdd}&to={yyyyMMdd}`
+  - 表示期間: 14週（98日）
+  - 段階表現: 5段階（`0=薄灰`, `1-4=テーマ色の濃淡`）
+  - 取得期間: 表示期間と一致する14週分を `from/to` で指定する
+  - データ再取得: Homeのpull-to-refreshと記録追加成功時に、一覧とカード単位のCompactデータを同期再取得する
 - `Full`:
   - MVPはPixela画像（既存方式）を許容
   - 将来的に自前描画へ統一

@@ -5,7 +5,7 @@ import BottomSheet, {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -38,6 +38,7 @@ import {
   type PixelAddFormValues,
   pixelAddSchema,
 } from "../pixels/pixel-add-schema";
+import { GraphCard } from "./components/graph-card";
 
 /**
  * Home画面で利用する表示モード。
@@ -45,22 +46,11 @@ import {
 type GraphViewMode = "compact" | "full";
 
 /**
- * Pixelaの色名をUIで使う色コードへ変換するマップ。
- */
-const graphThemeColorMap: Record<GraphDefinition["color"], string> = {
-  ajisai: "#7c3aed",
-  ichou: "#ca8a04",
-  kuro: "#171717",
-  momiji: "#dc2626",
-  shibafu: "#16a34a",
-  sora: "#0284c7",
-};
-
-/**
  * 認証情報を使って Pixela のグラフ一覧を表示する画面。
  */
 export const GraphListScreen = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const [credentials, setCredentials] = useState<AuthCredentials | null>(null);
   const [authLoadError, setAuthLoadError] = useState<string | null>(null);
@@ -207,6 +197,11 @@ export const GraphListScreen = () => {
     onSuccess: async (response) => {
       Alert.alert("削除完了", response.message);
       await query.refetch();
+      if (credentials) {
+        await queryClient.invalidateQueries({
+          queryKey: ["graphPixelsCompact", credentials.username],
+        });
+      }
     },
   });
 
@@ -251,6 +246,11 @@ export const GraphListScreen = () => {
     onSuccess: async (response) => {
       setSheetMessage(response.message);
       await query.refetch();
+      if (credentials) {
+        await queryClient.invalidateQueries({
+          queryKey: ["graphPixelsCompact", credentials.username],
+        });
+      }
       bottomSheetRef.current?.close();
       showToast(response.message);
     },
@@ -280,8 +280,14 @@ export const GraphListScreen = () => {
   /**
    * pull-to-refreshでグラフ一覧を再取得する。
    */
-  const onRefresh = () => {
-    query.refetch();
+  const onRefresh = async () => {
+    await query.refetch();
+    if (credentials) {
+      await queryClient.refetchQueries({
+        queryKey: ["graphPixelsCompact", credentials.username],
+        type: "active",
+      });
+    }
   };
 
   /**
@@ -509,77 +515,22 @@ export const GraphListScreen = () => {
               refreshing={query.isFetching}
             />
           }
-          renderItem={({ item }) => (
-            <View className="mb-3 rounded-xl border border-neutral-200 p-4">
-              <View className="flex-row items-start justify-between">
-                <View className="flex-1 pr-4">
-                  <View className="mb-2 flex-row items-center gap-2">
-                    <View
-                      className="h-2 w-2 rounded-full"
-                      style={{
-                        backgroundColor: graphThemeColorMap[item.color],
-                      }}
-                    />
-                    <Text className="font-semibold text-lg text-neutral-900">
-                      {item.name}
-                    </Text>
-                  </View>
-                </View>
-                <Button
-                  isDisabled={
-                    statsMutation.isPending || deleteMutation.isPending
-                  }
-                  onPress={() => {
-                    onPressGraphMenu(item);
-                  }}
-                >
-                  ...
-                </Button>
-              </View>
-              <Text className="mt-1 text-neutral-600">ID: {item.id}</Text>
-              <Text className="text-neutral-600">
-                単位: {item.unit} / タイムゾーン: {item.timezone}
-              </Text>
-              {viewMode === "full" ? (
-                <View className="mt-3 rounded-lg bg-neutral-50 p-3">
-                  <Text className="mb-2 text-neutral-700 text-sm">
-                    Fullビューは現在Pixelaページを開く方式です。
-                  </Text>
-                  <Button
-                    onPress={() => {
-                      onPressOpenFullView(item.id);
-                    }}
-                  >
-                    Fullビューを開く
-                  </Button>
-                </View>
-              ) : null}
-              <View className="mt-3">
-                <Button
-                  isDisabled={
-                    statsMutation.isPending || deleteMutation.isPending
-                  }
-                  onPress={() => {
-                    onPressAddPixel(item);
-                  }}
-                >
-                  記録する
-                </Button>
-              </View>
-              <View className="mt-2">
-                <Button
-                  isDisabled={
-                    statsMutation.isPending || deleteMutation.isPending
-                  }
-                  onPress={() => {
-                    onPressOpenPixels(item);
-                  }}
-                >
-                  記録一覧
-                </Button>
-              </View>
-            </View>
-          )}
+          renderItem={({ item }) =>
+            credentials ? (
+              <GraphCard
+                credentials={credentials}
+                graph={item}
+                isActionDisabled={
+                  statsMutation.isPending || deleteMutation.isPending
+                }
+                onPressAddPixel={onPressAddPixel}
+                onPressGraphMenu={onPressGraphMenu}
+                onPressOpenFullView={onPressOpenFullView}
+                onPressOpenPixels={onPressOpenPixels}
+                viewMode={viewMode}
+              />
+            ) : null
+          }
         />
       ) : null}
 

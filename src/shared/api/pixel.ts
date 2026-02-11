@@ -15,8 +15,10 @@ interface AddPixelParams {
  * ピクセル一覧取得APIのパラメータ。
  */
 interface GetPixelsParams {
+  from?: string;
   graphId: string;
   token: string;
+  to?: string;
   username: string;
 }
 
@@ -90,13 +92,25 @@ export const addPixel = ({
  * 指定グラフのピクセル一覧を取得する。
  */
 export const getPixels = async ({
+  from,
   graphId,
   token,
+  to,
   username,
 }: GetPixelsParams): Promise<Pixel[]> => {
+  const searchParams = new URLSearchParams({
+    withBody: "true",
+  });
+  if (from) {
+    searchParams.set("from", from);
+  }
+  if (to) {
+    searchParams.set("to", to);
+  }
+
   const response = await pixelaRequest<PixelsResponse>({
     method: "GET",
-    path: `/v1/users/${username}/graphs/${graphId}/pixels?withBody=true`,
+    path: `/v1/users/${username}/graphs/${graphId}/pixels?${searchParams.toString()}`,
     token,
   });
   if (!response.pixels) {

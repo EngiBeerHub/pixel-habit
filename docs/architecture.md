@@ -24,6 +24,7 @@
 
 - `src/app/`: 画面（ルーティング）
 - `src/features/`: ユースケース単位のUI/ロジック
+  - 画面固有コンポーネントは `src/features/<feature>/components/` に分離する
 - `src/shared/api/`: APIクライアント、型、エラーハンドリング
 - `src/shared/lib/`: 共通ユーティリティ
 - `src/shared/ui/`: 汎用UIコンポーネント
@@ -59,6 +60,7 @@
   - `schema.ts`（必要ならzod）
 - ローディング/エラー/空状態を毎画面で明示する
 - 先に「動く最小」を作り、その後UI調整する
+- 画面ファイル内に大きな子コンポーネントを内包しない（再利用しない場合も `components/` へ分離）
 
 ## 可読性方針（RN初心者向け）
 

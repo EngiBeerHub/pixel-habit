@@ -73,7 +73,9 @@
 ## ヒートマップ方針
 
 - MVP:
-  - `Compact`: 自前ヒートマップ（優先）
+  - `Compact`: 自前ヒートマップ（14週=98日、5段階: 薄灰+テーマ色4段階）
+  - `Compact` の描画データはグラフカード単位で `GET /v1/users/{username}/graphs/{graphID}/pixels` を取得する
+  - `Compact` は GitHub 風に、上部へ月境界ラベル・左側へ `Mon / Wed / Fri` ラベルを表示する
   - `Full`: 暫定でPixela画像を許容
 - MVP後:
   - `Full` も自前描画へ統一
