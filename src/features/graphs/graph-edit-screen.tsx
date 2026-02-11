@@ -22,6 +22,7 @@ export const GraphEditScreen = () => {
     color?: string;
     graphId?: string;
     graphName?: string;
+    timezone?: string;
     unit?: string;
   }>();
   const [authError, setAuthError] = useState<string | null>(null);
@@ -30,6 +31,8 @@ export const GraphEditScreen = () => {
   const graphId = typeof params.graphId === "string" ? params.graphId : "";
   const initialName =
     typeof params.graphName === "string" ? params.graphName : "";
+  const initialTimezone =
+    typeof params.timezone === "string" ? params.timezone : "Asia/Tokyo";
   const initialUnit = typeof params.unit === "string" ? params.unit : "";
   const initialColor = toGraphColor(params.color);
 
@@ -42,6 +45,7 @@ export const GraphEditScreen = () => {
     defaultValues: {
       color: initialColor,
       name: initialName,
+      timezone: initialTimezone,
       unit: initialUnit,
     },
     resolver: zodResolver(graphEditSchema),
@@ -67,6 +71,7 @@ export const GraphEditScreen = () => {
         color: values.color,
         graphId,
         name: values.name.trim(),
+        timezone: values.timezone.trim(),
         token: credentials.token,
         unit: values.unit.trim(),
         username: credentials.username,
@@ -135,6 +140,28 @@ export const GraphEditScreen = () => {
       />
       {errors.unit?.message ? (
         <Text className="mb-4 text-red-600 text-sm">{errors.unit.message}</Text>
+      ) : (
+        <View className="mb-4" />
+      )}
+
+      <Text className="mb-2 text-neutral-800">タイムゾーン</Text>
+      <Controller
+        control={control}
+        name="timezone"
+        render={({ field: { onBlur, onChange, value } }) => (
+          <TextInput
+            className="mb-2 rounded-xl border border-neutral-300 px-4 py-3 text-base"
+            onBlur={onBlur}
+            onChangeText={onChange}
+            placeholder="Asia/Tokyo"
+            value={value}
+          />
+        )}
+      />
+      {errors.timezone?.message ? (
+        <Text className="mb-4 text-red-600 text-sm">
+          {errors.timezone.message}
+        </Text>
       ) : (
         <View className="mb-4" />
       )}

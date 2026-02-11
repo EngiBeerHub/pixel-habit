@@ -24,6 +24,7 @@ export interface GraphDefinition {
   color: GraphColor;
   id: string;
   name: string;
+  type: "float" | "int";
   timezone: string;
   unit: string;
 }
@@ -65,6 +66,7 @@ interface UpdateGraphParams {
   color: GraphColor;
   graphId: string;
   name: string;
+  timezone: string;
   token: string;
   unit: string;
   username: string;
@@ -130,6 +132,7 @@ export const updateGraph = ({
   color,
   graphId,
   name,
+  timezone,
   token,
   unit,
   username,
@@ -138,6 +141,7 @@ export const updateGraph = ({
     body: {
       color,
       name,
+      timezone,
       unit,
     },
     method: "PUT",

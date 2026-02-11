@@ -7,6 +7,7 @@ import { graphColorOptions } from "../../shared/api/graph";
 export const graphEditSchema = z.object({
   color: z.enum(graphColorOptions),
   name: z.string().min(1, "グラフ名は必須です"),
+  timezone: z.string().min(1, "タイムゾーンは必須です"),
   unit: z.string().min(1, "単位は必須です"),
 });
 

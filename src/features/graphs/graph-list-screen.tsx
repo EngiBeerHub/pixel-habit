@@ -118,11 +118,22 @@ export const GraphListScreen = () => {
     },
     onSuccess: (stats, graph) => {
       const lines = [
+        "[統計]",
         `総記録数: ${stats.totalPixelsCount ?? "-"}`,
         `合計: ${stats.totalQuantity ?? "-"}`,
         `平均: ${stats.avgQuantity ?? "-"}`,
         `今日: ${stats.todaysQuantity ?? "-"}`,
         `昨日: ${stats.yesterdayQuantity ?? "-"}`,
+        `最大値: ${stats.maxQuantity ?? "-"} (${stats.maxDate ?? "-"})`,
+        `最小値: ${stats.minQuantity ?? "-"} (${stats.minDate ?? "-"})`,
+        "",
+        "[グラフ定義]",
+        `ID: ${graph.id}`,
+        `名前: ${graph.name}`,
+        `単位: ${graph.unit}`,
+        `種類: ${graph.type}`,
+        `色: ${graph.color}`,
+        `タイムゾーン: ${graph.timezone}`,
       ];
       Alert.alert(`${graph.name} の統計`, lines.join("\n"));
     },
@@ -188,6 +199,7 @@ export const GraphListScreen = () => {
         color: graph.color,
         graphId: graph.id,
         graphName: graph.name,
+        timezone: graph.timezone,
         unit: graph.unit,
       },
       pathname: "/graphs/[graphId]/edit",
