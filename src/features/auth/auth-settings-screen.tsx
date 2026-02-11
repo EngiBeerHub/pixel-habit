@@ -4,26 +4,23 @@ import { Button } from "heroui-native";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, TextInput, View } from "react-native";
-import { getGraphs } from "../../shared/api/graph";
-import {
-  type AuthCredentials,
-  loadAuthCredentials,
-  saveAuthCredentials,
-} from "../../shared/storage/auth-storage";
+import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 import {
   type AuthSettingsFormValues,
   authSettingsSchema,
 } from "./auth-settings-schema";
+import { useSignIn } from "./use-sign-in";
 
 /**
  * Pixela の接続情報（username/token）を入力・保存する画面。
  */
 export const AuthSettingsScreen = () => {
   const router = useRouter();
+  const signInMutation = useSignIn();
   const [loadError, setLoadError] = useState<string | null>(null);
   const {
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     handleSubmit,
     reset,
     setError,
@@ -60,16 +57,7 @@ export const AuthSettingsScreen = () => {
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      const credentials: AuthCredentials = {
-        token: values.token.trim(),
-        username: values.username.trim(),
-      };
-      // 資格情報が有効かを先にAPIで検証してから保存する。
-      await getGraphs({
-        token: credentials.token,
-        username: credentials.username,
-      });
-      await saveAuthCredentials(credentials);
+      await signInMutation.mutateAsync(values);
       router.replace("/(tabs)/home");
     } catch (error) {
       const message =
@@ -146,7 +134,7 @@ export const AuthSettingsScreen = () => {
       ) : null}
 
       <View className="gap-3">
-        <Button isDisabled={isSubmitting} onPress={onSubmit}>
+        <Button isDisabled={signInMutation.isPending} onPress={onSubmit}>
           ログイン
         </Button>
         <Button

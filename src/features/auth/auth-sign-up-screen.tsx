@@ -1,24 +1,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { Controller, useForm } from "react-hook-form";
 import { Text, TextInput, View } from "react-native";
-import { createUser } from "../../shared/api/user";
-import {
-  type AuthCredentials,
-  saveAuthCredentials,
-} from "../../shared/storage/auth-storage";
 import {
   type AuthSignUpFormValues,
   authSignUpSchema,
 } from "./auth-sign-up-schema";
+import { useSignUp } from "./use-sign-up";
 
 /**
  * Pixelaアカウントを作成してログイン状態へ遷移する画面。
  */
 export const AuthSignUpScreen = () => {
   const router = useRouter();
+  const signUpMutation = useSignUp();
   const {
     control,
     formState: { errors },
@@ -32,35 +28,20 @@ export const AuthSignUpScreen = () => {
     resolver: zodResolver(authSignUpSchema),
   });
 
-  const mutation = useMutation({
-    mutationFn: async (values: AuthSignUpFormValues) => {
-      const credentials: AuthCredentials = {
-        token: values.token.trim(),
-        username: values.username.trim(),
-      };
-      await createUser({
-        token: credentials.token,
-        username: credentials.username,
-      });
-      await saveAuthCredentials(credentials);
-    },
-    onError: (error) => {
+  /**
+   * アカウント作成処理を実行する。
+   */
+  const onSubmit = handleSubmit(async (values) => {
+    try {
+      await signUpMutation.mutateAsync(values);
+      router.replace("/(tabs)/home");
+    } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : "アカウント作成に失敗しました。再度お試しください。";
       setError("root", { message });
-    },
-    onSuccess: () => {
-      router.replace("/(tabs)/home");
-    },
-  });
-
-  /**
-   * アカウント作成処理を実行する。
-   */
-  const onSubmit = handleSubmit((values) => {
-    mutation.mutate(values);
+    }
   });
 
   return (
@@ -126,7 +107,7 @@ export const AuthSignUpScreen = () => {
       ) : null}
 
       <View className="gap-3">
-        <Button isDisabled={mutation.isPending} onPress={onSubmit}>
+        <Button isDisabled={signUpMutation.isPending} onPress={onSubmit}>
           作成して開始
         </Button>
         <Button
