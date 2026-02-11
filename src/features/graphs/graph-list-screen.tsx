@@ -26,6 +26,7 @@ import {
   getGraphs,
 } from "../../shared/api/graph";
 import { addPixel } from "../../shared/api/pixel";
+import { getTodayAsYyyyMmDd } from "../../shared/lib/date";
 import {
   type AuthCredentials,
   loadAuthCredentials,
@@ -630,15 +631,4 @@ export const GraphListScreen = () => {
  */
 const buildPixelaGraphUrl = (username: string, graphId: string): string => {
   return `https://pixe.la/v1/users/${username}/graphs/${graphId}.html`;
-};
-
-/**
- * 端末の現在日付を Pixela 指定の `yyyyMMdd` 形式へ変換する。
- */
-const getTodayAsYyyyMmDd = (): string => {
-  const now = new Date();
-  const year = now.getFullYear().toString();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}${month}${day}`;
 };
