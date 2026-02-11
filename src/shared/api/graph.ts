@@ -11,10 +11,16 @@ export interface GraphDefinition {
   unit: string;
 }
 
+/**
+ * グラフ一覧取得APIのレスポンス形式。
+ */
 interface GraphListResponse {
   graphs: GraphDefinition[];
 }
 
+/**
+ * グラフ一覧取得に必要な認証情報。
+ */
 interface GetGraphsParams {
   token: string;
   username: string;

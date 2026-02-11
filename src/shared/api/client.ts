@@ -1,5 +1,11 @@
+/**
+ * Pixela API のベースURL。
+ */
 const PIXELA_BASE_URL = "https://pixe.la";
 
+/**
+ * Pixela API の標準的なメッセージ形式。
+ */
 interface PixelaMessageResponse {
   isSuccess?: boolean;
   message?: string;
@@ -18,6 +24,9 @@ export class PixelaApiError extends Error {
   }
 }
 
+/**
+ * 共通リクエスト関数で利用するオプション。
+ */
 interface PixelaRequestOptions {
   body?: unknown;
   method?: "DELETE" | "GET" | "POST" | "PUT";
@@ -60,6 +69,9 @@ export const pixelaRequest = async <TResponse>({
   return responseBody as TResponse;
 };
 
+/**
+ * APIエラー応答からユーザー表示用のメッセージを抽出する。
+ */
 const extractErrorMessage = (body: unknown): string => {
   if (typeof body !== "object" || body === null) {
     return "Pixela API request failed.";

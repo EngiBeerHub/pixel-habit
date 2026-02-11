@@ -1,6 +1,12 @@
 import { deleteItemAsync, getItemAsync, setItemAsync } from "expo-secure-store";
 
+/**
+ * Secure Store で username を保存するキー。
+ */
 const USERNAME_KEY = "pixela.username";
+/**
+ * Secure Store で token を保存するキー。
+ */
 const TOKEN_KEY = "pixela.token";
 
 /**

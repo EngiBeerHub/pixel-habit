@@ -92,6 +92,15 @@ export const GraphListScreen = () => {
   const onPressReset = () => {
     onResetCredentials();
   };
+  const onPressAddPixel = (graph: GraphDefinition) => {
+    router.push({
+      params: {
+        graphId: graph.id,
+        graphName: graph.name,
+      },
+      pathname: "/graphs/[graphId]/add",
+    });
+  };
 
   return (
     <View className="flex-1 bg-white px-6 pt-16 pb-6">
@@ -144,6 +153,9 @@ export const GraphListScreen = () => {
               <Text className="text-neutral-600">
                 単位: {item.unit} / タイムゾーン: {item.timezone}
               </Text>
+              <View className="mt-3">
+                <Button onPress={() => onPressAddPixel(item)}>記録する</Button>
+              </View>
             </View>
           )}
         />

@@ -6,6 +6,9 @@ import { StatusBar } from "expo-status-bar";
 import { type HeroUINativeConfig, HeroUINativeProvider } from "heroui-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+/**
+ * HeroUI Native の開発時設定。
+ */
 const config: HeroUINativeConfig = {
   devInfo: {
     // スタイリング指針の案内表示を無効化する
@@ -13,6 +16,9 @@ const config: HeroUINativeConfig = {
   },
 };
 
+/**
+ * アプリ全体で共有する React Query クライアント。
+ */
 const queryClient = new QueryClient();
 
 export default function Layout() {
