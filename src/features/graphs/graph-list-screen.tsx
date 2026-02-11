@@ -1,7 +1,15 @@
+import BottomSheet, {
+  BottomSheetBackdrop,
+  type BottomSheetBackdropProps,
+  BottomSheetTextInput,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Button } from "heroui-native";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
   Alert,
@@ -17,10 +25,15 @@ import {
   getGraphStats,
   getGraphs,
 } from "../../shared/api/graph";
+import { addPixel } from "../../shared/api/pixel";
 import {
   type AuthCredentials,
   loadAuthCredentials,
 } from "../../shared/storage/auth-storage";
+import {
+  type PixelAddFormValues,
+  pixelAddSchema,
+} from "../pixels/pixel-add-schema";
 
 /**
  * Home画面で利用する表示モード。
@@ -44,9 +57,28 @@ const graphThemeColorMap: Record<GraphDefinition["color"], string> = {
  */
 export const GraphListScreen = () => {
   const router = useRouter();
+  const bottomSheetRef = useRef<BottomSheet>(null);
   const [credentials, setCredentials] = useState<AuthCredentials | null>(null);
   const [authLoadError, setAuthLoadError] = useState<string | null>(null);
+  const [sheetMessage, setSheetMessage] = useState<string | null>(null);
+  const [selectedGraph, setSelectedGraph] = useState<GraphDefinition | null>(
+    null
+  );
   const [viewMode, setViewMode] = useState<GraphViewMode>("compact");
+  const snapPoints = useMemo(() => ["50%"], []);
+  const {
+    control,
+    formState: { errors: pixelFormErrors },
+    handleSubmit,
+    reset,
+    setError,
+  } = useForm<PixelAddFormValues>({
+    defaultValues: {
+      date: getTodayAsYyyyMmDd(),
+      quantity: "",
+    },
+    resolver: zodResolver(pixelAddSchema),
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -163,6 +195,50 @@ export const GraphListScreen = () => {
     },
   });
 
+  const addPixelMutation = useMutation({
+    mutationFn: (values: PixelAddFormValues) => {
+      if (!credentials) {
+        throw new Error("認証情報が見つかりません。再ログインしてください。");
+      }
+      if (!selectedGraph) {
+        throw new Error("対象グラフが未選択です。");
+      }
+      return addPixel({
+        date: values.date,
+        graphId: selectedGraph.id,
+        quantity: values.quantity,
+        token: credentials.token,
+        username: credentials.username,
+      });
+    },
+    onError: (error) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "記録追加に失敗しました。再度お試しください。";
+      setError("root", { message });
+      setSheetMessage(null);
+    },
+    onSuccess: async (response) => {
+      setSheetMessage(response.message);
+      await query.refetch();
+    },
+  });
+
+  /**
+   * Bottom Sheet のバックドロップを描画する。
+   */
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        {...props}
+      />
+    ),
+    []
+  );
+
   /**
    * グラフ一覧を再取得する。
    */
@@ -178,16 +254,23 @@ export const GraphListScreen = () => {
   };
 
   /**
-   * 記録追加画面へ遷移する。
+   * 記録追加のBottom Sheetを開く。
    */
   const onPressAddPixel = (graph: GraphDefinition) => {
-    router.push({
-      params: {
-        graphId: graph.id,
-        graphName: graph.name,
-      },
-      pathname: "/graphs/[graphId]/add",
+    setSelectedGraph(graph);
+    setSheetMessage(null);
+    reset({
+      date: getTodayAsYyyyMmDd(),
+      quantity: "",
     });
+    bottomSheetRef.current?.snapToIndex(0);
+  };
+
+  /**
+   * グラフ作成画面へ遷移する。
+   */
+  const onPressCreateGraph = () => {
+    router.push("/graphs/create");
   };
 
   /**
@@ -201,13 +284,6 @@ export const GraphListScreen = () => {
       },
       pathname: "/graphs/[graphId]/pixels",
     });
-  };
-
-  /**
-   * グラフ作成画面へ遷移する。
-   */
-  const onPressCreateGraph = () => {
-    router.push("/graphs/create");
   };
 
   /**
@@ -301,6 +377,30 @@ export const GraphListScreen = () => {
       return;
     }
     await Linking.openURL(url);
+  };
+
+  /**
+   * Bottom Sheet内の記録追加を実行する。
+   */
+  const onSubmitQuickAdd = handleSubmit((values) => {
+    addPixelMutation.mutate(values);
+  });
+
+  /**
+   * 選択中グラフの詳細入力画面へ遷移する。
+   */
+  const onPressDetailedInput = () => {
+    if (!selectedGraph) {
+      return;
+    }
+    router.push({
+      params: {
+        graphId: selectedGraph.id,
+        graphName: selectedGraph.name,
+      },
+      pathname: "/graphs/[graphId]/add",
+    });
+    bottomSheetRef.current?.close();
   };
 
   return (
@@ -440,6 +540,87 @@ export const GraphListScreen = () => {
           )}
         />
       ) : null}
+
+      <BottomSheet
+        backdropComponent={renderBackdrop}
+        enablePanDownToClose
+        index={-1}
+        onChange={(index) => {
+          if (index === -1) {
+            setSelectedGraph(null);
+            setSheetMessage(null);
+          }
+        }}
+        ref={bottomSheetRef}
+        snapPoints={snapPoints}
+      >
+        <BottomSheetView className="flex-1 gap-3 px-6 pt-4">
+          <Text className="font-semibold text-lg text-neutral-900">
+            {selectedGraph ? `${selectedGraph.name} に記録追加` : "記録追加"}
+          </Text>
+          <Text className="text-neutral-600">
+            日付と数量を入力して保存してください。
+          </Text>
+
+          <Text className="mt-2 text-neutral-800">日付 (yyyyMMdd)</Text>
+          <Controller
+            control={control}
+            name="date"
+            render={({ field: { onBlur, onChange, value } }) => (
+              <BottomSheetTextInput
+                className="rounded-xl border border-neutral-300 px-4 py-3 text-base"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                placeholder="20260211"
+                value={value}
+              />
+            )}
+          />
+          {pixelFormErrors.date?.message ? (
+            <Text className="text-red-600 text-sm">
+              {pixelFormErrors.date.message}
+            </Text>
+          ) : null}
+
+          <Text className="mt-1 text-neutral-800">数量</Text>
+          <Controller
+            control={control}
+            name="quantity"
+            render={({ field: { onBlur, onChange, value } }) => (
+              <BottomSheetTextInput
+                className="rounded-xl border border-neutral-300 px-4 py-3 text-base"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                placeholder="10"
+                value={value}
+              />
+            )}
+          />
+          {pixelFormErrors.quantity?.message ? (
+            <Text className="text-red-600 text-sm">
+              {pixelFormErrors.quantity.message}
+            </Text>
+          ) : null}
+          {pixelFormErrors.root?.message ? (
+            <Text className="text-red-600 text-sm">
+              {pixelFormErrors.root.message}
+            </Text>
+          ) : null}
+          {sheetMessage ? (
+            <Text className="text-green-700 text-sm">{sheetMessage}</Text>
+          ) : null}
+
+          <View className="mt-2 gap-2">
+            <Button
+              isDisabled={addPixelMutation.isPending}
+              onPress={onSubmitQuickAdd}
+            >
+              保存
+            </Button>
+            <Button onPress={onPressDetailedInput}>詳細入力へ</Button>
+          </View>
+        </BottomSheetView>
+      </BottomSheet>
     </View>
   );
 };
@@ -449,4 +630,15 @@ export const GraphListScreen = () => {
  */
 const buildPixelaGraphUrl = (username: string, graphId: string): string => {
   return `https://pixe.la/v1/users/${username}/graphs/${graphId}.html`;
+};
+
+/**
+ * 端末の現在日付を Pixela 指定の `yyyyMMdd` 形式へ変換する。
+ */
+const getTodayAsYyyyMmDd = (): string => {
+  const now = new Date();
+  const year = now.getFullYear().toString();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}${month}${day}`;
 };
