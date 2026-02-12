@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useEffect, useMemo, useState } from "react";
@@ -34,6 +34,12 @@ export const PixelAddScreen = () => {
   const graphId = typeof params.graphId === "string" ? params.graphId : "";
   const graphName =
     typeof params.graphName === "string" ? params.graphName : "";
+  const authQuery = useQuery({
+    queryFn: loadAuthCredentials,
+    queryKey: ["authCredentials"],
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const credentials = authQuery.data ?? null;
   const {
     control,
     formState: { errors },
@@ -57,8 +63,8 @@ export const PixelAddScreen = () => {
 
   const mutation = useMutation({
     mutationFn: async (values: PixelAddFormValues) => {
-      const credentials = await loadAuthCredentials();
-      if (!credentials) {
+      const currentCredentials = credentials ?? (await loadAuthCredentials());
+      if (!currentCredentials) {
         throw new Error(
           "接続情報が見つかりません。先に接続設定を行ってください。"
         );
@@ -71,8 +77,8 @@ export const PixelAddScreen = () => {
         date: values.date,
         graphId,
         quantity: values.quantity,
-        token: credentials.token,
-        username: credentials.username,
+        token: currentCredentials.token,
+        username: currentCredentials.username,
       });
     },
     onError: (error) => {

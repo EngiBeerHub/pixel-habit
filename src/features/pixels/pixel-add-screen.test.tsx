@@ -78,6 +78,9 @@ describe("PixelAddScreen", () => {
 
   test("shows validation error when quantity is empty", async () => {
     renderScreen();
+    await waitFor(() => {
+      expect(mockLoadAuthCredentials).toHaveBeenCalledTimes(1);
+    });
 
     fireEvent.press(screen.getByText("記録を追加"));
 
@@ -90,6 +93,9 @@ describe("PixelAddScreen", () => {
     mockAddPixel.mockRejectedValueOnce(new Error("追加失敗"));
 
     renderScreen();
+    await waitFor(() => {
+      expect(mockLoadAuthCredentials).toHaveBeenCalledTimes(1);
+    });
 
     fireEvent.changeText(screen.getByPlaceholderText("10"), "2");
     fireEvent.press(screen.getByText("記録を追加"));
@@ -98,9 +104,12 @@ describe("PixelAddScreen", () => {
   });
 
   test("shows auth error when credentials are missing", async () => {
-    mockLoadAuthCredentials.mockResolvedValueOnce(null);
+    mockLoadAuthCredentials.mockResolvedValue(null);
 
     renderScreen();
+    await waitFor(() => {
+      expect(mockLoadAuthCredentials).toHaveBeenCalledTimes(1);
+    });
 
     fireEvent.changeText(screen.getByPlaceholderText("10"), "2");
     fireEvent.press(screen.getByText("記録を追加"));
@@ -120,6 +129,9 @@ describe("PixelAddScreen", () => {
     };
 
     renderScreen();
+    await waitFor(() => {
+      expect(mockLoadAuthCredentials).toHaveBeenCalledTimes(1);
+    });
 
     fireEvent.changeText(screen.getByPlaceholderText("10"), "2");
     fireEvent.press(screen.getByText("記録を追加"));
@@ -133,6 +145,9 @@ describe("PixelAddScreen", () => {
 
   test("shows success message and calls addPixel", async () => {
     renderScreen();
+    await waitFor(() => {
+      expect(mockLoadAuthCredentials).toHaveBeenCalledTimes(1);
+    });
 
     fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
     fireEvent.press(screen.getByText("記録を追加"));
