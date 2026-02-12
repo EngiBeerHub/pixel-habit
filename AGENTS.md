@@ -24,10 +24,16 @@
   - Routes: Expo Router names (`index.tsx`, `_layout.tsx`, segment folders).
   - Shared modules/components: `PascalCase` for components, `camelCase` for utilities.
 
+## Expo Document
+- [llms.txt](https://docs.expo.dev/llms.txt): A list of all available documentation files
+- [llms-full.txt](https://docs.expo.dev/llms-full.txt): Complete documentation for Expo, including Expo Router, Expo Modules API, development process, and more
+- [llms-eas.txt](https://docs.expo.dev/llms-eas.txt): Complete documentation for the Expo Application Services (EAS)
+- [llms-sdk.txt](https://docs.expo.dev/llms-sdk.txt): Complete documentation for the latest Expo SDK
+
 ## UI Design Guidelines
 - Prefer using HeroUI Native.
 
-### Reference
+### Document
 
 #### HeroUI Native
 <!-- HEROUI-NATIVE-AGENTS-MD-START -->
