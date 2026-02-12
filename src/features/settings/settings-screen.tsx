@@ -1,6 +1,7 @@
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Button, Input } from "heroui-native";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Text } from "react-native";
 import { deleteUser, updateUserToken } from "../../shared/api/user";
 import { showAlert } from "../../shared/platform/app-alert";
@@ -24,36 +25,26 @@ import { SectionCard } from "../../shared/ui/section-card";
  */
 export const SettingsScreen = () => {
   const router = useRouter();
-  const [profileUrl, setProfileUrl] = useState<string>("https://pixe.la");
-  const [username, setUsername] = useState<string | null>(null);
-  const [currentToken, setCurrentToken] = useState<string | null>(null);
+  const [tokenOverride, setTokenOverride] = useState<string | null>(null);
   const [newToken, setNewToken] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
+  const authQuery = useQuery({
+    queryFn: loadAuthCredentials,
+    queryKey: ["authCredentials"],
+    staleTime: Number.POSITIVE_INFINITY,
+  });
 
-    const hydrateProfile = async () => {
-      const credentials = await loadAuthCredentials();
-      if (!isMounted) {
-        return;
-      }
-
-      if (credentials) {
-        setProfileUrl(`https://pixe.la/@${credentials.username}`);
-        setUsername(credentials.username);
-        setCurrentToken(credentials.token);
-      }
-    };
-
-    hydrateProfile();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const username = authQuery.data?.username ?? null;
+  const currentToken = tokenOverride ?? authQuery.data?.token ?? null;
+  const profileUrl = useMemo(() => {
+    if (!username) {
+      return "https://pixe.la";
+    }
+    return `https://pixe.la/@${username}`;
+  }, [username]);
 
   /**
    * 外部リンクを開く。開けない場合はエラーダイアログを表示する。
@@ -122,7 +113,7 @@ export const SettingsScreen = () => {
         token: normalizedToken,
         username,
       });
-      setCurrentToken(normalizedToken);
+      setTokenOverride(normalizedToken);
       setNewToken("");
       setMessage(response.message);
     } catch (error) {

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   act,
   fireEvent,
@@ -51,7 +52,7 @@ jest.mock("../../shared/storage/auth-storage", () => ({
 
 describe("SettingsScreen", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
     mockLoadAuthCredentials.mockResolvedValue({
       token: "token-1234",
       username: "demo-user",
@@ -78,10 +79,35 @@ describe("SettingsScreen", () => {
     await waitFor(() => {
       expect(mockLoadAuthCredentials).toHaveBeenCalledTimes(1);
     });
+    await act(async () => {
+      await Promise.resolve();
+    });
+  };
+
+  /**
+   * QueryClientProvider配下で画面を描画する。
+   */
+  const renderScreen = () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        mutations: {
+          gcTime: Number.POSITIVE_INFINITY,
+        },
+        queries: {
+          gcTime: Number.POSITIVE_INFINITY,
+          retry: false,
+        },
+      },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <SettingsScreen />
+      </QueryClientProvider>
+    );
   };
 
   test("shows validation error for short token", async () => {
-    render(<SettingsScreen />);
+    renderScreen();
     await waitForHydration();
 
     fireEvent.changeText(screen.getByPlaceholderText("new-token"), "short");
@@ -93,7 +119,7 @@ describe("SettingsScreen", () => {
   });
 
   test("updates token and stores credentials", async () => {
-    render(<SettingsScreen />);
+    renderScreen();
     await waitForHydration();
 
     fireEvent.changeText(
@@ -118,7 +144,7 @@ describe("SettingsScreen", () => {
   });
 
   test("logs out after confirmation", async () => {
-    render(<SettingsScreen />);
+    renderScreen();
     await waitForHydration();
 
     fireEvent.press(screen.getByTestId("settings-logout-button"));
@@ -143,7 +169,7 @@ describe("SettingsScreen", () => {
   test("shows auth missing error on token update", async () => {
     mockLoadAuthCredentials.mockResolvedValueOnce(null);
 
-    render(<SettingsScreen />);
+    renderScreen();
     await waitForHydration();
 
     fireEvent.changeText(
@@ -162,7 +188,7 @@ describe("SettingsScreen", () => {
   test("shows API error when token update fails", async () => {
     mockUpdateUserToken.mockRejectedValueOnce(new Error("トークン更新失敗"));
 
-    render(<SettingsScreen />);
+    renderScreen();
     await waitForHydration();
 
     fireEvent.changeText(
@@ -177,10 +203,14 @@ describe("SettingsScreen", () => {
   test("shows API error when delete user fails", async () => {
     mockDeleteUser.mockRejectedValueOnce(new Error("ユーザー削除失敗"));
 
-    render(<SettingsScreen />);
+    renderScreen();
     await waitForHydration();
 
-    fireEvent.press(screen.getByTestId("settings-delete-user-button"));
+    await waitFor(() => {
+      fireEvent.press(screen.getByTestId("settings-delete-user-button"));
+      expect(mockShowAlert).toHaveBeenCalled();
+    });
+
     const buttons = mockShowAlert.mock.calls[0]?.[2] as
       | AlertButton[]
       | undefined;
@@ -195,7 +225,7 @@ describe("SettingsScreen", () => {
   test("shows alert when external link cannot be opened", async () => {
     mockCanOpenExternalUrl.mockResolvedValueOnce(false);
 
-    render(<SettingsScreen />);
+    renderScreen();
     await waitForHydration();
 
     fireEvent.press(screen.getByText("ウェブサイト"));
