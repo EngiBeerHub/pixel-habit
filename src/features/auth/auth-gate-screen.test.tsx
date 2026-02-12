@@ -1,4 +1,6 @@
-import { render, waitFor } from "@testing-library/react-native";
+import { notifyManager } from "@tanstack/query-core";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, render, waitFor } from "@testing-library/react-native";
 import { AuthGateScreen } from "./auth-gate-screen";
 
 const mockReplace = jest.fn();
@@ -15,6 +17,36 @@ jest.mock("../../shared/storage/auth-storage", () => ({
 }));
 
 describe("AuthGateScreen", () => {
+  const renderScreen = () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          gcTime: Number.POSITIVE_INFINITY,
+          retry: false,
+        },
+      },
+    });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuthGateScreen />
+      </QueryClientProvider>
+    );
+  };
+
+  beforeAll(() => {
+    notifyManager.setNotifyFunction((callback) => {
+      act(() => {
+        callback();
+      });
+    });
+  });
+
+  afterAll(() => {
+    notifyManager.setNotifyFunction((callback) => {
+      callback();
+    });
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -25,7 +57,7 @@ describe("AuthGateScreen", () => {
       username: "demo-user",
     });
 
-    render(<AuthGateScreen />);
+    renderScreen();
 
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith("/(tabs)/home");
@@ -35,7 +67,7 @@ describe("AuthGateScreen", () => {
   test("redirects to auth hub when credentials are missing", async () => {
     mockLoadAuthCredentials.mockResolvedValue(null);
 
-    render(<AuthGateScreen />);
+    renderScreen();
 
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith("/auth");
@@ -45,7 +77,7 @@ describe("AuthGateScreen", () => {
   test("redirects to auth hub when credentials loading throws", async () => {
     mockLoadAuthCredentials.mockRejectedValueOnce(new Error("load failed"));
 
-    render(<AuthGateScreen />);
+    renderScreen();
 
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith("/auth");

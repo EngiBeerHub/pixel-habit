@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
@@ -8,37 +9,26 @@ import { loadAuthCredentials } from "../../shared/storage/auth-storage";
  */
 export const AuthGateScreen = () => {
   const router = useRouter();
+  const authQuery = useQuery({
+    queryFn: loadAuthCredentials,
+    queryKey: ["authCredentials"],
+    retry: false,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
 
   useEffect(() => {
-    let isMounted = true;
-
-    const resolveInitialRoute = async () => {
-      try {
-        const credentials = await loadAuthCredentials();
-        if (!isMounted) {
-          return;
-        }
-
-        if (credentials) {
-          router.replace("/(tabs)/home");
-          return;
-        }
-
-        router.replace("/auth");
-      } catch {
-        if (!isMounted) {
-          return;
-        }
-        router.replace("/auth");
+    if (authQuery.isError) {
+      router.replace("/auth");
+      return;
+    }
+    if (authQuery.isSuccess) {
+      if (authQuery.data) {
+        router.replace("/(tabs)/home");
+        return;
       }
-    };
-
-    resolveInitialRoute();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [router]);
+      router.replace("/auth");
+    }
+  }, [authQuery.data, authQuery.isError, authQuery.isSuccess, router]);
 
   return (
     <View className="flex-1 items-center justify-center bg-white px-6">
