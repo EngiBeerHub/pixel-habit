@@ -13,17 +13,24 @@ export const AuthGateScreen = () => {
     let isMounted = true;
 
     const resolveInitialRoute = async () => {
-      const credentials = await loadAuthCredentials();
-      if (!isMounted) {
-        return;
-      }
+      try {
+        const credentials = await loadAuthCredentials();
+        if (!isMounted) {
+          return;
+        }
 
-      if (credentials) {
-        router.replace("/(tabs)/home");
-        return;
-      }
+        if (credentials) {
+          router.replace("/(tabs)/home");
+          return;
+        }
 
-      router.replace("/auth");
+        router.replace("/auth");
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+        router.replace("/auth");
+      }
     };
 
     resolveInitialRoute();

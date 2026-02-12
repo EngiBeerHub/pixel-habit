@@ -58,6 +58,28 @@ describe("AuthSignUpScreen", () => {
     expect(await screen.findByText("作成に失敗しました")).toBeTruthy();
   });
 
+  test("shows fallback error when sign up rejects non-Error", async () => {
+    mockMutateAsync.mockRejectedValueOnce("unknown error");
+
+    render(<AuthSignUpScreen />);
+
+    fireEvent.changeText(
+      screen.getByPlaceholderText("your-username"),
+      "demo-user"
+    );
+    fireEvent.changeText(
+      screen.getByPlaceholderText("pixela-token"),
+      "12345678"
+    );
+    fireEvent.press(screen.getByText("作成して開始"));
+
+    expect(
+      await screen.findByText(
+        "アカウント作成に失敗しました。再度お試しください。"
+      )
+    ).toBeTruthy();
+  });
+
   test("navigates to home on success", async () => {
     mockMutateAsync.mockResolvedValueOnce({
       token: "12345678",

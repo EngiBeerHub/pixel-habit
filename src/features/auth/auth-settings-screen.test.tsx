@@ -8,6 +8,7 @@ import { AuthSettingsScreen } from "./auth-settings-screen";
 
 const mockReplace = jest.fn();
 const mockMutateAsync = jest.fn();
+const mockLoadAuthCredentials = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -16,7 +17,7 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("../../shared/storage/auth-storage", () => ({
-  loadAuthCredentials: jest.fn(async () => null),
+  loadAuthCredentials: (...args: unknown[]) => mockLoadAuthCredentials(...args),
 }));
 
 jest.mock("./use-sign-in", () => ({
@@ -29,6 +30,7 @@ jest.mock("./use-sign-in", () => ({
 describe("AuthSettingsScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockLoadAuthCredentials.mockResolvedValue(null);
   });
 
   test("shows validation errors when required fields are empty", async () => {
@@ -62,6 +64,39 @@ describe("AuthSettingsScreen", () => {
     fireEvent.press(loginButtons[0]);
 
     expect(await screen.findByText("認証に失敗しました")).toBeTruthy();
+  });
+
+  test("shows fallback error when sign in rejects non-Error", async () => {
+    mockMutateAsync.mockRejectedValueOnce("unknown error");
+
+    render(<AuthSettingsScreen />);
+
+    fireEvent.changeText(
+      screen.getByPlaceholderText("your-username"),
+      "demo-user"
+    );
+    fireEvent.changeText(
+      screen.getByPlaceholderText("pixela-token"),
+      "12345678"
+    );
+    const loginButtons = screen.getAllByRole("button", { name: "ログイン" });
+    fireEvent.press(loginButtons[0]);
+
+    expect(
+      await screen.findByText(
+        "ログインに失敗しました。username/tokenを確認して再度お試しください。"
+      )
+    ).toBeTruthy();
+  });
+
+  test("shows load error when credentials hydration fails", async () => {
+    mockLoadAuthCredentials.mockRejectedValueOnce(new Error("load failed"));
+
+    render(<AuthSettingsScreen />);
+
+    expect(
+      await screen.findByText("保存済みの接続情報を読み込めませんでした。")
+    ).toBeTruthy();
   });
 
   test("navigates to home on successful sign in", async () => {

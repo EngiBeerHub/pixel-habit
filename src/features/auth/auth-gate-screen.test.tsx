@@ -41,4 +41,14 @@ describe("AuthGateScreen", () => {
       expect(mockReplace).toHaveBeenCalledWith("/auth");
     });
   });
+
+  test("redirects to auth hub when credentials loading throws", async () => {
+    mockLoadAuthCredentials.mockRejectedValueOnce(new Error("load failed"));
+
+    render(<AuthGateScreen />);
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/auth");
+    });
+  });
 });
