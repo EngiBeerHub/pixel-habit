@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useState } from "react";
@@ -23,6 +23,12 @@ export const GraphCreateScreen = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const authQuery = useQuery({
+    queryFn: loadAuthCredentials,
+    queryKey: ["authCredentials"],
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const credentials = authQuery.data ?? null;
   const {
     control,
     formState: { errors },
@@ -42,8 +48,8 @@ export const GraphCreateScreen = () => {
 
   const mutation = useMutation({
     mutationFn: async (values: GraphCreateFormValues) => {
-      const credentials = await loadAuthCredentials();
-      if (!credentials) {
+      const currentCredentials = credentials ?? (await loadAuthCredentials());
+      if (!currentCredentials) {
         throw new Error("認証情報が見つかりません。再ログインしてください。");
       }
 
@@ -52,10 +58,10 @@ export const GraphCreateScreen = () => {
         id: values.id.trim(),
         name: values.name.trim(),
         timezone: values.timezone.trim(),
-        token: credentials.token,
+        token: currentCredentials.token,
         type: values.type,
         unit: values.unit.trim(),
-        username: credentials.username,
+        username: currentCredentials.username,
       });
     },
     onError: (error) => {
