@@ -1,4 +1,7 @@
+import { notifyManager } from "@tanstack/query-core";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -8,11 +11,16 @@ import { AuthSignUpScreen } from "./auth-sign-up-screen";
 
 const mockReplace = jest.fn();
 const mockMutateAsync = jest.fn();
+const mockLoadAuthCredentials = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
     replace: mockReplace,
   }),
+}));
+
+jest.mock("../../shared/storage/auth-storage", () => ({
+  loadAuthCredentials: (...args: unknown[]) => mockLoadAuthCredentials(...args),
 }));
 
 jest.mock("./use-sign-up", () => ({
@@ -23,12 +31,50 @@ jest.mock("./use-sign-up", () => ({
 }));
 
 describe("AuthSignUpScreen", () => {
+  /**
+   * QueryClientProvider配下で画面を描画する。
+   */
+  const renderScreen = () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        mutations: {
+          gcTime: Number.POSITIVE_INFINITY,
+        },
+        queries: {
+          gcTime: Number.POSITIVE_INFINITY,
+          retry: false,
+        },
+      },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuthSignUpScreen />
+      </QueryClientProvider>
+    );
+  };
+
+  beforeAll(() => {
+    notifyManager.setNotifyFunction((callback) => {
+      act(() => {
+        callback();
+      });
+    });
+  });
+
+  afterAll(() => {
+    notifyManager.setNotifyFunction((callback) => {
+      callback();
+    });
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
+    mockLoadAuthCredentials.mockResolvedValue(null);
   });
 
   test("shows validation errors for empty fields", async () => {
-    render(<AuthSignUpScreen />);
+    renderScreen();
 
     fireEvent.press(screen.getByText("作成して開始"));
 
@@ -43,7 +89,7 @@ describe("AuthSignUpScreen", () => {
   test("shows API error message", async () => {
     mockMutateAsync.mockRejectedValueOnce(new Error("作成に失敗しました"));
 
-    render(<AuthSignUpScreen />);
+    renderScreen();
 
     fireEvent.changeText(
       screen.getByPlaceholderText("your-username"),
@@ -61,7 +107,7 @@ describe("AuthSignUpScreen", () => {
   test("shows fallback error when sign up rejects non-Error", async () => {
     mockMutateAsync.mockRejectedValueOnce("unknown error");
 
-    render(<AuthSignUpScreen />);
+    renderScreen();
 
     fireEvent.changeText(
       screen.getByPlaceholderText("your-username"),
@@ -86,7 +132,7 @@ describe("AuthSignUpScreen", () => {
       username: "demo-user",
     });
 
-    render(<AuthSignUpScreen />);
+    renderScreen();
 
     fireEvent.changeText(
       screen.getByPlaceholderText("your-username"),
@@ -97,6 +143,19 @@ describe("AuthSignUpScreen", () => {
       "12345678"
     );
     fireEvent.press(screen.getByText("作成して開始"));
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/(tabs)/home");
+    });
+  });
+
+  test("redirects to home when credentials already exist", async () => {
+    mockLoadAuthCredentials.mockResolvedValueOnce({
+      token: "token-1234",
+      username: "demo-user",
+    });
+
+    renderScreen();
 
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith("/(tabs)/home");

@@ -52,6 +52,14 @@
 - アプリ全体の軽量状態（例: auth context）: React Context
 - Contextで辛くなったら必要箇所に限定して Zustand を導入
 
+## 認証情報読み込みルール
+
+- 画面初期化時の認証情報読み込みは `useQuery(loadAuthCredentials)` を基本とする
+- `useEffect + setState` での手動hydrateは新規実装しない
+- mutation内で認証情報が必要な場合は、`authQuery.data` を優先し、未取得時のみ `loadAuthCredentials()` でフォールバックする
+- query key は `["authCredentials"]` で統一する
+- 既ログイン時に表示不要な認証画面は `authQuery.isSuccess && authQuery.data` を条件に Home へリダイレクトする
+
 ## Screen Development Rules
 
 - 1画面あたり:
