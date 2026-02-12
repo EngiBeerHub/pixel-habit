@@ -5,13 +5,8 @@ import { Button } from "heroui-native";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ScrollView, Text, TextInput, View } from "react-native";
-import {
-  createGraph,
-  graphColorOptions,
-  graphTypeOptions,
-} from "../../shared/api/graph";
-import { useAuthSession } from "../../shared/auth/use-auth-session";
-import { loadAuthCredentials } from "../../shared/storage/auth-storage";
+import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
+import { graphColorOptions, graphTypeOptions } from "../../shared/api/graph";
 import {
   type GraphCreateFormValues,
   graphCreateSchema,
@@ -24,7 +19,7 @@ export const GraphCreateScreen = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const { credentials } = useAuthSession();
+  const api = useAuthedPixelaApi();
   const {
     control,
     formState: { errors },
@@ -43,21 +38,14 @@ export const GraphCreateScreen = () => {
   });
 
   const mutation = useMutation({
-    mutationFn: async (values: GraphCreateFormValues) => {
-      const currentCredentials = credentials ?? (await loadAuthCredentials());
-      if (!currentCredentials) {
-        throw new Error("認証情報が見つかりません。再ログインしてください。");
-      }
-
-      return createGraph({
+    mutationFn: (values: GraphCreateFormValues) => {
+      return api.createGraph({
         color: values.color,
         id: values.id.trim(),
         name: values.name.trim(),
         timezone: values.timezone.trim(),
-        token: currentCredentials.token,
         type: values.type,
         unit: values.unit.trim(),
-        username: currentCredentials.username,
       });
     },
     onError: (error) => {

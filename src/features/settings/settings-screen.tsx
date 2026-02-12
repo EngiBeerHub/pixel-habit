@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { Button, Input } from "heroui-native";
 import { useMemo, useState } from "react";
 import { Text } from "react-native";
-import { deleteUser, updateUserToken } from "../../shared/api/user";
+import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
 import { showAlert } from "../../shared/platform/app-alert";
 import {
@@ -21,6 +21,7 @@ import { SectionCard } from "../../shared/ui/section-card";
 export const SettingsScreen = () => {
   const router = useRouter();
   const { clearAuthSession, credentials, setAuthSession } = useAuthSession();
+  const api = useAuthedPixelaApi();
   const [tokenOverride, setTokenOverride] = useState<string | null>(null);
   const [newToken, setNewToken] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -94,10 +95,8 @@ export const SettingsScreen = () => {
       setIsSubmitting(true);
       setErrorMessage(null);
       setMessage(null);
-      const response = await updateUserToken({
+      const response = await api.updateUserToken({
         newToken: normalizedToken,
-        token: currentToken,
-        username,
       });
       await setAuthSession({
         token: normalizedToken,
@@ -136,7 +135,7 @@ export const SettingsScreen = () => {
         },
         {
           onPress: async () => {
-            await onConfirmDeleteUser(username, currentToken);
+            await onConfirmDeleteUser();
           },
           style: "destructive",
           text: "削除する",
@@ -148,18 +147,12 @@ export const SettingsScreen = () => {
   /**
    * ユーザー削除APIを実行し、成功時は認証画面へ遷移する。
    */
-  const onConfirmDeleteUser = async (
-    currentUsername: string,
-    token: string
-  ) => {
+  const onConfirmDeleteUser = async () => {
     try {
       setIsSubmitting(true);
       setErrorMessage(null);
       setMessage(null);
-      await deleteUser({
-        token,
-        username: currentUsername,
-      });
+      await api.deleteUser();
       await clearAuthSession();
       router.replace("/auth");
     } catch (error) {

@@ -5,12 +5,11 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react-native";
-import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { PixelAddScreen } from "./pixel-add-screen";
 
 const mockBack = jest.fn();
 const mockAddPixel = jest.fn();
-const mockLoadAuthCredentials = jest.fn();
+const mockUseAuthedPixelaApi = jest.fn();
 let mockRouteParams: {
   date?: string;
   graphId?: string;
@@ -28,18 +27,9 @@ jest.mock("expo-router", () => ({
   }),
 }));
 
-jest.mock("../../shared/api/pixel", () => ({
-  addPixel: (...args: unknown[]) => mockAddPixel(...args),
+jest.mock("../../shared/api/authed-pixela-api", () => ({
+  useAuthedPixelaApi: (...args: unknown[]) => mockUseAuthedPixelaApi(...args),
 }));
-
-jest.mock("../../shared/storage/auth-storage", () => ({
-  loadAuthCredentials: (...args: unknown[]) => mockLoadAuthCredentials(...args),
-}));
-
-const credentials = {
-  token: "token-1234",
-  username: "demo-user",
-};
 
 const renderScreen = () => {
   const queryClient = new QueryClient({
@@ -56,9 +46,7 @@ const renderScreen = () => {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <AuthSessionProvider>
-        <PixelAddScreen />
-      </AuthSessionProvider>
+      <PixelAddScreen />
     </QueryClientProvider>
   );
 };
@@ -66,10 +54,12 @@ const renderScreen = () => {
 describe("PixelAddScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockLoadAuthCredentials.mockResolvedValue(credentials);
     mockAddPixel.mockResolvedValue({
       isSuccess: true,
       message: "追加成功",
+    });
+    mockUseAuthedPixelaApi.mockReturnValue({
+      addPixel: (...args: unknown[]) => mockAddPixel(...args),
     });
     mockRouteParams = {
       date: "20260108",
@@ -81,9 +71,6 @@ describe("PixelAddScreen", () => {
 
   test("shows validation error when quantity is empty", async () => {
     renderScreen();
-    await waitFor(() => {
-      expect(mockLoadAuthCredentials).toHaveBeenCalledTimes(1);
-    });
 
     fireEvent.press(screen.getByText("記録を追加"));
 
@@ -96,9 +83,6 @@ describe("PixelAddScreen", () => {
     mockAddPixel.mockRejectedValueOnce(new Error("追加失敗"));
 
     renderScreen();
-    await waitFor(() => {
-      expect(mockLoadAuthCredentials).toHaveBeenCalledTimes(1);
-    });
 
     fireEvent.changeText(screen.getByPlaceholderText("10"), "2");
     fireEvent.press(screen.getByText("記録を追加"));
@@ -107,19 +91,18 @@ describe("PixelAddScreen", () => {
   });
 
   test("shows auth error when credentials are missing", async () => {
-    mockLoadAuthCredentials.mockResolvedValue(null);
+    mockAddPixel.mockRejectedValueOnce(
+      new Error("認証情報が見つかりません。再ログインしてください。")
+    );
 
     renderScreen();
-    await waitFor(() => {
-      expect(mockLoadAuthCredentials).toHaveBeenCalledTimes(1);
-    });
 
     fireEvent.changeText(screen.getByPlaceholderText("10"), "2");
     fireEvent.press(screen.getByText("記録を追加"));
 
     expect(
       await screen.findByText(
-        "接続情報が見つかりません。先に接続設定を行ってください。"
+        "認証情報が見つかりません。再ログインしてください。"
       )
     ).toBeTruthy();
   });
@@ -132,9 +115,6 @@ describe("PixelAddScreen", () => {
     };
 
     renderScreen();
-    await waitFor(() => {
-      expect(mockLoadAuthCredentials).toHaveBeenCalledTimes(1);
-    });
 
     fireEvent.changeText(screen.getByPlaceholderText("10"), "2");
     fireEvent.press(screen.getByText("記録を追加"));
@@ -148,9 +128,6 @@ describe("PixelAddScreen", () => {
 
   test("shows success message and calls addPixel", async () => {
     renderScreen();
-    await waitFor(() => {
-      expect(mockLoadAuthCredentials).toHaveBeenCalledTimes(1);
-    });
 
     fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
     fireEvent.press(screen.getByText("記録を追加"));
@@ -160,8 +137,6 @@ describe("PixelAddScreen", () => {
         date: "20260108",
         graphId: "sleep",
         quantity: "3",
-        token: "token-1234",
-        username: "demo-user",
       });
     });
 

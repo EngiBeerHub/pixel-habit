@@ -17,13 +17,8 @@ import {
   Text,
   View,
 } from "react-native";
-import {
-  deleteGraph,
-  type GraphDefinition,
-  getGraphStats,
-  getGraphs,
-} from "../../shared/api/graph";
-import { addPixel } from "../../shared/api/pixel";
+import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
+import type { GraphDefinition } from "../../shared/api/graph";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
 import {
   getTodayAsYyyyMmDd,
@@ -84,6 +79,7 @@ export const GraphListScreen = () => {
   }, []);
 
   const { credentials, hasLoadError, status } = useAuthSession();
+  const api = useAuthedPixelaApi();
 
   useEffect(() => {
     if (status === "anonymous" && !credentials) {
@@ -92,14 +88,9 @@ export const GraphListScreen = () => {
   }, [credentials, router, status]);
 
   const query = useQuery({
-    enabled: Boolean(credentials) && status !== "loading",
-    queryFn: () => {
-      if (!credentials) {
-        return [];
-      }
-      return getGraphs(credentials);
-    },
-    queryKey: ["graphs", credentials?.username],
+    enabled: api.isAuthenticated && status !== "loading",
+    queryFn: api.getGraphs,
+    queryKey: ["graphs", api.username],
   });
 
   const errorMessage = useMemo(() => {
@@ -119,15 +110,8 @@ export const GraphListScreen = () => {
   }, [credentials, hasLoadError, query.error, status]);
 
   const statsMutation = useMutation({
-    mutationFn: (graph: GraphDefinition) => {
-      if (!credentials) {
-        throw new Error("認証情報が見つかりません。再ログインしてください。");
-      }
-      return getGraphStats({
-        graphId: graph.id,
-        username: credentials.username,
-      });
-    },
+    mutationFn: (graph: GraphDefinition) =>
+      api.getGraphStats({ graphId: graph.id }),
     onError: (error) => {
       const message =
         error instanceof Error
@@ -159,16 +143,8 @@ export const GraphListScreen = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (graph: GraphDefinition) => {
-      if (!credentials) {
-        throw new Error("認証情報が見つかりません。再ログインしてください。");
-      }
-      return deleteGraph({
-        graphId: graph.id,
-        token: credentials.token,
-        username: credentials.username,
-      });
-    },
+    mutationFn: (graph: GraphDefinition) =>
+      api.deleteGraph({ graphId: graph.id }),
     onError: (error) => {
       const message =
         error instanceof Error
@@ -179,9 +155,9 @@ export const GraphListScreen = () => {
     onSuccess: async (response) => {
       showAlert("削除完了", response.message);
       await query.refetch();
-      if (credentials) {
+      if (api.username) {
         await queryClient.invalidateQueries({
-          queryKey: ["graphPixelsCompact", credentials.username],
+          queryKey: ["graphPixelsCompact", api.username],
         });
       }
     },
@@ -203,18 +179,13 @@ export const GraphListScreen = () => {
 
   const addPixelMutation = useMutation({
     mutationFn: (values: PixelAddFormValues) => {
-      if (!credentials) {
-        throw new Error("認証情報が見つかりません。再ログインしてください。");
-      }
       if (!selectedGraph) {
         throw new Error("対象グラフが未選択です。");
       }
-      return addPixel({
+      return api.addPixel({
         date: values.date,
         graphId: selectedGraph.id,
         quantity: values.quantity,
-        token: credentials.token,
-        username: credentials.username,
       });
     },
     onError: (error) => {
@@ -228,9 +199,9 @@ export const GraphListScreen = () => {
     onSuccess: async (response) => {
       setSheetMessage(response.message);
       await query.refetch();
-      if (credentials) {
+      if (api.username) {
         await queryClient.invalidateQueries({
-          queryKey: ["graphPixelsCompact", credentials.username],
+          queryKey: ["graphPixelsCompact", api.username],
         });
       }
       bottomSheetRef.current?.close();
@@ -264,9 +235,9 @@ export const GraphListScreen = () => {
    */
   const onRefresh = async () => {
     await query.refetch();
-    if (credentials) {
+    if (api.username) {
       await queryClient.refetchQueries({
-        queryKey: ["graphPixelsCompact", credentials.username],
+        queryKey: ["graphPixelsCompact", api.username],
         type: "active",
       });
     }
@@ -386,10 +357,10 @@ export const GraphListScreen = () => {
    * Full表示用のPixelaグラフURLを開く。
    */
   const onPressOpenFullView = async (graphId: string) => {
-    if (!credentials) {
+    if (!api.username) {
       return;
     }
-    const url = buildPixelaGraphUrl(credentials.username, graphId);
+    const url = buildPixelaGraphUrl(api.username, graphId);
     const canOpen = await canOpenExternalUrl(url);
     if (!canOpen) {
       showAlert("エラー", "グラフURLを開けませんでした。");
@@ -510,9 +481,8 @@ export const GraphListScreen = () => {
           }
           removeClippedSubviews={false}
           renderItem={({ item }) =>
-            credentials ? (
+            api.isAuthenticated ? (
               <GraphCard
-                credentials={credentials}
                 graph={item}
                 isActionDisabled={
                   statsMutation.isPending || deleteMutation.isPending

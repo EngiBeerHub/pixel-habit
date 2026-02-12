@@ -5,13 +5,8 @@ import { Button } from "heroui-native";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ScrollView, Text, TextInput, View } from "react-native";
-import {
-  type GraphColor,
-  graphColorOptions,
-  updateGraph,
-} from "../../shared/api/graph";
-import { useAuthSession } from "../../shared/auth/use-auth-session";
-import { loadAuthCredentials } from "../../shared/storage/auth-storage";
+import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
+import { type GraphColor, graphColorOptions } from "../../shared/api/graph";
 import { type GraphEditFormValues, graphEditSchema } from "./graph-edit-schema";
 
 /**
@@ -35,7 +30,7 @@ export const GraphEditScreen = () => {
     typeof params.timezone === "string" ? params.timezone : "Asia/Tokyo";
   const initialUnit = typeof params.unit === "string" ? params.unit : "";
   const initialColor = toGraphColor(params.color);
-  const { credentials } = useAuthSession();
+  const api = useAuthedPixelaApi();
   const graphIdError = useMemo(() => {
     if (graphId) {
       return null;
@@ -59,23 +54,17 @@ export const GraphEditScreen = () => {
   });
 
   const mutation = useMutation({
-    mutationFn: async (values: GraphEditFormValues) => {
-      const currentCredentials = credentials ?? (await loadAuthCredentials());
-      if (!currentCredentials) {
-        throw new Error("認証情報が見つかりません。再ログインしてください。");
-      }
+    mutationFn: (values: GraphEditFormValues) => {
       if (!graphId) {
         throw new Error("グラフIDが不正です。Home画面からやり直してください。");
       }
 
-      return updateGraph({
+      return api.updateGraph({
         color: values.color,
         graphId,
         name: values.name.trim(),
         timezone: values.timezone.trim(),
-        token: currentCredentials.token,
         unit: values.unit.trim(),
-        username: currentCredentials.username,
       });
     },
     onError: (error) => {

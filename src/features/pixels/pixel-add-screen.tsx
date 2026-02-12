@@ -5,13 +5,11 @@ import { Button } from "heroui-native";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, TextInput, View } from "react-native";
-import { addPixel } from "../../shared/api/pixel";
-import { useAuthSession } from "../../shared/auth/use-auth-session";
+import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import {
   getTodayAsYyyyMmDd,
   normalizeYyyyMmDdInput,
 } from "../../shared/lib/date";
-import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 import { type PixelAddFormValues, pixelAddSchema } from "./pixel-add-schema";
 
 /**
@@ -35,7 +33,7 @@ export const PixelAddScreen = () => {
   const graphId = typeof params.graphId === "string" ? params.graphId : "";
   const graphName =
     typeof params.graphName === "string" ? params.graphName : "";
-  const { credentials } = useAuthSession();
+  const api = useAuthedPixelaApi();
   const {
     control,
     formState: { errors },
@@ -58,23 +56,15 @@ export const PixelAddScreen = () => {
   }, [defaultDate, defaultQuantity, reset]);
 
   const mutation = useMutation({
-    mutationFn: async (values: PixelAddFormValues) => {
-      const currentCredentials = credentials ?? (await loadAuthCredentials());
-      if (!currentCredentials) {
-        throw new Error(
-          "接続情報が見つかりません。先に接続設定を行ってください。"
-        );
-      }
+    mutationFn: (values: PixelAddFormValues) => {
       if (!graphId) {
         throw new Error("グラフIDが不正です。一覧画面からやり直してください。");
       }
 
-      return addPixel({
+      return api.addPixel({
         date: values.date,
         graphId,
         quantity: values.quantity,
-        token: currentCredentials.token,
-        username: currentCredentials.username,
       });
     },
     onError: (error) => {

@@ -1,13 +1,17 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
 import type { GraphDefinition } from "../../../shared/api/graph";
-import type { AuthCredentials } from "../../../shared/storage/auth-storage";
 import { GraphCard } from "./graph-card";
 
 const mockUseQuery = jest.fn();
 const mockRefetch = jest.fn();
+const mockUseAuthedPixelaApi = jest.fn();
 
 jest.mock("@tanstack/react-query", () => ({
   useQuery: (...args: unknown[]) => mockUseQuery(...args),
+}));
+
+jest.mock("../../../shared/api/authed-pixela-api", () => ({
+  useAuthedPixelaApi: (...args: unknown[]) => mockUseAuthedPixelaApi(...args),
 }));
 
 jest.mock("./compact-heatmap", () => ({
@@ -17,11 +21,6 @@ jest.mock("./compact-heatmap", () => ({
   },
   getCompactHeatmapDateRange: () => ({ from: "20251005", to: "20260108" }),
 }));
-
-const credentials: AuthCredentials = {
-  token: "token",
-  username: "user",
-};
 
 const graph: GraphDefinition = {
   color: "sora",
@@ -33,7 +32,6 @@ const graph: GraphDefinition = {
 };
 
 const buildProps = () => ({
-  credentials,
   graph,
   isActionDisabled: false,
   onPressAddPixel: jest.fn(),
@@ -45,6 +43,11 @@ const buildProps = () => ({
 describe("GraphCard", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseAuthedPixelaApi.mockReturnValue({
+      getPixels: jest.fn(),
+      isAuthenticated: true,
+      username: "user",
+    });
     mockUseQuery.mockReturnValue({
       data: [],
       error: null,

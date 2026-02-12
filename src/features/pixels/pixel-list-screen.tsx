@@ -9,7 +9,8 @@ import {
   Text,
   View,
 } from "react-native";
-import { getPixels, type Pixel } from "../../shared/api/pixel";
+import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
+import type { Pixel } from "../../shared/api/pixel";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
 
 /**
@@ -25,17 +26,16 @@ export const PixelListScreen = () => {
   const graphName =
     typeof params.graphName === "string" ? params.graphName : "";
   const { credentials, hasLoadError, status } = useAuthSession();
+  const api = useAuthedPixelaApi();
 
   const query = useQuery({
-    enabled: Boolean(credentials && graphId) && status !== "loading",
+    enabled: Boolean(api.isAuthenticated && graphId) && status !== "loading",
     queryFn: () => {
-      if (!(credentials && graphId)) {
+      if (!graphId) {
         return [];
       }
-      return getPixels({
+      return api.getPixels({
         graphId,
-        token: credentials.token,
-        username: credentials.username,
       });
     },
     queryKey: ["pixels", graphId],

@@ -1,10 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "heroui-native";
 import { Text, View } from "react-native";
+import { useAuthedPixelaApi } from "../../../shared/api/authed-pixela-api";
 import type { GraphDefinition } from "../../../shared/api/graph";
-import { getPixels } from "../../../shared/api/pixel";
 import { getGraphThemeColor } from "../../../shared/lib/graph-theme";
-import type { AuthCredentials } from "../../../shared/storage/auth-storage";
 import { ActionStack } from "../../../shared/ui/action-stack";
 import { InlineMessage } from "../../../shared/ui/inline-message";
 import { SectionCard } from "../../../shared/ui/section-card";
@@ -16,7 +15,6 @@ const COMPACT_HEATMAP_WEEKS = 14;
  * グラフカード描画に必要な入力値。
  */
 export interface GraphCardProps {
-  credentials: AuthCredentials;
   graph: GraphDefinition;
   isActionDisabled: boolean;
   onPressAddPixel: (graph: GraphDefinition) => void;
@@ -30,7 +28,6 @@ export interface GraphCardProps {
  * グラフ1件分のカードを描画し、Compact時はカード単位でヒートマップを取得する。
  */
 export const GraphCard = ({
-  credentials,
   graph,
   isActionDisabled,
   onPressAddPixel,
@@ -39,22 +36,21 @@ export const GraphCard = ({
   onPressOpenPixels,
   viewMode,
 }: GraphCardProps) => {
+  const api = useAuthedPixelaApi();
   const compactHeatmapRange = getCompactHeatmapDateRange(COMPACT_HEATMAP_WEEKS);
 
   const pixelQuery = useQuery({
-    enabled: viewMode === "compact",
+    enabled: viewMode === "compact" && api.isAuthenticated,
     queryFn: () => {
-      return getPixels({
+      return api.getPixels({
         from: compactHeatmapRange.from,
         graphId: graph.id,
-        token: credentials.token,
         to: compactHeatmapRange.to,
-        username: credentials.username,
       });
     },
     queryKey: [
       "graphPixelsCompact",
-      credentials.username,
+      api.username,
       graph.id,
       compactHeatmapRange.from,
       compactHeatmapRange.to,

@@ -7,12 +7,11 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react-native";
-import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { GraphEditScreen } from "./graph-edit-screen";
 
 const mockBack = jest.fn();
 const mockUpdateGraph = jest.fn();
-const mockLoadAuthCredentials = jest.fn();
+const mockUseAuthedPixelaApi = jest.fn();
 let mockRouteParams: {
   color?: string;
   graphId?: string;
@@ -36,17 +35,11 @@ jest.mock("expo-router", () => ({
 
 jest.mock("../../shared/api/graph", () => ({
   graphColorOptions: ["shibafu", "sora"],
-  updateGraph: (...args: unknown[]) => mockUpdateGraph(...args),
 }));
 
-jest.mock("../../shared/storage/auth-storage", () => ({
-  loadAuthCredentials: (...args: unknown[]) => mockLoadAuthCredentials(...args),
+jest.mock("../../shared/api/authed-pixela-api", () => ({
+  useAuthedPixelaApi: (...args: unknown[]) => mockUseAuthedPixelaApi(...args),
 }));
-
-const credentials = {
-  token: "token-1234",
-  username: "demo-user",
-};
 
 const renderScreen = () => {
   const queryClient = new QueryClient({
@@ -63,9 +56,7 @@ const renderScreen = () => {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <AuthSessionProvider>
-        <GraphEditScreen />
-      </AuthSessionProvider>
+      <GraphEditScreen />
     </QueryClientProvider>
   );
 };
@@ -87,10 +78,12 @@ describe("GraphEditScreen", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockLoadAuthCredentials.mockResolvedValue(credentials);
     mockUpdateGraph.mockResolvedValue({
       isSuccess: true,
       message: "更新成功",
+    });
+    mockUseAuthedPixelaApi.mockReturnValue({
+      updateGraph: (...args: unknown[]) => mockUpdateGraph(...args),
     });
     mockRouteParams = {
       color: "sora",
@@ -144,9 +137,7 @@ describe("GraphEditScreen", () => {
         graphId: "sleep",
         name: "Sleep v2",
         timezone: "Asia/Tokyo",
-        token: "token-1234",
         unit: "minutes",
-        username: "demo-user",
       });
     });
 
@@ -154,7 +145,9 @@ describe("GraphEditScreen", () => {
   });
 
   test("shows auth error when credentials are missing", async () => {
-    mockLoadAuthCredentials.mockResolvedValue(null);
+    mockUpdateGraph.mockRejectedValueOnce(
+      new Error("認証情報が見つかりません。再ログインしてください。")
+    );
 
     renderScreen();
 

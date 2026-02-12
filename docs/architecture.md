@@ -57,11 +57,13 @@
 - 画面から認証情報へアクセスするときは `useAuthSession`（`src/shared/auth/use-auth-session.ts`）を使う
 - 画面から `useAuthCredentialsQuery` を直接呼ばない（`AuthSessionProvider` 内部専用）
 - `useEffect + setState` での手動hydrateは新規実装しない
-- mutation内で認証情報が必要な場合は、`useAuthSession().credentials` を優先し、未取得時のみ `loadAuthCredentials()` でフォールバックする
+- 画面から認証必須APIを呼ぶときは `useAuthedPixelaApi`（`src/shared/api/authed-pixela-api.ts`）を使い、`token/username` を直接渡さない
+- 画面から `loadAuthCredentials()` を直接呼ばない（認証の読み込み責務は `AuthSessionProvider` に集約する）
+- 認証必須APIで認証情報がない場合は `AuthRequiredError` を投げ、画面側は既存エラーメッセージ導線で表示する
 - `AuthSessionProvider` は `authCredentials` query の読み込み・保存同期・invalidate責務を持つ
 - `query key / retry / staleTime` は `useAuthCredentialsQuery` に集約し、画面側で再定義しない
 - 既ログイン時に表示不要な認証画面は `useAuthSession` の `status/credentials` で Home へリダイレクトする
-- 次フェーズで API層へ認証注入を導入し、画面から `token/username` 引き回しを削減する
+- 次フェーズで `src/shared/api/*.ts` の公開シグネチャも認証注入前提へ簡素化する
 
 ## Screen Development Rules
 

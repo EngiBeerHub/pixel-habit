@@ -7,12 +7,11 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react-native";
-import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { GraphCreateScreen } from "./graph-create-screen";
 
 const mockBack = jest.fn();
 const mockCreateGraph = jest.fn();
-const mockLoadAuthCredentials = jest.fn();
+const mockUseAuthedPixelaApi = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -21,19 +20,13 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("../../shared/api/graph", () => ({
-  createGraph: (...args: unknown[]) => mockCreateGraph(...args),
   graphColorOptions: ["shibafu", "sora"],
   graphTypeOptions: ["int", "float"],
 }));
 
-jest.mock("../../shared/storage/auth-storage", () => ({
-  loadAuthCredentials: (...args: unknown[]) => mockLoadAuthCredentials(...args),
+jest.mock("../../shared/api/authed-pixela-api", () => ({
+  useAuthedPixelaApi: (...args: unknown[]) => mockUseAuthedPixelaApi(...args),
 }));
-
-const credentials = {
-  token: "token-1234",
-  username: "demo-user",
-};
 
 const renderScreen = () => {
   const queryClient = new QueryClient({
@@ -50,9 +43,7 @@ const renderScreen = () => {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <AuthSessionProvider>
-        <GraphCreateScreen />
-      </AuthSessionProvider>
+      <GraphCreateScreen />
     </QueryClientProvider>
   );
 };
@@ -74,10 +65,12 @@ describe("GraphCreateScreen", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockLoadAuthCredentials.mockResolvedValue(credentials);
     mockCreateGraph.mockResolvedValue({
       isSuccess: true,
       message: "作成成功",
+    });
+    mockUseAuthedPixelaApi.mockReturnValue({
+      createGraph: (...args: unknown[]) => mockCreateGraph(...args),
     });
   });
 
@@ -124,7 +117,9 @@ describe("GraphCreateScreen", () => {
   });
 
   test("shows auth error when credentials are missing", async () => {
-    mockLoadAuthCredentials.mockResolvedValue(null);
+    mockCreateGraph.mockRejectedValueOnce(
+      new Error("認証情報が見つかりません。再ログインしてください。")
+    );
 
     renderScreen();
 
@@ -154,10 +149,8 @@ describe("GraphCreateScreen", () => {
         id: "habit-1",
         name: "Habit",
         timezone: "Asia/Tokyo",
-        token: "token-1234",
         type: "int",
         unit: "count",
-        username: "demo-user",
       });
     });
 

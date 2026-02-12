@@ -5,10 +5,8 @@ import { Button } from "heroui-native";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, TextInput, View } from "react-native";
-import { deletePixel, updatePixel } from "../../shared/api/pixel";
-import { useAuthSession } from "../../shared/auth/use-auth-session";
+import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import { showAlert } from "../../shared/platform/app-alert";
-import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 import { type PixelEditFormValues, pixelEditSchema } from "./pixel-edit-schema";
 
 /**
@@ -30,7 +28,7 @@ export const PixelDetailScreen = () => {
   const date = typeof params.date === "string" ? params.date : "";
   const initialQuantity =
     typeof params.quantity === "string" ? params.quantity : "";
-  const { credentials } = useAuthSession();
+  const api = useAuthedPixelaApi();
 
   const {
     control,
@@ -45,20 +43,14 @@ export const PixelDetailScreen = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (values: PixelEditFormValues) => {
-      const currentCredentials = credentials ?? (await loadAuthCredentials());
-      if (!currentCredentials) {
-        throw new Error("認証情報が見つかりません。再ログインしてください。");
-      }
+    mutationFn: (values: PixelEditFormValues) => {
       if (!(graphId && date)) {
         throw new Error("graphIdまたはdateが不正です。");
       }
-      return updatePixel({
+      return api.updatePixel({
         date,
         graphId,
         quantity: values.quantity,
-        token: currentCredentials.token,
-        username: currentCredentials.username,
       });
     },
     onError: (error) => {
@@ -78,19 +70,13 @@ export const PixelDetailScreen = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async () => {
-      const currentCredentials = credentials ?? (await loadAuthCredentials());
-      if (!currentCredentials) {
-        throw new Error("認証情報が見つかりません。再ログインしてください。");
-      }
+    mutationFn: () => {
       if (!(graphId && date)) {
         throw new Error("graphIdまたはdateが不正です。");
       }
-      return deletePixel({
+      return api.deletePixel({
         date,
         graphId,
-        token: currentCredentials.token,
-        username: currentCredentials.username,
       });
     },
     onError: (error) => {

@@ -8,15 +8,16 @@ import {
 import { SettingsScreen } from "./settings-screen";
 
 const mockReplace = jest.fn();
-const mockUpdateUserToken = jest.fn();
-const mockDeleteUser = jest.fn();
 const mockClearAuthCredentials = jest.fn();
 const mockShowAlert = jest.fn();
 const mockCanOpenExternalUrl = jest.fn();
 const mockOpenExternalUrl = jest.fn();
 const mockSetAuthSession = jest.fn();
+const mockAuthedUpdateUserToken = jest.fn();
+const mockAuthedDeleteUser = jest.fn();
 
 const mockUseAuthSession = jest.fn();
+const mockUseAuthedPixelaApi = jest.fn();
 
 interface AlertButton {
   onPress?: () => void;
@@ -29,9 +30,8 @@ jest.mock("expo-router", () => ({
   }),
 }));
 
-jest.mock("../../shared/api/user", () => ({
-  deleteUser: (...args: unknown[]) => mockDeleteUser(...args),
-  updateUserToken: (...args: unknown[]) => mockUpdateUserToken(...args),
+jest.mock("../../shared/api/authed-pixela-api", () => ({
+  useAuthedPixelaApi: (...args: unknown[]) => mockUseAuthedPixelaApi(...args),
 }));
 
 jest.mock("../../shared/platform/app-alert", () => ({
@@ -66,19 +66,24 @@ describe("SettingsScreen", () => {
       setAuthSession: mockSetAuthSession,
       status: "authenticated",
     });
-    mockUpdateUserToken.mockResolvedValue({
-      isSuccess: true,
-      message: "トークン更新成功",
-    });
-    mockDeleteUser.mockResolvedValue({
-      isSuccess: true,
-      message: "ユーザー削除成功",
-    });
     mockClearAuthCredentials.mockResolvedValue(undefined);
     mockSetAuthSession.mockResolvedValue(undefined);
     mockShowAlert.mockImplementation(() => undefined);
     mockCanOpenExternalUrl.mockResolvedValue(true);
     mockOpenExternalUrl.mockResolvedValue(undefined);
+    mockUseAuthedPixelaApi.mockReturnValue({
+      deleteUser: (...args: unknown[]) => mockAuthedDeleteUser(...args),
+      updateUserToken: (...args: unknown[]) =>
+        mockAuthedUpdateUserToken(...args),
+    });
+    mockAuthedUpdateUserToken.mockResolvedValue({
+      isSuccess: true,
+      message: "トークン更新成功",
+    });
+    mockAuthedDeleteUser.mockResolvedValue({
+      isSuccess: true,
+      message: "ユーザー削除成功",
+    });
   });
 
   test("shows validation error for short token", async () => {
@@ -102,10 +107,8 @@ describe("SettingsScreen", () => {
     fireEvent.press(screen.getByTestId("settings-update-token-button"));
 
     await waitFor(() => {
-      expect(mockUpdateUserToken).toHaveBeenCalledWith({
+      expect(mockAuthedUpdateUserToken).toHaveBeenCalledWith({
         newToken: "new-token-9999",
-        token: "token-1234",
-        username: "demo-user",
       });
     });
 
@@ -164,7 +167,9 @@ describe("SettingsScreen", () => {
   });
 
   test("shows API error when token update fails", async () => {
-    mockUpdateUserToken.mockRejectedValueOnce(new Error("トークン更新失敗"));
+    mockAuthedUpdateUserToken.mockRejectedValueOnce(
+      new Error("トークン更新失敗")
+    );
 
     render(<SettingsScreen />);
 
@@ -178,7 +183,7 @@ describe("SettingsScreen", () => {
   });
 
   test("shows API error when delete user fails", async () => {
-    mockDeleteUser.mockRejectedValueOnce(new Error("ユーザー削除失敗"));
+    mockAuthedDeleteUser.mockRejectedValueOnce(new Error("ユーザー削除失敗"));
 
     render(<SettingsScreen />);
 

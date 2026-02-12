@@ -7,13 +7,12 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react-native";
-import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { PixelDetailScreen } from "./pixel-detail-screen";
 
 const mockBack = jest.fn();
 const mockUpdatePixel = jest.fn();
 const mockDeletePixel = jest.fn();
-const mockLoadAuthCredentials = jest.fn();
+const mockUseAuthedPixelaApi = jest.fn();
 const mockShowAlert = jest.fn();
 let mockRouteParams: {
   date?: string;
@@ -39,23 +38,13 @@ jest.mock("expo-router", () => ({
   }),
 }));
 
-jest.mock("../../shared/api/pixel", () => ({
-  deletePixel: (...args: unknown[]) => mockDeletePixel(...args),
-  updatePixel: (...args: unknown[]) => mockUpdatePixel(...args),
-}));
-
-jest.mock("../../shared/storage/auth-storage", () => ({
-  loadAuthCredentials: (...args: unknown[]) => mockLoadAuthCredentials(...args),
+jest.mock("../../shared/api/authed-pixela-api", () => ({
+  useAuthedPixelaApi: (...args: unknown[]) => mockUseAuthedPixelaApi(...args),
 }));
 
 jest.mock("../../shared/platform/app-alert", () => ({
   showAlert: (...args: unknown[]) => mockShowAlert(...args),
 }));
-
-const credentials = {
-  token: "token-1234",
-  username: "demo-user",
-};
 
 const renderScreen = () => {
   const queryClient = new QueryClient({
@@ -72,9 +61,7 @@ const renderScreen = () => {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <AuthSessionProvider>
-        <PixelDetailScreen />
-      </AuthSessionProvider>
+      <PixelDetailScreen />
     </QueryClientProvider>
   );
 };
@@ -96,7 +83,6 @@ describe("PixelDetailScreen", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockLoadAuthCredentials.mockResolvedValue(credentials);
     mockUpdatePixel.mockResolvedValue({
       isSuccess: true,
       message: "更新成功",
@@ -104,6 +90,10 @@ describe("PixelDetailScreen", () => {
     mockDeletePixel.mockResolvedValue({
       isSuccess: true,
       message: "削除成功",
+    });
+    mockUseAuthedPixelaApi.mockReturnValue({
+      deletePixel: (...args: unknown[]) => mockDeletePixel(...args),
+      updatePixel: (...args: unknown[]) => mockUpdatePixel(...args),
     });
     mockRouteParams = {
       date: "20260108",
@@ -136,8 +126,6 @@ describe("PixelDetailScreen", () => {
         date: "20260108",
         graphId: "sleep",
         quantity: "5",
-        token: "token-1234",
-        username: "demo-user",
       });
     });
 
@@ -162,8 +150,6 @@ describe("PixelDetailScreen", () => {
       expect(mockDeletePixel).toHaveBeenCalledWith({
         date: "20260108",
         graphId: "sleep",
-        token: "token-1234",
-        username: "demo-user",
       });
     });
 
@@ -177,7 +163,9 @@ describe("PixelDetailScreen", () => {
   });
 
   test("shows auth error when credentials are missing on update", async () => {
-    mockLoadAuthCredentials.mockResolvedValue(null);
+    mockUpdatePixel.mockRejectedValueOnce(
+      new Error("認証情報が見つかりません。再ログインしてください。")
+    );
 
     renderScreen();
 
