@@ -10,7 +10,7 @@ import {
   graphColorOptions,
   updateGraph,
 } from "../../shared/api/graph";
-import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
+import { useAuthSession } from "../../shared/auth/use-auth-session";
 import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 import { type GraphEditFormValues, graphEditSchema } from "./graph-edit-schema";
 
@@ -35,8 +35,7 @@ export const GraphEditScreen = () => {
     typeof params.timezone === "string" ? params.timezone : "Asia/Tokyo";
   const initialUnit = typeof params.unit === "string" ? params.unit : "";
   const initialColor = toGraphColor(params.color);
-  const authQuery = useAuthCredentialsQuery();
-  const credentials = authQuery.data ?? null;
+  const { credentials } = useAuthSession();
   const graphIdError = useMemo(() => {
     if (graphId) {
       return null;

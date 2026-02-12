@@ -1,6 +1,7 @@
 import { notifyManager } from "@tanstack/query-core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, waitFor } from "@testing-library/react-native";
+import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { AuthGateScreen } from "./auth-gate-screen";
 
 const mockReplace = jest.fn();
@@ -28,7 +29,9 @@ describe("AuthGateScreen", () => {
     });
     render(
       <QueryClientProvider client={queryClient}>
-        <AuthGateScreen />
+        <AuthSessionProvider>
+          <AuthGateScreen />
+        </AuthSessionProvider>
       </QueryClientProvider>
     );
   };

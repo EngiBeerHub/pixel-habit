@@ -24,7 +24,7 @@ import {
   getGraphs,
 } from "../../shared/api/graph";
 import { addPixel } from "../../shared/api/pixel";
-import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
+import { useAuthSession } from "../../shared/auth/use-auth-session";
 import {
   getTodayAsYyyyMmDd,
   normalizeYyyyMmDdInput,
@@ -83,18 +83,16 @@ export const GraphListScreen = () => {
     };
   }, []);
 
-  const authQuery = useAuthCredentialsQuery();
-
-  const credentials = authQuery.data ?? null;
+  const { credentials, hasLoadError, status } = useAuthSession();
 
   useEffect(() => {
-    if (authQuery.isSuccess && !authQuery.data) {
+    if (status === "anonymous" && !credentials) {
       router.replace("/auth");
     }
-  }, [authQuery.data, authQuery.isSuccess, router]);
+  }, [credentials, router, status]);
 
   const query = useQuery({
-    enabled: Boolean(credentials) && !authQuery.isPending,
+    enabled: Boolean(credentials) && status !== "loading",
     queryFn: () => {
       if (!credentials) {
         return [];
@@ -105,10 +103,10 @@ export const GraphListScreen = () => {
   });
 
   const errorMessage = useMemo(() => {
-    if (authQuery.isError) {
+    if (hasLoadError) {
       return "接続情報の読み込みに失敗しました。";
     }
-    if (authQuery.isSuccess && !authQuery.data) {
+    if (status === "anonymous" && !credentials) {
       return "接続情報がありません。接続設定画面へ移動します。";
     }
     if (!query.error) {
@@ -118,7 +116,7 @@ export const GraphListScreen = () => {
       return query.error.message;
     }
     return "グラフ一覧の取得に失敗しました。";
-  }, [authQuery.data, authQuery.isError, authQuery.isSuccess, query.error]);
+  }, [credentials, hasLoadError, query.error, status]);
 
   const statsMutation = useMutation({
     mutationFn: (graph: GraphDefinition) => {

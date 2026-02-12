@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { getPixels, type Pixel } from "../../shared/api/pixel";
-import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
+import { useAuthSession } from "../../shared/auth/use-auth-session";
 
 /**
  * 指定グラフのピクセル一覧を表示する画面。
@@ -24,11 +24,10 @@ export const PixelListScreen = () => {
   const graphId = typeof params.graphId === "string" ? params.graphId : "";
   const graphName =
     typeof params.graphName === "string" ? params.graphName : "";
-  const authQuery = useAuthCredentialsQuery();
-  const credentials = authQuery.data ?? null;
+  const { credentials, hasLoadError, status } = useAuthSession();
 
   const query = useQuery({
-    enabled: Boolean(credentials && graphId) && !authQuery.isPending,
+    enabled: Boolean(credentials && graphId) && status !== "loading",
     queryFn: () => {
       if (!(credentials && graphId)) {
         return [];
@@ -43,10 +42,10 @@ export const PixelListScreen = () => {
   });
 
   const errorMessage = useMemo(() => {
-    if (authQuery.isError) {
+    if (hasLoadError) {
       return "認証情報の読み込みに失敗しました。";
     }
-    if (authQuery.isSuccess && !authQuery.data) {
+    if (status === "anonymous" && !credentials) {
       return "認証情報が見つかりません。再ログインしてください。";
     }
     if (!query.error) {
@@ -56,7 +55,7 @@ export const PixelListScreen = () => {
       return query.error.message;
     }
     return "ピクセル一覧の取得に失敗しました。";
-  }, [authQuery.data, authQuery.isError, authQuery.isSuccess, query.error]);
+  }, [credentials, hasLoadError, query.error, status]);
 
   /**
    * ピクセル編集画面へ遷移する。

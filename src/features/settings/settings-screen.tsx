@@ -3,16 +3,12 @@ import { Button, Input } from "heroui-native";
 import { useMemo, useState } from "react";
 import { Text } from "react-native";
 import { deleteUser, updateUserToken } from "../../shared/api/user";
-import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
+import { useAuthSession } from "../../shared/auth/use-auth-session";
 import { showAlert } from "../../shared/platform/app-alert";
 import {
   canOpenExternalUrl,
   openExternalUrl,
 } from "../../shared/platform/app-linking";
-import {
-  clearAuthCredentials,
-  saveAuthCredentials,
-} from "../../shared/storage/auth-storage";
 import { ActionStack } from "../../shared/ui/action-stack";
 import { FormField } from "../../shared/ui/form-field";
 import { InlineMessage } from "../../shared/ui/inline-message";
@@ -24,16 +20,15 @@ import { SectionCard } from "../../shared/ui/section-card";
  */
 export const SettingsScreen = () => {
   const router = useRouter();
+  const { clearAuthSession, credentials, setAuthSession } = useAuthSession();
   const [tokenOverride, setTokenOverride] = useState<string | null>(null);
   const [newToken, setNewToken] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const authQuery = useAuthCredentialsQuery();
-
-  const username = authQuery.data?.username ?? null;
-  const currentToken = tokenOverride ?? authQuery.data?.token ?? null;
+  const username = credentials?.username ?? null;
+  const currentToken = tokenOverride ?? credentials?.token ?? null;
   const profileUrl = useMemo(() => {
     if (!username) {
       return "https://pixe.la";
@@ -57,7 +52,7 @@ export const SettingsScreen = () => {
    * 認証情報を削除して認証画面へ戻す。
    */
   const onLogout = async () => {
-    await clearAuthCredentials();
+    await clearAuthSession();
     router.replace("/auth");
   };
 
@@ -104,7 +99,7 @@ export const SettingsScreen = () => {
         token: currentToken,
         username,
       });
-      await saveAuthCredentials({
+      await setAuthSession({
         token: normalizedToken,
         username,
       });
@@ -165,7 +160,7 @@ export const SettingsScreen = () => {
         token,
         username: currentUsername,
       });
-      await clearAuthCredentials();
+      await clearAuthSession();
       router.replace("/auth");
     } catch (error) {
       const messageText =

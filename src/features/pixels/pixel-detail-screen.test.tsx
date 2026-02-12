@@ -7,6 +7,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react-native";
+import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { PixelDetailScreen } from "./pixel-detail-screen";
 
 const mockBack = jest.fn();
@@ -71,7 +72,9 @@ const renderScreen = () => {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <PixelDetailScreen />
+      <AuthSessionProvider>
+        <PixelDetailScreen />
+      </AuthSessionProvider>
     </QueryClientProvider>
   );
 };

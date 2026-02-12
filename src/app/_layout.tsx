@@ -5,6 +5,7 @@ import { Slot } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { type HeroUINativeConfig, HeroUINativeProvider } from "heroui-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { AuthSessionProvider } from "../shared/auth/auth-session-context";
 
 /**
  * HeroUI Native の開発時設定。
@@ -25,10 +26,12 @@ export default function Layout() {
   return (
     <GestureHandlerRootView>
       <QueryClientProvider client={queryClient}>
-        <HeroUINativeProvider config={config}>
-          <Slot />
-          <StatusBar style="dark" />
-        </HeroUINativeProvider>
+        <AuthSessionProvider>
+          <HeroUINativeProvider config={config}>
+            <Slot />
+            <StatusBar style="dark" />
+          </HeroUINativeProvider>
+        </AuthSessionProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
   );

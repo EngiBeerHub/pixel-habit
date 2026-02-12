@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, TextInput, View } from "react-native";
 import { deletePixel, updatePixel } from "../../shared/api/pixel";
-import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
+import { useAuthSession } from "../../shared/auth/use-auth-session";
 import { showAlert } from "../../shared/platform/app-alert";
 import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 import { type PixelEditFormValues, pixelEditSchema } from "./pixel-edit-schema";
@@ -30,8 +30,7 @@ export const PixelDetailScreen = () => {
   const date = typeof params.date === "string" ? params.date : "";
   const initialQuantity =
     typeof params.quantity === "string" ? params.quantity : "";
-  const authQuery = useAuthCredentialsQuery();
-  const credentials = authQuery.data ?? null;
+  const { credentials } = useAuthSession();
 
   const {
     control,

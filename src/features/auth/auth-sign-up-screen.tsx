@@ -4,7 +4,7 @@ import { Button, Input } from "heroui-native";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text } from "react-native";
-import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
+import { useAuthSession } from "../../shared/auth/use-auth-session";
 import { ActionStack } from "../../shared/ui/action-stack";
 import { FormField } from "../../shared/ui/form-field";
 import { InlineMessage } from "../../shared/ui/inline-message";
@@ -21,7 +21,7 @@ import { useSignUp } from "./use-sign-up";
 export const AuthSignUpScreen = () => {
   const router = useRouter();
   const signUpMutation = useSignUp();
-  const authQuery = useAuthCredentialsQuery();
+  const { credentials, status } = useAuthSession();
   const {
     control,
     formState: { errors },
@@ -36,10 +36,10 @@ export const AuthSignUpScreen = () => {
   });
 
   useEffect(() => {
-    if (authQuery.isSuccess && authQuery.data) {
+    if (status === "authenticated" && credentials) {
       router.replace("/(tabs)/home");
     }
-  }, [authQuery.data, authQuery.isSuccess, router]);
+  }, [credentials, router, status]);
 
   /**
    * アカウント作成処理を実行する。

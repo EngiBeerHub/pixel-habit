@@ -4,7 +4,7 @@ import { Button, Input } from "heroui-native";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text } from "react-native";
-import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
+import { useAuthSession } from "../../shared/auth/use-auth-session";
 import { ActionStack } from "../../shared/ui/action-stack";
 import { FormField } from "../../shared/ui/form-field";
 import { InlineMessage } from "../../shared/ui/inline-message";
@@ -21,6 +21,7 @@ import { useSignIn } from "./use-sign-in";
 export const AuthSettingsScreen = () => {
   const router = useRouter();
   const signInMutation = useSignIn();
+  const { credentials: authCredentials, hasLoadError } = useAuthSession();
   const {
     control,
     formState: { errors },
@@ -35,15 +36,13 @@ export const AuthSettingsScreen = () => {
     resolver: zodResolver(authSettingsSchema),
   });
 
-  const authQuery = useAuthCredentialsQuery();
-
   useEffect(() => {
-    if (authQuery.data) {
-      reset(authQuery.data);
+    if (authCredentials) {
+      reset(authCredentials);
     }
-  }, [authQuery.data, reset]);
+  }, [authCredentials, reset]);
 
-  const loadError = authQuery.isError
+  const loadError = hasLoadError
     ? "保存済みの接続情報を読み込めませんでした。"
     : null;
 

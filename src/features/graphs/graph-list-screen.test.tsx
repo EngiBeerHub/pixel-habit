@@ -8,6 +8,7 @@ import {
   waitFor,
 } from "@testing-library/react-native";
 import type { ReactNode } from "react";
+import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { GraphListScreen } from "./graph-list-screen";
 
 const mockReplace = jest.fn();
@@ -134,7 +135,9 @@ const renderScreen = async () => {
 
   const screenInstance = render(
     <QueryClientProvider client={queryClient}>
-      <GraphListScreen />
+      <AuthSessionProvider>
+        <GraphListScreen />
+      </AuthSessionProvider>
     </QueryClientProvider>
   );
   await waitFor(() => {

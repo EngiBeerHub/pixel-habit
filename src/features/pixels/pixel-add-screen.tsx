@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, TextInput, View } from "react-native";
 import { addPixel } from "../../shared/api/pixel";
-import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
+import { useAuthSession } from "../../shared/auth/use-auth-session";
 import {
   getTodayAsYyyyMmDd,
   normalizeYyyyMmDdInput,
@@ -35,8 +35,7 @@ export const PixelAddScreen = () => {
   const graphId = typeof params.graphId === "string" ? params.graphId : "";
   const graphName =
     typeof params.graphName === "string" ? params.graphName : "";
-  const authQuery = useAuthCredentialsQuery();
-  const credentials = authQuery.data ?? null;
+  const { credentials } = useAuthSession();
   const {
     control,
     formState: { errors },

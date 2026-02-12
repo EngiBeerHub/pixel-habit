@@ -10,7 +10,7 @@ import {
   graphColorOptions,
   graphTypeOptions,
 } from "../../shared/api/graph";
-import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
+import { useAuthSession } from "../../shared/auth/use-auth-session";
 import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 import {
   type GraphCreateFormValues,
@@ -24,8 +24,7 @@ export const GraphCreateScreen = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const authQuery = useAuthCredentialsQuery();
-  const credentials = authQuery.data ?? null;
+  const { credentials } = useAuthSession();
   const {
     control,
     formState: { errors },

@@ -7,6 +7,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react-native";
+import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { GraphEditScreen } from "./graph-edit-screen";
 
 const mockBack = jest.fn();
@@ -62,7 +63,9 @@ const renderScreen = () => {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <GraphEditScreen />
+      <AuthSessionProvider>
+        <GraphEditScreen />
+      </AuthSessionProvider>
     </QueryClientProvider>
   );
 };

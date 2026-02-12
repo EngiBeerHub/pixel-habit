@@ -5,6 +5,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react-native";
+import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { AuthSettingsScreen } from "./auth-settings-screen";
 
 const mockReplace = jest.fn();
@@ -47,7 +48,9 @@ describe("AuthSettingsScreen", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <AuthSettingsScreen />
+        <AuthSessionProvider>
+          <AuthSettingsScreen />
+        </AuthSessionProvider>
       </QueryClientProvider>
     );
   };

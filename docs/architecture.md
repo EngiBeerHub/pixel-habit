@@ -54,11 +54,14 @@
 
 ## 認証情報読み込みルール
 
-- 画面初期化時の認証情報読み込みは `useAuthCredentialsQuery`（`src/shared/auth/use-auth-credentials-query.ts`）を基本とする
+- 画面から認証情報へアクセスするときは `useAuthSession`（`src/shared/auth/use-auth-session.ts`）を使う
+- 画面から `useAuthCredentialsQuery` を直接呼ばない（`AuthSessionProvider` 内部専用）
 - `useEffect + setState` での手動hydrateは新規実装しない
-- mutation内で認証情報が必要な場合は、`authQuery.data` を優先し、未取得時のみ `loadAuthCredentials()` でフォールバックする
-- query key / retry / staleTime は共通hookに集約し、画面側で再定義しない
-- 既ログイン時に表示不要な認証画面は `authQuery.isSuccess && authQuery.data` を条件に Home へリダイレクトする
+- mutation内で認証情報が必要な場合は、`useAuthSession().credentials` を優先し、未取得時のみ `loadAuthCredentials()` でフォールバックする
+- `AuthSessionProvider` は `authCredentials` query の読み込み・保存同期・invalidate責務を持つ
+- `query key / retry / staleTime` は `useAuthCredentialsQuery` に集約し、画面側で再定義しない
+- 既ログイン時に表示不要な認証画面は `useAuthSession` の `status/credentials` で Home へリダイレクトする
+- 次フェーズで API層へ認証注入を導入し、画面から `token/username` 引き回しを削減する
 
 ## Screen Development Rules
 
