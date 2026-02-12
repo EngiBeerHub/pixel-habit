@@ -513,6 +513,7 @@ export const GraphListScreen = () => {
       query.data.length > 0 ? (
         <FlatList<GraphDefinition>
           className="mt-2"
+          contentContainerClassName="px-1 pb-2"
           data={query.data}
           keyExtractor={(item) => item.id}
           refreshControl={
@@ -521,6 +522,7 @@ export const GraphListScreen = () => {
               refreshing={query.isFetching}
             />
           }
+          removeClippedSubviews={false}
           renderItem={({ item }) =>
             credentials ? (
               <GraphCard

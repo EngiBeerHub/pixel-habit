@@ -1,8 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { Button } from "heroui-native";
+import { Button, Input } from "heroui-native";
 import { Controller, useForm } from "react-hook-form";
-import { Text, TextInput, View } from "react-native";
+import { Text } from "react-native";
+import { ActionStack } from "../../shared/ui/action-stack";
+import { FormField } from "../../shared/ui/form-field";
+import { InlineMessage } from "../../shared/ui/inline-message";
+import { ScreenContainer } from "../../shared/ui/screen-container";
 import {
   type AuthSignUpFormValues,
   authSignUpSchema,
@@ -45,7 +49,7 @@ export const AuthSignUpScreen = () => {
   });
 
   return (
-    <View className="flex-1 justify-center bg-white px-6">
+    <ScreenContainer contentClassName="justify-center">
       {/* 画面ヘッダー: 目的と入力ガイダンス */}
       <Text className="mb-2 font-bold text-2xl text-neutral-900">
         アカウント作成
@@ -55,65 +59,57 @@ export const AuthSignUpScreen = () => {
       </Text>
 
       {/* Username入力 */}
-      <Text className="mb-2 text-neutral-800">Username</Text>
-      <Controller
-        control={control}
-        name="username"
-        render={({ field: { onBlur, onChange, value } }) => (
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            className="mb-2 rounded-xl border border-neutral-300 px-4 py-3 text-base"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            placeholder="your-username"
-            value={value}
-          />
-        )}
-      />
-      {/* Usernameバリデーションエラー */}
-      {errors.username ? (
-        <Text className="mb-4 text-red-600 text-sm">
-          {errors.username.message}
-        </Text>
-      ) : (
-        <View className="mb-4" />
-      )}
+      <FormField errorMessage={errors.username?.message} label="Username">
+        <Controller
+          control={control}
+          name="username"
+          render={({ field: { onBlur, onChange, value } }) => (
+            <Input
+              autoCapitalize="none"
+              autoCorrect={false}
+              className="text-base"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              placeholder="your-username"
+              value={value}
+              variant="secondary"
+            />
+          )}
+        />
+      </FormField>
 
       {/* Token入力 */}
-      <Text className="mb-2 text-neutral-800">Token</Text>
-      <Controller
-        control={control}
-        name="token"
-        render={({ field: { onBlur, onChange, value } }) => (
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            className="mb-2 rounded-xl border border-neutral-300 px-4 py-3 text-base"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            placeholder="pixela-token"
-            secureTextEntry
-            value={value}
-          />
-        )}
-      />
-      {/* Tokenバリデーションエラー */}
-      {errors.token ? (
-        <Text className="mb-4 text-red-600 text-sm">
-          {errors.token.message}
-        </Text>
-      ) : (
-        <View className="mb-4" />
-      )}
+      <FormField errorMessage={errors.token?.message} label="Token">
+        <Controller
+          control={control}
+          name="token"
+          render={({ field: { onBlur, onChange, value } }) => (
+            <Input
+              autoCapitalize="none"
+              autoCorrect={false}
+              className="text-base"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              placeholder="pixela-token"
+              secureTextEntry
+              value={value}
+              variant="secondary"
+            />
+          )}
+        />
+      </FormField>
 
       {/* API失敗時のフォーム共通エラー */}
       {errors.root?.message ? (
-        <Text className="mb-4 text-red-600 text-sm">{errors.root.message}</Text>
+        <InlineMessage
+          className="mb-4"
+          message={errors.root.message}
+          variant="error"
+        />
       ) : null}
 
       {/* 画面アクション: 作成実行 / ログイン画面へ戻る */}
-      <View className="gap-3">
+      <ActionStack>
         <Button isDisabled={signUpMutation.isPending} onPress={onSubmit}>
           作成して開始
         </Button>
@@ -124,7 +120,7 @@ export const AuthSignUpScreen = () => {
         >
           ログインへ
         </Button>
-      </View>
-    </View>
+      </ActionStack>
+    </ScreenContainer>
   );
 };

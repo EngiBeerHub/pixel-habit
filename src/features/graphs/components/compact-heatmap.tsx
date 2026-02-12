@@ -1,14 +1,14 @@
 import { Text, View } from "react-native";
 import type { GraphDefinition } from "../../../shared/api/graph";
 import type { Pixel } from "../../../shared/api/pixel";
+import { heatmapTokens } from "../../../shared/config/ui-tokens";
 import { getGraphThemeColor } from "../../../shared/lib/graph-theme";
 
 const DAYS_PER_WEEK = 7;
 const DEFAULT_WEEKS = 14;
-const EMPTY_COLOR = "#f3f4f6";
-const CELL_SIZE = 16;
-const CELL_GAP = 3;
-const LABEL_WIDTH = 24;
+const CELL_SIZE = heatmapTokens.cellSize;
+const CELL_GAP = heatmapTokens.cellGap;
+const LABEL_WIDTH = heatmapTokens.labelWidth;
 const ROW_KEYS = [
   "row-0",
   "row-1",
@@ -328,7 +328,7 @@ const resolveCellColor = ({
   level: number;
 }): string => {
   if (level <= 0) {
-    return EMPTY_COLOR;
+    return heatmapTokens.emptyColor;
   }
   return toRgba(baseColor, 0.18 + level * 0.2);
 };

@@ -5,6 +5,9 @@ import type { GraphDefinition } from "../../../shared/api/graph";
 import { getPixels } from "../../../shared/api/pixel";
 import { getGraphThemeColor } from "../../../shared/lib/graph-theme";
 import type { AuthCredentials } from "../../../shared/storage/auth-storage";
+import { ActionStack } from "../../../shared/ui/action-stack";
+import { InlineMessage } from "../../../shared/ui/inline-message";
+import { SectionCard } from "../../../shared/ui/section-card";
 import { CompactHeatmap, getCompactHeatmapDateRange } from "./compact-heatmap";
 
 const COMPACT_HEATMAP_WEEKS = 14;
@@ -66,7 +69,7 @@ export const GraphCard = ({
   };
 
   return (
-    <View className="mb-3 rounded-xl border border-neutral-200 p-4">
+    <SectionCard className="mb-3">
       {/* カード上部: タイトルと操作メニュー */}
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-4">
@@ -100,18 +103,20 @@ export const GraphCard = ({
         <View>
           {/* Compact表示: カード内ヒートマップ取得中のプレースホルダー */}
           {pixelQuery.isLoading ? (
-            <View className="mt-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-              <Text className="text-neutral-600 text-sm">
-                記録を読み込み中...
-              </Text>
-            </View>
+            <InlineMessage
+              className="mt-3"
+              message="記録を読み込み中..."
+              variant="info"
+            />
           ) : null}
           {/* Compact表示: カード単位エラー。再取得だけを局所的に実行する */}
           {!pixelQuery.isLoading && pixelQuery.error ? (
-            <View className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3">
-              <Text className="mb-2 text-red-700 text-sm">
-                ヒートマップの取得に失敗しました。
-              </Text>
+            <View className="mt-3 rounded-lg p-3">
+              <InlineMessage
+                className="mb-2"
+                message="ヒートマップの取得に失敗しました。"
+                variant="error"
+              />
               <Button onPress={onRetryPixels}>再取得</Button>
             </View>
           ) : null}
@@ -141,7 +146,7 @@ export const GraphCard = ({
         </View>
       ) : null}
       {/* 主操作: クイック記録追加 */}
-      <View className="mt-3">
+      <ActionStack className="mt-3">
         <Button
           isDisabled={isActionDisabled}
           onPress={() => {
@@ -150,9 +155,6 @@ export const GraphCard = ({
         >
           記録する
         </Button>
-      </View>
-      {/* 補助操作: 記録一覧画面へ遷移 */}
-      <View className="mt-2">
         <Button
           isDisabled={isActionDisabled}
           onPress={() => {
@@ -161,7 +163,7 @@ export const GraphCard = ({
         >
           記録一覧
         </Button>
-      </View>
-    </View>
+      </ActionStack>
+    </SectionCard>
   );
 };

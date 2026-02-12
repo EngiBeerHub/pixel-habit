@@ -1,20 +1,18 @@
 import { useRouter } from "expo-router";
-import { Button } from "heroui-native";
+import { Button, Input } from "heroui-native";
 import { useEffect, useState } from "react";
-import {
-  Alert,
-  Linking,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, Linking, Text } from "react-native";
 import { deleteUser, updateUserToken } from "../../shared/api/user";
 import {
   clearAuthCredentials,
   loadAuthCredentials,
   saveAuthCredentials,
 } from "../../shared/storage/auth-storage";
+import { ActionStack } from "../../shared/ui/action-stack";
+import { FormField } from "../../shared/ui/form-field";
+import { InlineMessage } from "../../shared/ui/inline-message";
+import { ScreenContainer } from "../../shared/ui/screen-container";
+import { SectionCard } from "../../shared/ui/section-card";
 
 /**
  * ユーザー設定と外部リンクを表示するSettings画面。
@@ -190,7 +188,7 @@ export const SettingsScreen = () => {
   };
 
   return (
-    <ScrollView className="flex-1 bg-white px-6 pt-16 pb-6">
+    <ScreenContainer scrollable>
       {/* 画面ヘッダー: Settings概要 */}
       <Text className="mb-2 font-bold text-2xl text-neutral-900">Settings</Text>
       <Text className="mb-6 text-neutral-600">
@@ -198,23 +196,20 @@ export const SettingsScreen = () => {
       </Text>
 
       {/* ユーザーセクション: トークン更新とプロフィール導線 */}
-      <View className="mb-6 rounded-xl border border-neutral-200 p-4">
-        <Text className="mb-3 font-semibold text-lg text-neutral-900">
-          ユーザー
-        </Text>
-        <View className="mb-3">
-          <Text className="mb-2 text-neutral-800">新しいトークン</Text>
-          <TextInput
+      <SectionCard className="mb-6" title="ユーザー">
+        <FormField label="新しいトークン">
+          <Input
             autoCapitalize="none"
             autoCorrect={false}
-            className="rounded-xl border border-neutral-300 px-4 py-3 text-base"
+            className="text-base"
             onChangeText={setNewToken}
             placeholder="new-token"
             secureTextEntry
             value={newToken}
+            variant="secondary"
           />
-        </View>
-        <View className="gap-3">
+        </FormField>
+        <ActionStack>
           <Button isDisabled={isSubmitting} onPress={onPressUpdateToken}>
             トークン変更
           </Button>
@@ -225,26 +220,20 @@ export const SettingsScreen = () => {
           >
             プロフィールを開く
           </Button>
-        </View>
-      </View>
+        </ActionStack>
+      </SectionCard>
 
       {/* アプリセクション: アプリ関連リンク（現時点は準備中） */}
-      <View className="mb-6 rounded-xl border border-neutral-200 p-4">
-        <Text className="mb-3 font-semibold text-lg text-neutral-900">
-          アプリ
-        </Text>
-        <View className="gap-3">
+      <SectionCard className="mb-6" title="アプリ">
+        <ActionStack>
           <Button isDisabled>プライバシーポリシー（準備中）</Button>
           <Button isDisabled>利用規約（準備中）</Button>
-        </View>
-      </View>
+        </ActionStack>
+      </SectionCard>
 
       {/* Pixelaセクション: 外部サイト/規約リンク */}
-      <View className="mb-6 rounded-xl border border-neutral-200 p-4">
-        <Text className="mb-3 font-semibold text-lg text-neutral-900">
-          Pixela
-        </Text>
-        <View className="gap-3">
+      <SectionCard className="mb-6" title="Pixela">
+        <ActionStack>
           <Button
             onPress={() => {
               onOpenExternalLink("https://pixe.la");
@@ -266,32 +255,33 @@ export const SettingsScreen = () => {
           >
             プライバシーポリシー
           </Button>
-        </View>
-      </View>
+        </ActionStack>
+      </SectionCard>
 
       {/* 危険操作セクション: アカウント削除とログアウト */}
-      <View className="rounded-xl border border-red-200 bg-red-50 p-4">
-        <Text className="mb-3 font-semibold text-lg text-red-700">
-          危険操作
-        </Text>
-        <View className="gap-3">
+      <SectionCard title="危険操作" tone="danger">
+        <ActionStack>
           <Button isDisabled={isSubmitting} onPress={onPressDeleteUser}>
             ユーザー削除
           </Button>
           <Button isDisabled={isSubmitting} onPress={onPressLogout}>
             ログアウト
           </Button>
-        </View>
-      </View>
+        </ActionStack>
+      </SectionCard>
 
       {/* API成功メッセージ */}
       {message ? (
-        <Text className="mt-4 text-green-700 text-sm">{message}</Text>
+        <InlineMessage className="mt-4" message={message} variant="success" />
       ) : null}
       {/* API失敗メッセージ */}
       {errorMessage ? (
-        <Text className="mt-4 text-red-600 text-sm">{errorMessage}</Text>
+        <InlineMessage
+          className="mt-4"
+          message={errorMessage}
+          variant="error"
+        />
       ) : null}
-    </ScrollView>
+    </ScreenContainer>
   );
 };

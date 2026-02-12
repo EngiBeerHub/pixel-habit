@@ -72,6 +72,8 @@
 
 - 同じロジックが2画面以上で必要になった時点で `src/shared/lib/` へ切り出す
 - 切り出した共通関数にはDocコメントを付け、利用側ではローカル再実装しない
+- `src/shared/ui/` 配下で同じユーティリティ処理（例: className結合）が2回以上出たら `src/shared/lib/` へ移動する
+- className結合は `src/shared/lib/class-name.ts` の `mergeClassNames` を使用し、各ファイルで再定義しない
 
 ## コメント運用ルール
 
@@ -88,6 +90,38 @@
 - 入力フォームは `入力本体 / バリデーションエラー / 成功・失敗メッセージ / アクション` をコメントで区切る
 - コメントは構造の見取り図として機能させ、実装と同コミットで更新する
 - このルールは `auth` / `settings` / `graphs` / `pixels` の全画面に適用する
+
+## HeroUI/Uniwind Styling Rules
+
+`heroui-native` と `uniwind` の公式方針に合わせ、以下を適用する。
+
+### Allowed
+
+- UIコンポーネントは `heroui-native` を第一選択で使用する
+- 見た目は `uniwind` の `className` で構成する
+- 色・余白・角丸・サイズは `src/shared/config/ui-tokens.ts` を単一ソースとして参照する
+- 共通化可能な見た目は `src/shared/ui/` へ切り出す
+- 計算が必要なレイアウト（ヒートマップ座標など）のみ `style` を許可する
+
+### Discouraged
+
+- 画面内で同じトーンの色や余白を直接ハードコードする
+- 画面ごとに独自コンテナ/独自カードを増やす
+- 同じフォーム構造を各画面で再実装する
+
+### Forbidden
+
+- `heroui-native` で代替可能な要素を理由なく素のRNコンポーネントで新規実装する
+- 計算不要なプロパティをインライン `style` で上書きする
+- テーマ値を `src/shared/config/ui-tokens.ts` を経由せず直接重複定義する
+
+### Review Checklist
+
+- 追加UIは `heroui-native` ベースで構成されているか
+- 画面内の重複スタイルは `src/shared/ui/` へ集約されているか
+- 色・余白・角丸・ヒートマップサイズはトークン参照になっているか
+- インライン `style` は計算レイアウトに限定され、理由がコメントで明示されているか
+- `src/shared/ui/` 内でユーティリティ関数が重複定義されていないか
 
 ## Docコメントルール
 
