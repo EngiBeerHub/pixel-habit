@@ -1,7 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Button, Input } from "heroui-native";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text } from "react-native";
 import { loadAuthCredentials } from "../../shared/storage/auth-storage";
@@ -21,7 +22,6 @@ import { useSignIn } from "./use-sign-in";
 export const AuthSettingsScreen = () => {
   const router = useRouter();
   const signInMutation = useSignIn();
-  const [loadError, setLoadError] = useState<string | null>(null);
   const {
     control,
     formState: { errors },
@@ -36,28 +36,21 @@ export const AuthSettingsScreen = () => {
     resolver: zodResolver(authSettingsSchema),
   });
 
+  const authQuery = useQuery({
+    queryFn: loadAuthCredentials,
+    queryKey: ["authCredentials"],
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+
   useEffect(() => {
-    let isMounted = true;
+    if (authQuery.data) {
+      reset(authQuery.data);
+    }
+  }, [authQuery.data, reset]);
 
-    const hydrate = async () => {
-      try {
-        const credentials = await loadAuthCredentials();
-        if (isMounted && credentials) {
-          reset(credentials);
-        }
-      } catch {
-        if (isMounted) {
-          setLoadError("保存済みの接続情報を読み込めませんでした。");
-        }
-      }
-    };
-
-    hydrate();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [reset]);
+  const loadError = authQuery.isError
+    ? "保存済みの接続情報を読み込めませんでした。"
+    : null;
 
   const onSubmit = handleSubmit(async (values) => {
     try {

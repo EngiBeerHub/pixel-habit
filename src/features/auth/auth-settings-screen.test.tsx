@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   fireEvent,
   render,
@@ -28,13 +29,36 @@ jest.mock("./use-sign-in", () => ({
 }));
 
 describe("AuthSettingsScreen", () => {
+  /**
+   * QueryClientProvider配下で画面を描画する。
+   */
+  const renderScreen = () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        mutations: {
+          gcTime: Number.POSITIVE_INFINITY,
+        },
+        queries: {
+          gcTime: Number.POSITIVE_INFINITY,
+          retry: false,
+        },
+      },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <AuthSettingsScreen />
+      </QueryClientProvider>
+    );
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockLoadAuthCredentials.mockResolvedValue(null);
   });
 
   test("shows validation errors when required fields are empty", async () => {
-    render(<AuthSettingsScreen />);
+    renderScreen();
 
     const loginButtons = screen.getAllByRole("button", { name: "ログイン" });
     fireEvent.press(loginButtons[0]);
@@ -50,7 +74,7 @@ describe("AuthSettingsScreen", () => {
   test("shows api error message when sign in fails", async () => {
     mockMutateAsync.mockRejectedValueOnce(new Error("認証に失敗しました"));
 
-    render(<AuthSettingsScreen />);
+    renderScreen();
 
     fireEvent.changeText(
       screen.getByPlaceholderText("your-username"),
@@ -69,7 +93,7 @@ describe("AuthSettingsScreen", () => {
   test("shows fallback error when sign in rejects non-Error", async () => {
     mockMutateAsync.mockRejectedValueOnce("unknown error");
 
-    render(<AuthSettingsScreen />);
+    renderScreen();
 
     fireEvent.changeText(
       screen.getByPlaceholderText("your-username"),
@@ -92,7 +116,7 @@ describe("AuthSettingsScreen", () => {
   test("shows load error when credentials hydration fails", async () => {
     mockLoadAuthCredentials.mockRejectedValueOnce(new Error("load failed"));
 
-    render(<AuthSettingsScreen />);
+    renderScreen();
 
     expect(
       await screen.findByText("保存済みの接続情報を読み込めませんでした。")
@@ -105,7 +129,7 @@ describe("AuthSettingsScreen", () => {
       username: "demo-user",
     });
 
-    render(<AuthSettingsScreen />);
+    renderScreen();
 
     fireEvent.changeText(
       screen.getByPlaceholderText("your-username"),
