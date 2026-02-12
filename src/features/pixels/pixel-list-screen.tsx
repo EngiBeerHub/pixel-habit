@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { getPixels, type Pixel } from "../../shared/api/pixel";
-import { loadAuthCredentials } from "../../shared/storage/auth-storage";
+import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
 
 /**
  * 指定グラフのピクセル一覧を表示する画面。
@@ -24,11 +24,7 @@ export const PixelListScreen = () => {
   const graphId = typeof params.graphId === "string" ? params.graphId : "";
   const graphName =
     typeof params.graphName === "string" ? params.graphName : "";
-  const authQuery = useQuery({
-    queryFn: loadAuthCredentials,
-    queryKey: ["authCredentials"],
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const authQuery = useAuthCredentialsQuery();
   const credentials = authQuery.data ?? null;
 
   const query = useQuery({

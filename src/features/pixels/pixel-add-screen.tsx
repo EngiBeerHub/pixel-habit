@@ -1,11 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, TextInput, View } from "react-native";
 import { addPixel } from "../../shared/api/pixel";
+import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
 import {
   getTodayAsYyyyMmDd,
   normalizeYyyyMmDdInput,
@@ -34,11 +35,7 @@ export const PixelAddScreen = () => {
   const graphId = typeof params.graphId === "string" ? params.graphId : "";
   const graphName =
     typeof params.graphName === "string" ? params.graphName : "";
-  const authQuery = useQuery({
-    queryFn: loadAuthCredentials,
-    queryKey: ["authCredentials"],
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const authQuery = useAuthCredentialsQuery();
   const credentials = authQuery.data ?? null;
   const {
     control,

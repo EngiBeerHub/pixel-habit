@@ -24,6 +24,7 @@ import {
   getGraphs,
 } from "../../shared/api/graph";
 import { addPixel } from "../../shared/api/pixel";
+import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
 import {
   getTodayAsYyyyMmDd,
   normalizeYyyyMmDdInput,
@@ -33,7 +34,6 @@ import {
   canOpenExternalUrl,
   openExternalUrl,
 } from "../../shared/platform/app-linking";
-import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 import {
   type PixelAddFormValues,
   pixelAddSchema,
@@ -83,11 +83,7 @@ export const GraphListScreen = () => {
     };
   }, []);
 
-  const authQuery = useQuery({
-    queryFn: loadAuthCredentials,
-    queryKey: ["authCredentials"],
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const authQuery = useAuthCredentialsQuery();
 
   const credentials = authQuery.data ?? null;
 

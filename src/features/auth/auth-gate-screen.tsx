@@ -1,20 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { loadAuthCredentials } from "../../shared/storage/auth-storage";
+import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
 
 /**
  * 保存済み認証情報の有無で初期遷移先を決定するゲート画面。
  */
 export const AuthGateScreen = () => {
   const router = useRouter();
-  const authQuery = useQuery({
-    queryFn: loadAuthCredentials,
-    queryKey: ["authCredentials"],
-    retry: false,
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const authQuery = useAuthCredentialsQuery();
 
   useEffect(() => {
     if (authQuery.isError) {

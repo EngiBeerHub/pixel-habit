@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useState } from "react";
@@ -10,6 +10,7 @@ import {
   graphColorOptions,
   graphTypeOptions,
 } from "../../shared/api/graph";
+import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
 import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 import {
   type GraphCreateFormValues,
@@ -23,11 +24,7 @@ export const GraphCreateScreen = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const authQuery = useQuery({
-    queryFn: loadAuthCredentials,
-    queryKey: ["authCredentials"],
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const authQuery = useAuthCredentialsQuery();
   const credentials = authQuery.data ?? null;
   const {
     control,

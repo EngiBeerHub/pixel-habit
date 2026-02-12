@@ -1,11 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Button, Input } from "heroui-native";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text } from "react-native";
-import { loadAuthCredentials } from "../../shared/storage/auth-storage";
+import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
 import { ActionStack } from "../../shared/ui/action-stack";
 import { FormField } from "../../shared/ui/form-field";
 import { InlineMessage } from "../../shared/ui/inline-message";
@@ -36,11 +35,7 @@ export const AuthSettingsScreen = () => {
     resolver: zodResolver(authSettingsSchema),
   });
 
-  const authQuery = useQuery({
-    queryFn: loadAuthCredentials,
-    queryKey: ["authCredentials"],
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const authQuery = useAuthCredentialsQuery();
 
   useEffect(() => {
     if (authQuery.data) {

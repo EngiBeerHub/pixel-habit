@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useMemo, useState } from "react";
@@ -10,6 +10,7 @@ import {
   graphColorOptions,
   updateGraph,
 } from "../../shared/api/graph";
+import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
 import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 import { type GraphEditFormValues, graphEditSchema } from "./graph-edit-schema";
 
@@ -34,11 +35,7 @@ export const GraphEditScreen = () => {
     typeof params.timezone === "string" ? params.timezone : "Asia/Tokyo";
   const initialUnit = typeof params.unit === "string" ? params.unit : "";
   const initialColor = toGraphColor(params.color);
-  const authQuery = useQuery({
-    queryFn: loadAuthCredentials,
-    queryKey: ["authCredentials"],
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const authQuery = useAuthCredentialsQuery();
   const credentials = authQuery.data ?? null;
   const graphIdError = useMemo(() => {
     if (graphId) {

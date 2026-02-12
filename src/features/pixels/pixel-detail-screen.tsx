@@ -1,11 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, TextInput, View } from "react-native";
 import { deletePixel, updatePixel } from "../../shared/api/pixel";
+import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
 import { showAlert } from "../../shared/platform/app-alert";
 import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 import { type PixelEditFormValues, pixelEditSchema } from "./pixel-edit-schema";
@@ -29,11 +30,7 @@ export const PixelDetailScreen = () => {
   const date = typeof params.date === "string" ? params.date : "";
   const initialQuantity =
     typeof params.quantity === "string" ? params.quantity : "";
-  const authQuery = useQuery({
-    queryFn: loadAuthCredentials,
-    queryKey: ["authCredentials"],
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const authQuery = useAuthCredentialsQuery();
   const credentials = authQuery.data ?? null;
 
   const {

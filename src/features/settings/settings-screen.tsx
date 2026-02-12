@@ -1,9 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Button, Input } from "heroui-native";
 import { useMemo, useState } from "react";
 import { Text } from "react-native";
 import { deleteUser, updateUserToken } from "../../shared/api/user";
+import { useAuthCredentialsQuery } from "../../shared/auth/use-auth-credentials-query";
 import { showAlert } from "../../shared/platform/app-alert";
 import {
   canOpenExternalUrl,
@@ -11,7 +11,6 @@ import {
 } from "../../shared/platform/app-linking";
 import {
   clearAuthCredentials,
-  loadAuthCredentials,
   saveAuthCredentials,
 } from "../../shared/storage/auth-storage";
 import { ActionStack } from "../../shared/ui/action-stack";
@@ -31,11 +30,7 @@ export const SettingsScreen = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const authQuery = useQuery({
-    queryFn: loadAuthCredentials,
-    queryKey: ["authCredentials"],
-    staleTime: Number.POSITIVE_INFINITY,
-  });
+  const authQuery = useAuthCredentialsQuery();
 
   const username = authQuery.data?.username ?? null;
   const currentToken = tokenOverride ?? authQuery.data?.token ?? null;
