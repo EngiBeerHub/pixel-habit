@@ -1,3 +1,4 @@
+import { notifyManager } from "@tanstack/query-core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   act,
@@ -137,8 +138,8 @@ const renderScreen = async () => {
       <GraphListScreen />
     </QueryClientProvider>
   );
-  await act(async () => {
-    await Promise.resolve();
+  await waitFor(() => {
+    expect(mockLoadAuthCredentials).toHaveBeenCalled();
   });
   return screenInstance;
 };
@@ -158,13 +159,32 @@ const graph = {
 } as const;
 
 describe("GraphListScreen", () => {
+  beforeAll(() => {
+    notifyManager.setNotifyFunction((callback) => {
+      act(() => {
+        callback();
+      });
+    });
+  });
+
+  afterAll(() => {
+    notifyManager.setNotifyFunction((callback) => {
+      callback();
+    });
+  });
+
   beforeEach(() => {
     const originalConsoleError = console.error;
     consoleErrorSpy = jest
       .spyOn(console, "error")
       .mockImplementation((...args) => {
-        const first = args[0];
-        if (typeof first === "string" && first.includes("not wrapped in act")) {
+        const firstArg = args[0];
+        if (
+          typeof firstArg === "string" &&
+          firstArg.includes(
+            "GraphListScreen inside a test was not wrapped in act"
+          )
+        ) {
           return;
         }
         originalConsoleError(...args);
@@ -182,21 +202,11 @@ describe("GraphListScreen", () => {
     consoleErrorSpy.mockRestore();
   });
 
-  /**
-   * 認証情報のhydrate完了を待ってから画面状態を検証する。
-   */
-  const waitForHydration = async () => {
-    await waitFor(() => {
-      expect(mockLoadAuthCredentials).toHaveBeenCalled();
-    });
-  };
-
   test("shows loading state while graph list is pending", async () => {
     const deferred = createDeferred<readonly [typeof graph]>();
     mockGetGraphs.mockImplementationOnce(() => deferred.promise);
 
     await renderScreen();
-    await waitForHydration();
 
     expect(await screen.findByText("読み込み中...")).toBeTruthy();
 
@@ -208,7 +218,6 @@ describe("GraphListScreen", () => {
     mockGetGraphs.mockRejectedValueOnce(new Error("取得失敗"));
 
     await renderScreen();
-    await waitForHydration();
 
     expect(await screen.findByText("取得失敗")).toBeTruthy();
     fireEvent.press(screen.getByTestId("graph-list-retry-button"));
@@ -222,7 +231,6 @@ describe("GraphListScreen", () => {
     mockGetGraphs.mockResolvedValueOnce([]);
 
     await renderScreen();
-    await waitForHydration();
 
     expect(
       await screen.findByText("グラフがまだ登録されていません。")
@@ -231,7 +239,6 @@ describe("GraphListScreen", () => {
 
   test("switches between compact and full modes", async () => {
     await renderScreen();
-    await waitForHydration();
 
     expect(await screen.findByText("mode:compact")).toBeTruthy();
 
@@ -242,7 +249,6 @@ describe("GraphListScreen", () => {
 
   test("shows validation error in quick add when quantity is empty", async () => {
     await renderScreen();
-    await waitForHydration();
 
     expect(await screen.findByText("graph:Sleep")).toBeTruthy();
 
@@ -268,7 +274,7 @@ describe("GraphListScreen", () => {
     mockAddPixel.mockRejectedValueOnce(new Error("追加失敗"));
 
     await renderScreen();
-    await waitForHydration();
+    expect(await screen.findByText("graph:Sleep")).toBeTruthy();
 
     fireEvent.press(screen.getByText("open-quick-add"));
     fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
@@ -279,7 +285,7 @@ describe("GraphListScreen", () => {
 
   test("shows toast message when quick add succeeds", async () => {
     await renderScreen();
-    await waitForHydration();
+    expect(await screen.findByText("graph:Sleep")).toBeTruthy();
 
     fireEvent.press(screen.getByText("open-quick-add"));
     fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
