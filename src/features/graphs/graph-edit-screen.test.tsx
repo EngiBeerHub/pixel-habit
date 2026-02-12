@@ -97,6 +97,7 @@ describe("GraphEditScreen", () => {
         "グラフIDが不正です。Home画面からやり直してください。"
       )
     ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "保存" })).toBeDisabled();
   });
 
   test("shows validation error when name is empty", async () => {
@@ -131,5 +132,19 @@ describe("GraphEditScreen", () => {
     });
 
     expect(await screen.findByText("更新成功")).toBeTruthy();
+  });
+
+  test("shows auth error when credentials are missing", async () => {
+    mockLoadAuthCredentials.mockResolvedValueOnce(null);
+
+    renderScreen();
+
+    fireEvent.press(screen.getByText("保存"));
+
+    expect(
+      await screen.findByText(
+        "認証情報が見つかりません。再ログインしてください。"
+      )
+    ).toBeTruthy();
   });
 });

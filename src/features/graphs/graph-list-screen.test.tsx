@@ -12,6 +12,7 @@ import { GraphListScreen } from "./graph-list-screen";
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
 const mockGetGraphs = jest.fn();
+const mockAddPixel = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
 let consoleErrorSpy: jest.SpyInstance;
 
@@ -55,7 +56,7 @@ jest.mock("../../shared/api/graph", () => ({
 }));
 
 jest.mock("../../shared/api/pixel", () => ({
-  addPixel: jest.fn(),
+  addPixel: (...args: unknown[]) => mockAddPixel(...args),
 }));
 
 jest.mock("@gorhom/bottom-sheet", () => {
@@ -171,6 +172,10 @@ describe("GraphListScreen", () => {
     jest.clearAllMocks();
     mockLoadAuthCredentials.mockResolvedValue(credentials);
     mockGetGraphs.mockResolvedValue([graph]);
+    mockAddPixel.mockResolvedValue({
+      isSuccess: true,
+      message: "追加成功",
+    });
   });
 
   afterEach(() => {
@@ -247,5 +252,39 @@ describe("GraphListScreen", () => {
     expect(
       await screen.findByText("数量は0以上の数値で入力してください")
     ).toBeTruthy();
+  });
+
+  test("redirects to auth screen when credentials are missing", async () => {
+    mockLoadAuthCredentials.mockResolvedValue(null);
+
+    await renderScreen();
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith("/auth");
+    });
+  });
+
+  test("shows root error when quick add API fails", async () => {
+    mockAddPixel.mockRejectedValueOnce(new Error("追加失敗"));
+
+    await renderScreen();
+    await waitForHydration();
+
+    fireEvent.press(screen.getByText("open-quick-add"));
+    fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
+    fireEvent.press(screen.getByText("保存"));
+
+    expect(await screen.findByText("追加失敗")).toBeTruthy();
+  });
+
+  test("shows toast message when quick add succeeds", async () => {
+    await renderScreen();
+    await waitForHydration();
+
+    fireEvent.press(screen.getByText("open-quick-add"));
+    fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
+    fireEvent.press(screen.getByText("保存"));
+
+    expect((await screen.findAllByText("追加成功")).length).toBeGreaterThan(0);
   });
 });

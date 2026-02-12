@@ -89,6 +89,38 @@ describe("GraphCreateScreen", () => {
     expect(await screen.findByText("作成失敗")).toBeTruthy();
   });
 
+  test("shows fallback error when create rejects non-Error", async () => {
+    mockCreateGraph.mockRejectedValueOnce("unknown error");
+
+    renderScreen();
+
+    fireEvent.changeText(screen.getByPlaceholderText("habit-graph"), "habit-1");
+    fireEvent.changeText(screen.getByPlaceholderText("読書"), "Habit");
+    fireEvent.changeText(screen.getByPlaceholderText("page"), "count");
+    fireEvent.press(screen.getByText("作成"));
+
+    expect(
+      await screen.findByText("グラフ作成に失敗しました。再度お試しください。")
+    ).toBeTruthy();
+  });
+
+  test("shows auth error when credentials are missing", async () => {
+    mockLoadAuthCredentials.mockResolvedValueOnce(null);
+
+    renderScreen();
+
+    fireEvent.changeText(screen.getByPlaceholderText("habit-graph"), "habit-1");
+    fireEvent.changeText(screen.getByPlaceholderText("読書"), "Habit");
+    fireEvent.changeText(screen.getByPlaceholderText("page"), "count");
+    fireEvent.press(screen.getByText("作成"));
+
+    expect(
+      await screen.findByText(
+        "認証情報が見つかりません。再ログインしてください。"
+      )
+    ).toBeTruthy();
+  });
+
   test("creates graph and navigates back on success", async () => {
     renderScreen();
 
