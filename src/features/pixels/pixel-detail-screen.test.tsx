@@ -5,13 +5,13 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react-native";
-import { Alert } from "react-native";
 import { PixelDetailScreen } from "./pixel-detail-screen";
 
 const mockBack = jest.fn();
 const mockUpdatePixel = jest.fn();
 const mockDeletePixel = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
+const mockShowAlert = jest.fn();
 let mockRouteParams: {
   date?: string;
   graphId?: string;
@@ -43,6 +43,10 @@ jest.mock("../../shared/api/pixel", () => ({
 
 jest.mock("../../shared/storage/auth-storage", () => ({
   loadAuthCredentials: (...args: unknown[]) => mockLoadAuthCredentials(...args),
+}));
+
+jest.mock("../../shared/platform/app-alert", () => ({
+  showAlert: (...args: unknown[]) => mockShowAlert(...args),
 }));
 
 const credentials = {
@@ -88,11 +92,7 @@ describe("PixelDetailScreen", () => {
       graphName: "Sleep",
       quantity: "2",
     };
-    jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
+    mockShowAlert.mockImplementation(() => undefined);
   });
 
   test("shows validation error when quantity is empty", async () => {
@@ -130,8 +130,7 @@ describe("PixelDetailScreen", () => {
 
     fireEvent.press(screen.getByText("削除"));
 
-    const alertSpy = jest.mocked(Alert.alert);
-    const confirmButtons = alertSpy.mock.calls[0]?.[2] as
+    const confirmButtons = mockShowAlert.mock.calls[0]?.[2] as
       | AlertButton[]
       | undefined;
     const deleteConfirmButton = confirmButtons?.find(
@@ -149,7 +148,7 @@ describe("PixelDetailScreen", () => {
       });
     });
 
-    const completionButtons = alertSpy.mock.calls[1]?.[2] as
+    const completionButtons = mockShowAlert.mock.calls[1]?.[2] as
       | AlertButton[]
       | undefined;
     const okButton = completionButtons?.find((button) => button.text === "OK");

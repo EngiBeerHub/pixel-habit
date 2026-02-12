@@ -4,8 +4,9 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Alert, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { deletePixel, updatePixel } from "../../shared/api/pixel";
+import { showAlert } from "../../shared/platform/app-alert";
 import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 import { type PixelEditFormValues, pixelEditSchema } from "./pixel-edit-schema";
 
@@ -102,7 +103,7 @@ export const PixelDetailScreen = () => {
       await queryClient.invalidateQueries({
         queryKey: ["pixels", graphId],
       });
-      Alert.alert("削除完了", response.message, [
+      showAlert("削除完了", response.message, [
         {
           onPress: () => {
             router.back();
@@ -124,7 +125,7 @@ export const PixelDetailScreen = () => {
    * ピクセル削除確認ダイアログを表示する。
    */
   const onPressDelete = () => {
-    Alert.alert(
+    showAlert(
       "記録削除",
       `${date} の記録を削除しますか？この操作は取り消せません。`,
       [

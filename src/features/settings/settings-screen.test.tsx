@@ -1,11 +1,9 @@
 import {
-  act,
   fireEvent,
   render,
   screen,
   waitFor,
 } from "@testing-library/react-native";
-import { Alert, Linking } from "react-native";
 import { SettingsScreen } from "./settings-screen";
 
 const mockReplace = jest.fn();
@@ -13,6 +11,9 @@ const mockUpdateUserToken = jest.fn();
 const mockDeleteUser = jest.fn();
 const mockClearAuthCredentials = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
+const mockShowAlert = jest.fn();
+const mockCanOpenExternalUrl = jest.fn();
+const mockOpenExternalUrl = jest.fn();
 const mockSaveAuthCredentials = jest.fn();
 
 interface AlertButton {
@@ -29,6 +30,15 @@ jest.mock("expo-router", () => ({
 jest.mock("../../shared/api/user", () => ({
   deleteUser: (...args: unknown[]) => mockDeleteUser(...args),
   updateUserToken: (...args: unknown[]) => mockUpdateUserToken(...args),
+}));
+
+jest.mock("../../shared/platform/app-alert", () => ({
+  showAlert: (...args: unknown[]) => mockShowAlert(...args),
+}));
+
+jest.mock("../../shared/platform/app-linking", () => ({
+  canOpenExternalUrl: (...args: unknown[]) => mockCanOpenExternalUrl(...args),
+  openExternalUrl: (...args: unknown[]) => mockOpenExternalUrl(...args),
 }));
 
 jest.mock("../../shared/storage/auth-storage", () => ({
@@ -55,13 +65,9 @@ describe("SettingsScreen", () => {
     });
     mockClearAuthCredentials.mockResolvedValue(undefined);
     mockSaveAuthCredentials.mockResolvedValue(undefined);
-    jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
-    jest.spyOn(Linking, "canOpenURL").mockResolvedValue(true);
-    jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
+    mockShowAlert.mockImplementation(() => undefined);
+    mockCanOpenExternalUrl.mockResolvedValue(true);
+    mockOpenExternalUrl.mockResolvedValue(undefined);
   });
 
   /**
@@ -115,8 +121,9 @@ describe("SettingsScreen", () => {
 
     fireEvent.press(screen.getByText("ログアウト"));
 
-    const alertSpy = jest.mocked(Alert.alert);
-    const buttons = alertSpy.mock.calls[0]?.[2] as AlertButton[] | undefined;
+    const buttons = mockShowAlert.mock.calls[0]?.[2] as
+      | AlertButton[]
+      | undefined;
     const logoutButton = buttons?.find(
       (button) => button.text === "ログアウト"
     );
@@ -170,18 +177,17 @@ describe("SettingsScreen", () => {
     await waitForHydration();
 
     fireEvent.press(screen.getByText("ユーザー削除"));
-    const alertSpy = jest.mocked(Alert.alert);
-    const buttons = alertSpy.mock.calls[0]?.[2] as AlertButton[] | undefined;
+    const buttons = mockShowAlert.mock.calls[0]?.[2] as
+      | AlertButton[]
+      | undefined;
     const deleteButton = buttons?.find((button) => button.text === "削除する");
-    await act(() => {
-      deleteButton?.onPress?.();
-    });
+    deleteButton?.onPress?.();
 
     expect(await screen.findByText("ユーザー削除失敗")).toBeTruthy();
   });
 
   test("shows alert when external link cannot be opened", async () => {
-    jest.spyOn(Linking, "canOpenURL").mockResolvedValueOnce(false);
+    mockCanOpenExternalUrl.mockResolvedValueOnce(false);
 
     render(<SettingsScreen />);
     await waitForHydration();
@@ -189,7 +195,7 @@ describe("SettingsScreen", () => {
     fireEvent.press(screen.getByText("ウェブサイト"));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith(
+      expect(mockShowAlert).toHaveBeenCalledWith(
         "エラー",
         "リンクを開けませんでした。"
       );

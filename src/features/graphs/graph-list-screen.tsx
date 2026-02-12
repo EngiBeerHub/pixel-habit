@@ -12,9 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
-  Linking,
   RefreshControl,
   Text,
   View,
@@ -30,6 +28,11 @@ import {
   getTodayAsYyyyMmDd,
   normalizeYyyyMmDdInput,
 } from "../../shared/lib/date";
+import { showAlert } from "../../shared/platform/app-alert";
+import {
+  canOpenExternalUrl,
+  openExternalUrl,
+} from "../../shared/platform/app-linking";
 import {
   type AuthCredentials,
   loadAuthCredentials,
@@ -151,7 +154,7 @@ export const GraphListScreen = () => {
         error instanceof Error
           ? error.message
           : "統計の取得に失敗しました。再度お試しください。";
-      Alert.alert("統計取得エラー", message);
+      showAlert("統計取得エラー", message);
     },
     onSuccess: (stats, graph) => {
       const lines = [
@@ -172,7 +175,7 @@ export const GraphListScreen = () => {
         `色: ${graph.color}`,
         `タイムゾーン: ${graph.timezone}`,
       ];
-      Alert.alert(`${graph.name} の統計`, lines.join("\n"));
+      showAlert(`${graph.name} の統計`, lines.join("\n"));
     },
   });
 
@@ -192,10 +195,10 @@ export const GraphListScreen = () => {
         error instanceof Error
           ? error.message
           : "グラフ削除に失敗しました。再度お試しください。";
-      Alert.alert("削除エラー", message);
+      showAlert("削除エラー", message);
     },
     onSuccess: async (response) => {
-      Alert.alert("削除完了", response.message);
+      showAlert("削除完了", response.message);
       await query.refetch();
       if (credentials) {
         await queryClient.invalidateQueries({
@@ -350,7 +353,7 @@ export const GraphListScreen = () => {
    * グラフ削除確認ダイアログを表示する。
    */
   const onPressDeleteGraph = (graph: GraphDefinition) => {
-    Alert.alert(
+    showAlert(
       "グラフ削除",
       `${graph.name} を削除しますか？この操作は取り消せません。`,
       [
@@ -373,7 +376,7 @@ export const GraphListScreen = () => {
    * グラフカードの追加操作メニューを表示する。
    */
   const onPressGraphMenu = (graph: GraphDefinition) => {
-    Alert.alert(graph.name, "操作を選択してください。", [
+    showAlert(graph.name, "操作を選択してください。", [
       {
         onPress: () => {
           onPressEditGraph(graph);
@@ -408,12 +411,12 @@ export const GraphListScreen = () => {
       return;
     }
     const url = buildPixelaGraphUrl(credentials.username, graphId);
-    const canOpen = await Linking.canOpenURL(url);
+    const canOpen = await canOpenExternalUrl(url);
     if (!canOpen) {
-      Alert.alert("エラー", "グラフURLを開けませんでした。");
+      showAlert("エラー", "グラフURLを開けませんでした。");
       return;
     }
-    await Linking.openURL(url);
+    await openExternalUrl(url);
   };
 
   /**

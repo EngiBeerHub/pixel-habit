@@ -1,8 +1,13 @@
 import { useRouter } from "expo-router";
 import { Button, Input } from "heroui-native";
 import { useEffect, useState } from "react";
-import { Alert, Linking, Text } from "react-native";
+import { Text } from "react-native";
 import { deleteUser, updateUserToken } from "../../shared/api/user";
+import { showAlert } from "../../shared/platform/app-alert";
+import {
+  canOpenExternalUrl,
+  openExternalUrl,
+} from "../../shared/platform/app-linking";
 import {
   clearAuthCredentials,
   loadAuthCredentials,
@@ -54,12 +59,12 @@ export const SettingsScreen = () => {
    * 外部リンクを開く。開けない場合はエラーダイアログを表示する。
    */
   const onOpenExternalLink = async (url: string) => {
-    const canOpen = await Linking.canOpenURL(url);
+    const canOpen = await canOpenExternalUrl(url);
     if (!canOpen) {
-      Alert.alert("エラー", "リンクを開けませんでした。");
+      showAlert("エラー", "リンクを開けませんでした。");
       return;
     }
-    await Linking.openURL(url);
+    await openExternalUrl(url);
   };
 
   /**
@@ -74,7 +79,7 @@ export const SettingsScreen = () => {
    * ログアウト確認ダイアログを表示する。
    */
   const onPressLogout = () => {
-    Alert.alert("ログアウト", "ログアウトしますか？", [
+    showAlert("ログアウト", "ログアウトしますか？", [
       {
         style: "cancel",
         text: "キャンセル",
@@ -140,7 +145,7 @@ export const SettingsScreen = () => {
       return;
     }
 
-    Alert.alert(
+    showAlert(
       "ユーザー削除",
       "この操作は取り消せません。ユーザーを削除しますか？",
       [
