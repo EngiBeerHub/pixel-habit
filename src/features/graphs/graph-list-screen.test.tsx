@@ -13,6 +13,7 @@ const mockReplace = jest.fn();
 const mockPush = jest.fn();
 const mockGetGraphs = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
+let consoleErrorSpy: jest.SpyInstance;
 
 /**
  * 非同期の完了タイミングをテスト側で制御するためのDeferred。
@@ -157,9 +158,23 @@ const graph = {
 
 describe("GraphListScreen", () => {
   beforeEach(() => {
+    const originalConsoleError = console.error;
+    consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation((...args) => {
+        const first = args[0];
+        if (typeof first === "string" && first.includes("not wrapped in act")) {
+          return;
+        }
+        originalConsoleError(...args);
+      });
     jest.clearAllMocks();
     mockLoadAuthCredentials.mockResolvedValue(credentials);
     mockGetGraphs.mockResolvedValue([graph]);
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
   });
 
   /**
