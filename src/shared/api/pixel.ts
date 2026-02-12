@@ -1,4 +1,5 @@
-import { pixelaRequest } from "./client";
+import { AuthRequiredError, pixelaRequest } from "./client";
+import { getApiAuthCredentials } from "./client-auth-context";
 
 /**
  * 日次記録追加APIのリクエストパラメータ。
@@ -7,8 +8,6 @@ interface AddPixelParams {
   date: string;
   graphId: string;
   quantity: string;
-  token: string;
-  username: string;
 }
 
 /**
@@ -17,9 +16,7 @@ interface AddPixelParams {
 interface GetPixelsParams {
   from?: string;
   graphId: string;
-  token: string;
   to?: string;
-  username: string;
 }
 
 /**
@@ -29,8 +26,6 @@ interface UpdatePixelParams {
   date: string;
   graphId: string;
   quantity: string;
-  token: string;
-  username: string;
 }
 
 /**
@@ -39,8 +34,6 @@ interface UpdatePixelParams {
 interface DeletePixelParams {
   date: string;
   graphId: string;
-  token: string;
-  username: string;
 }
 
 /**
@@ -74,9 +67,8 @@ export const addPixel = ({
   date,
   graphId,
   quantity,
-  token,
-  username,
 }: AddPixelParams): Promise<SuccessResponse> => {
+  const username = getRequiredUsername();
   return pixelaRequest<SuccessResponse>({
     body: {
       date,
@@ -84,7 +76,6 @@ export const addPixel = ({
     },
     method: "POST",
     path: `/v1/users/${username}/graphs/${graphId}`,
-    token,
   });
 };
 
@@ -94,10 +85,9 @@ export const addPixel = ({
 export const getPixels = async ({
   from,
   graphId,
-  token,
   to,
-  username,
 }: GetPixelsParams): Promise<Pixel[]> => {
+  const username = getRequiredUsername();
   const searchParams = new URLSearchParams({
     withBody: "true",
   });
@@ -111,7 +101,6 @@ export const getPixels = async ({
   const response = await pixelaRequest<PixelsResponse>({
     method: "GET",
     path: `/v1/users/${username}/graphs/${graphId}/pixels?${searchParams.toString()}`,
-    token,
   });
   if (!response.pixels) {
     return [];
@@ -126,16 +115,14 @@ export const updatePixel = ({
   date,
   graphId,
   quantity,
-  token,
-  username,
 }: UpdatePixelParams): Promise<SuccessResponse> => {
+  const username = getRequiredUsername();
   return pixelaRequest<SuccessResponse>({
     body: {
       quantity,
     },
     method: "PUT",
     path: `/v1/users/${username}/graphs/${graphId}/${date}`,
-    token,
   });
 };
 
@@ -145,13 +132,11 @@ export const updatePixel = ({
 export const deletePixel = ({
   date,
   graphId,
-  token,
-  username,
 }: DeletePixelParams): Promise<SuccessResponse> => {
+  const username = getRequiredUsername();
   return pixelaRequest<SuccessResponse>({
     method: "DELETE",
     path: `/v1/users/${username}/graphs/${graphId}/${date}`,
-    token,
   });
 };
 
@@ -171,4 +156,15 @@ const normalizePixels = (pixels: Array<Pixel | string>): Pixel[] => {
     normalized.push(pixel);
   }
   return normalized;
+};
+
+/**
+ * 認証コンテキストから現在のusernameを取得する。
+ */
+const getRequiredUsername = (): string => {
+  const credentials = getApiAuthCredentials();
+  if (!credentials) {
+    throw new AuthRequiredError();
+  }
+  return credentials.username;
 };

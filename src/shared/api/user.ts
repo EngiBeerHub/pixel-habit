@@ -1,4 +1,5 @@
-import { pixelaRequest } from "./client";
+import { AuthRequiredError, pixelaRequest } from "./client";
+import { getApiAuthCredentials } from "./client-auth-context";
 
 /**
  * ユーザー作成APIのリクエストパラメータ。
@@ -13,16 +14,6 @@ interface CreateUserParams {
  */
 interface UpdateUserTokenParams {
   newToken: string;
-  token: string;
-  username: string;
-}
-
-/**
- * ユーザー削除APIのリクエストパラメータ。
- */
-interface DeleteUserParams {
-  token: string;
-  username: string;
 }
 
 /**
@@ -57,29 +48,35 @@ export const createUser = ({
  */
 export const updateUserToken = ({
   newToken,
-  token,
-  username,
 }: UpdateUserTokenParams): Promise<SuccessResponse> => {
+  const username = getRequiredUsername();
   return pixelaRequest<SuccessResponse>({
     body: {
       newToken,
     },
     method: "PUT",
     path: `/v1/users/${username}`,
-    token,
   });
 };
 
 /**
  * 指定ユーザーを削除する。
  */
-export const deleteUser = ({
-  token,
-  username,
-}: DeleteUserParams): Promise<SuccessResponse> => {
+export const deleteUser = (): Promise<SuccessResponse> => {
+  const username = getRequiredUsername();
   return pixelaRequest<SuccessResponse>({
     method: "DELETE",
     path: `/v1/users/${username}`,
-    token,
   });
+};
+
+/**
+ * 認証コンテキストから現在のusernameを取得する。
+ */
+const getRequiredUsername = (): string => {
+  const credentials = getApiAuthCredentials();
+  if (!credentials) {
+    throw new AuthRequiredError();
+  }
+  return credentials.username;
 };

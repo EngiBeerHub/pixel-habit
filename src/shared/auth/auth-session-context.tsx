@@ -1,6 +1,10 @@
 import { useQueryClient } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
-import { createContext, useCallback, useMemo } from "react";
+import { createContext, useCallback, useEffect, useMemo } from "react";
+import {
+  clearApiAuthCredentials,
+  setApiAuthCredentials,
+} from "../api/client-auth-context";
 import {
   type AuthCredentials,
   clearAuthCredentials,
@@ -20,6 +24,14 @@ export const AuthSessionContext = createContext<AuthSessionValue | null>(null);
 export const AuthSessionProvider = ({ children }: PropsWithChildren) => {
   const queryClient = useQueryClient();
   const authQuery = useAuthCredentialsQuery();
+
+  useEffect(() => {
+    if (authQuery.data) {
+      setApiAuthCredentials(authQuery.data);
+      return;
+    }
+    clearApiAuthCredentials();
+  }, [authQuery.data]);
 
   /**
    * 認証情報キャッシュを更新する。

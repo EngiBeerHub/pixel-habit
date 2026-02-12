@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { getGraphs } from "../../shared/api/graph";
+import { pixelaRequest } from "../../shared/api/client";
 import {
   type AuthCredentials,
   saveAuthCredentials,
@@ -23,9 +23,10 @@ export const useSignIn = () => {
         token: values.token.trim(),
         username: values.username.trim(),
       };
-      await getGraphs({
+      await pixelaRequest({
+        method: "GET",
+        path: `/v1/users/${credentials.username}/graphs`,
         token: credentials.token,
-        username: credentials.username,
       });
       await saveAuthCredentials(credentials);
       return credentials;

@@ -20,16 +20,6 @@ import {
 import { deleteUser, updateUserToken } from "./user";
 
 /**
- * 認証情報が必要なAPI呼び出しで、認証未取得時に投げる共通例外。
- */
-export class AuthRequiredError extends Error {
-  constructor(message = "認証情報が見つかりません。再ログインしてください。") {
-    super(message);
-    this.name = "AuthRequiredError";
-  }
-}
-
-/**
  * Pixela APIの成功レスポンス形式。
  */
 interface SuccessResponse {
@@ -141,103 +131,19 @@ export interface AuthedPixelaApi {
 export const useAuthedPixelaApi = (): AuthedPixelaApi => {
   const { credentials } = useAuthSession();
 
-  /**
-   * 認証済みcredentialsを返し、未認証時は共通例外を投げる。
-   */
-  const getRequiredCredentials = () => {
-    if (!credentials) {
-      throw new AuthRequiredError();
-    }
-    return credentials;
-  };
-
   return {
-    addPixel: (input) => {
-      const auth = getRequiredCredentials();
-      return addPixel({
-        ...input,
-        token: auth.token,
-        username: auth.username,
-      });
-    },
-    createGraph: (input) => {
-      const auth = getRequiredCredentials();
-      return createGraph({
-        ...input,
-        token: auth.token,
-        username: auth.username,
-      });
-    },
-    deleteGraph: (input) => {
-      const auth = getRequiredCredentials();
-      return deleteGraph({
-        ...input,
-        token: auth.token,
-        username: auth.username,
-      });
-    },
-    deletePixel: (input) => {
-      const auth = getRequiredCredentials();
-      return deletePixel({
-        ...input,
-        token: auth.token,
-        username: auth.username,
-      });
-    },
-    deleteUser: () => {
-      const auth = getRequiredCredentials();
-      return deleteUser({
-        token: auth.token,
-        username: auth.username,
-      });
-    },
-    getGraphs: () => {
-      const auth = getRequiredCredentials();
-      return getGraphs({
-        token: auth.token,
-        username: auth.username,
-      });
-    },
-    getGraphStats: (input) => {
-      const auth = getRequiredCredentials();
-      return getGraphStats({
-        ...input,
-        username: auth.username,
-      });
-    },
-    getPixels: (input) => {
-      const auth = getRequiredCredentials();
-      return getPixels({
-        ...input,
-        token: auth.token,
-        username: auth.username,
-      });
-    },
+    addPixel,
+    createGraph,
+    deleteGraph,
+    deletePixel,
+    deleteUser,
+    getGraphs,
+    getGraphStats,
+    getPixels,
     isAuthenticated: Boolean(credentials),
-    updateGraph: (input) => {
-      const auth = getRequiredCredentials();
-      return updateGraph({
-        ...input,
-        token: auth.token,
-        username: auth.username,
-      });
-    },
-    updatePixel: (input) => {
-      const auth = getRequiredCredentials();
-      return updatePixel({
-        ...input,
-        token: auth.token,
-        username: auth.username,
-      });
-    },
-    updateUserToken: (input) => {
-      const auth = getRequiredCredentials();
-      return updateUserToken({
-        ...input,
-        token: auth.token,
-        username: auth.username,
-      });
-    },
+    updateGraph,
+    updatePixel,
+    updateUserToken,
     username: credentials?.username ?? null,
   };
 };

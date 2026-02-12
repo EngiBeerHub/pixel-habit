@@ -60,10 +60,12 @@
 - 画面から認証必須APIを呼ぶときは `useAuthedPixelaApi`（`src/shared/api/authed-pixela-api.ts`）を使い、`token/username` を直接渡さない
 - 画面から `loadAuthCredentials()` を直接呼ばない（認証の読み込み責務は `AuthSessionProvider` に集約する）
 - 認証必須APIで認証情報がない場合は `AuthRequiredError` を投げ、画面側は既存エラーメッセージ導線で表示する
+- `src/shared/api/graph.ts` / `pixel.ts` / `user.ts` は業務パラメータのみを受け取り、認証情報は `pixelaRequest` が自動注入する
+- 認証情報の同期は `AuthSessionProvider` から `src/shared/api/client-auth-context.ts` へ行う
 - `AuthSessionProvider` は `authCredentials` query の読み込み・保存同期・invalidate責務を持つ
 - `query key / retry / staleTime` は `useAuthCredentialsQuery` に集約し、画面側で再定義しない
 - 既ログイン時に表示不要な認証画面は `useAuthSession` の `status/credentials` で Home へリダイレクトする
-- 次フェーズで `src/shared/api/*.ts` の公開シグネチャも認証注入前提へ簡素化する
+- `useAuthedPixelaApi` は互換レイヤとして維持し、次フェーズで不要性を評価して削除判断する
 
 ## Screen Development Rules
 

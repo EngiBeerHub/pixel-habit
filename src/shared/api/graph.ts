@@ -1,4 +1,5 @@
-import { pixelaRequest } from "./client";
+import { AuthRequiredError, pixelaRequest } from "./client";
+import { getApiAuthCredentials } from "./client-auth-context";
 
 /**
  * Pixelaで利用できるグラフ色。
@@ -47,14 +48,6 @@ interface GraphListResponse {
 }
 
 /**
- * グラフ一覧取得に必要な認証情報。
- */
-interface GetGraphsParams {
-  token: string;
-  username: string;
-}
-
-/**
  * グラフ作成APIのパラメータ。
  */
 interface CreateGraphParams {
@@ -62,10 +55,8 @@ interface CreateGraphParams {
   id: string;
   name: string;
   timezone: string;
-  token: string;
   type: GraphType;
   unit: string;
-  username: string;
 }
 
 /**
@@ -91,9 +82,7 @@ interface UpdateGraphParams {
   graphId: string;
   name: string;
   timezone: string;
-  token: string;
   unit: string;
-  username: string;
 }
 
 /**
@@ -101,8 +90,6 @@ interface UpdateGraphParams {
  */
 interface DeleteGraphParams {
   graphId: string;
-  token: string;
-  username: string;
 }
 
 /**
@@ -110,7 +97,6 @@ interface DeleteGraphParams {
  */
 interface GetGraphStatsParams {
   graphId: string;
-  username: string;
 }
 
 /**
@@ -124,14 +110,11 @@ interface SuccessResponse {
 /**
  * 指定ユーザーのグラフ一覧を取得する。
  */
-export const getGraphs = async ({
-  token,
-  username,
-}: GetGraphsParams): Promise<GraphDefinition[]> => {
+export const getGraphs = async (): Promise<GraphDefinition[]> => {
+  const username = getRequiredUsername();
   const response = await pixelaRequest<GraphListResponse>({
     method: "GET",
     path: `/v1/users/${username}/graphs`,
-    token,
   });
   return response.graphs;
 };
@@ -144,11 +127,10 @@ export const createGraph = ({
   id,
   name,
   timezone,
-  token,
   type,
   unit,
-  username,
 }: CreateGraphParams): Promise<SuccessResponse> => {
+  const username = getRequiredUsername();
   return pixelaRequest<SuccessResponse>({
     body: {
       color,
@@ -160,7 +142,6 @@ export const createGraph = ({
     },
     method: "POST",
     path: `/v1/users/${username}/graphs`,
-    token,
   });
 };
 
@@ -169,8 +150,8 @@ export const createGraph = ({
  */
 export const getGraphStats = ({
   graphId,
-  username,
 }: GetGraphStatsParams): Promise<GraphStats> => {
+  const username = getRequiredUsername();
   return pixelaRequest<GraphStats>({
     method: "GET",
     path: `/v1/users/${username}/graphs/${graphId}/stats`,
@@ -185,10 +166,9 @@ export const updateGraph = ({
   graphId,
   name,
   timezone,
-  token,
   unit,
-  username,
 }: UpdateGraphParams): Promise<SuccessResponse> => {
+  const username = getRequiredUsername();
   return pixelaRequest<SuccessResponse>({
     body: {
       color,
@@ -198,7 +178,6 @@ export const updateGraph = ({
     },
     method: "PUT",
     path: `/v1/users/${username}/graphs/${graphId}`,
-    token,
   });
 };
 
@@ -207,12 +186,21 @@ export const updateGraph = ({
  */
 export const deleteGraph = ({
   graphId,
-  token,
-  username,
 }: DeleteGraphParams): Promise<SuccessResponse> => {
+  const username = getRequiredUsername();
   return pixelaRequest<SuccessResponse>({
     method: "DELETE",
     path: `/v1/users/${username}/graphs/${graphId}`,
-    token,
   });
+};
+
+/**
+ * 認証コンテキストから現在のusernameを取得する。
+ */
+const getRequiredUsername = (): string => {
+  const credentials = getApiAuthCredentials();
+  if (!credentials) {
+    throw new AuthRequiredError();
+  }
+  return credentials.username;
 };

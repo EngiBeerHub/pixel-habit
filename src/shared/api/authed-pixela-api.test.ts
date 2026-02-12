@@ -1,5 +1,6 @@
 import { renderHook } from "@testing-library/react-native";
-import { AuthRequiredError, useAuthedPixelaApi } from "./authed-pixela-api";
+import { useAuthedPixelaApi } from "./authed-pixela-api";
+import { AuthRequiredError } from "./client";
 
 const mockCreateGraph = jest.fn();
 const mockDeleteGraph = jest.fn();
@@ -71,14 +72,9 @@ describe("useAuthedPixelaApi", () => {
       graphId: "sleep",
     });
 
-    expect(mockGetGraphs).toHaveBeenCalledWith({
-      token: "token-1234",
-      username: "demo-user",
-    });
+    expect(mockGetGraphs).toHaveBeenCalledWith();
     expect(mockGetPixels).toHaveBeenCalledWith({
       graphId: "sleep",
-      token: "token-1234",
-      username: "demo-user",
     });
   });
 
@@ -134,54 +130,37 @@ describe("useAuthedPixelaApi", () => {
       id: "sleep",
       name: "Sleep",
       timezone: "Asia/Tokyo",
-      token: "token-1234",
       type: "int",
       unit: "hour",
-      username: "demo-user",
     });
     expect(mockUpdateGraph).toHaveBeenCalledWith({
       color: "sora",
       graphId: "sleep",
       name: "Sleep2",
       timezone: "Asia/Tokyo",
-      token: "token-1234",
       unit: "hour",
-      username: "demo-user",
     });
     expect(mockDeleteGraph).toHaveBeenCalledWith({
       graphId: "sleep",
-      token: "token-1234",
-      username: "demo-user",
     });
     expect(mockAddPixel).toHaveBeenCalledWith({
       date: "20260101",
       graphId: "sleep",
       quantity: "2",
-      token: "token-1234",
-      username: "demo-user",
     });
     expect(mockUpdatePixel).toHaveBeenCalledWith({
       date: "20260101",
       graphId: "sleep",
       quantity: "3",
-      token: "token-1234",
-      username: "demo-user",
     });
     expect(mockDeletePixel).toHaveBeenCalledWith({
       date: "20260101",
       graphId: "sleep",
-      token: "token-1234",
-      username: "demo-user",
     });
     expect(mockUpdateUserToken).toHaveBeenCalledWith({
       newToken: "new-token-9999",
-      token: "token-1234",
-      username: "demo-user",
     });
-    expect(mockDeleteUser).toHaveBeenCalledWith({
-      token: "token-1234",
-      username: "demo-user",
-    });
+    expect(mockDeleteUser).toHaveBeenCalledWith();
   });
 
   test("throws AuthRequiredError when credentials are missing", () => {
@@ -196,9 +175,11 @@ describe("useAuthedPixelaApi", () => {
 
     const { result } = renderHook(() => useAuthedPixelaApi());
 
-    expect(() => {
-      result.current.getGraphs();
-    }).toThrow(AuthRequiredError);
+    mockGetGraphs.mockImplementationOnce(() => {
+      throw new AuthRequiredError();
+    });
+
+    expect(() => result.current.getGraphs()).toThrow(AuthRequiredError);
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.username).toBeNull();
   });

@@ -1,3 +1,5 @@
+import { getApiAuthCredentials } from "./client-auth-context";
+
 /**
  * Pixela API のベースURL。
  */
@@ -25,6 +27,16 @@ export class PixelaApiError extends Error {
 }
 
 /**
+ * 認証必須APIで認証情報が未設定のときに投げる例外。
+ */
+export class AuthRequiredError extends Error {
+  constructor(message = "認証情報が見つかりません。再ログインしてください。") {
+    super(message);
+    this.name = "AuthRequiredError";
+  }
+}
+
+/**
  * 共通リクエスト関数で利用するオプション。
  */
 interface PixelaRequestOptions {
@@ -47,8 +59,13 @@ export const pixelaRequest = async <TResponse>({
     "Content-Type": "application/json",
   });
 
-  if (token) {
-    headers.set("X-USER-TOKEN", token);
+  const resolvedToken = token ?? getApiAuthCredentials()?.token;
+  const shouldRequireAuth = path.startsWith("/v1/users/");
+  if (shouldRequireAuth && !resolvedToken) {
+    throw new AuthRequiredError();
+  }
+  if (resolvedToken) {
+    headers.set("X-USER-TOKEN", resolvedToken);
   }
 
   const response = await fetch(`${PIXELA_BASE_URL}${path}`, {

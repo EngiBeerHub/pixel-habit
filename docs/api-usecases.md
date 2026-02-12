@@ -8,6 +8,8 @@
 - 認証: `X-USER-TOKEN`
 - 認証情報保持: `expo-secure-store`
 - サーバー状態管理: React Query
+- API層シグネチャ: `src/shared/api/graph.ts` / `pixel.ts` / `user.ts` は業務パラメータのみを受け取る
+- 認証注入: `AuthSessionProvider` が `client-auth-context` と同期し、`pixelaRequest` がトークンを自動注入する
 
 ## MVPで実装するユースケース
 
