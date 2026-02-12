@@ -1,5 +1,7 @@
+import { notifyManager } from "@tanstack/query-core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -75,6 +77,20 @@ const renderScreen = () => {
 };
 
 describe("PixelDetailScreen", () => {
+  beforeAll(() => {
+    notifyManager.setNotifyFunction((callback) => {
+      act(() => {
+        callback();
+      });
+    });
+  });
+
+  afterAll(() => {
+    notifyManager.setNotifyFunction((callback) => {
+      callback();
+    });
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockLoadAuthCredentials.mockResolvedValue(credentials);
@@ -158,7 +174,7 @@ describe("PixelDetailScreen", () => {
   });
 
   test("shows auth error when credentials are missing on update", async () => {
-    mockLoadAuthCredentials.mockResolvedValueOnce(null);
+    mockLoadAuthCredentials.mockResolvedValue(null);
 
     renderScreen();
 

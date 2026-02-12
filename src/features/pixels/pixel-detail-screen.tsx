@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useState } from "react";
@@ -29,6 +29,12 @@ export const PixelDetailScreen = () => {
   const date = typeof params.date === "string" ? params.date : "";
   const initialQuantity =
     typeof params.quantity === "string" ? params.quantity : "";
+  const authQuery = useQuery({
+    queryFn: loadAuthCredentials,
+    queryKey: ["authCredentials"],
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const credentials = authQuery.data ?? null;
 
   const {
     control,
@@ -44,8 +50,8 @@ export const PixelDetailScreen = () => {
 
   const updateMutation = useMutation({
     mutationFn: async (values: PixelEditFormValues) => {
-      const credentials = await loadAuthCredentials();
-      if (!credentials) {
+      const currentCredentials = credentials ?? (await loadAuthCredentials());
+      if (!currentCredentials) {
         throw new Error("認証情報が見つかりません。再ログインしてください。");
       }
       if (!(graphId && date)) {
@@ -55,8 +61,8 @@ export const PixelDetailScreen = () => {
         date,
         graphId,
         quantity: values.quantity,
-        token: credentials.token,
-        username: credentials.username,
+        token: currentCredentials.token,
+        username: currentCredentials.username,
       });
     },
     onError: (error) => {
@@ -77,8 +83,8 @@ export const PixelDetailScreen = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      const credentials = await loadAuthCredentials();
-      if (!credentials) {
+      const currentCredentials = credentials ?? (await loadAuthCredentials());
+      if (!currentCredentials) {
         throw new Error("認証情報が見つかりません。再ログインしてください。");
       }
       if (!(graphId && date)) {
@@ -87,8 +93,8 @@ export const PixelDetailScreen = () => {
       return deletePixel({
         date,
         graphId,
-        token: credentials.token,
-        username: credentials.username,
+        token: currentCredentials.token,
+        username: currentCredentials.username,
       });
     },
     onError: (error) => {
