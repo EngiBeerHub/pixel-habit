@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -10,10 +10,7 @@ import {
   View,
 } from "react-native";
 import { getPixels, type Pixel } from "../../shared/api/pixel";
-import {
-  type AuthCredentials,
-  loadAuthCredentials,
-} from "../../shared/storage/auth-storage";
+import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 
 /**
  * 指定グラフのピクセル一覧を表示する画面。
@@ -27,39 +24,15 @@ export const PixelListScreen = () => {
   const graphId = typeof params.graphId === "string" ? params.graphId : "";
   const graphName =
     typeof params.graphName === "string" ? params.graphName : "";
-  const [credentials, setCredentials] = useState<AuthCredentials | null>(null);
-  const [authLoadError, setAuthLoadError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const hydrate = async () => {
-      try {
-        const stored = await loadAuthCredentials();
-        if (!isMounted) {
-          return;
-        }
-        setCredentials(stored);
-        if (!stored) {
-          setAuthLoadError(
-            "認証情報が見つかりません。再ログインしてください。"
-          );
-        }
-      } catch {
-        if (isMounted) {
-          setAuthLoadError("認証情報の読み込みに失敗しました。");
-        }
-      }
-    };
-
-    hydrate();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const authQuery = useQuery({
+    queryFn: loadAuthCredentials,
+    queryKey: ["authCredentials"],
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const credentials = authQuery.data ?? null;
 
   const query = useQuery({
-    enabled: Boolean(credentials && graphId),
+    enabled: Boolean(credentials && graphId) && !authQuery.isPending,
     queryFn: () => {
       if (!(credentials && graphId)) {
         return [];
@@ -74,8 +47,11 @@ export const PixelListScreen = () => {
   });
 
   const errorMessage = useMemo(() => {
-    if (authLoadError) {
-      return authLoadError;
+    if (authQuery.isError) {
+      return "認証情報の読み込みに失敗しました。";
+    }
+    if (authQuery.isSuccess && !authQuery.data) {
+      return "認証情報が見つかりません。再ログインしてください。";
     }
     if (!query.error) {
       return null;
@@ -84,7 +60,7 @@ export const PixelListScreen = () => {
       return query.error.message;
     }
     return "ピクセル一覧の取得に失敗しました。";
-  }, [authLoadError, query.error]);
+  }, [authQuery.data, authQuery.isError, authQuery.isSuccess, query.error]);
 
   /**
    * ピクセル編集画面へ遷移する。
