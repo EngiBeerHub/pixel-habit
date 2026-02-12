@@ -211,7 +211,7 @@ describe("GraphListScreen", () => {
     await waitForHydration();
 
     expect(await screen.findByText("取得失敗")).toBeTruthy();
-    fireEvent.press(screen.getByText("再試行"));
+    fireEvent.press(screen.getByTestId("graph-list-retry-button"));
 
     await waitFor(() => {
       expect(mockGetGraphs).toHaveBeenCalledTimes(2);
@@ -235,7 +235,7 @@ describe("GraphListScreen", () => {
 
     expect(await screen.findByText("mode:compact")).toBeTruthy();
 
-    fireEvent.press(screen.getByText("Full"));
+    fireEvent.press(screen.getByTestId("graph-view-mode-full-button"));
 
     expect(await screen.findByText("mode:full")).toBeTruthy();
   });
@@ -247,7 +247,7 @@ describe("GraphListScreen", () => {
     expect(await screen.findByText("graph:Sleep")).toBeTruthy();
 
     fireEvent.press(screen.getByText("open-quick-add"));
-    fireEvent.press(screen.getByText("保存"));
+    fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
 
     expect(
       await screen.findByText("数量は0以上の数値で入力してください")
@@ -272,7 +272,7 @@ describe("GraphListScreen", () => {
 
     fireEvent.press(screen.getByText("open-quick-add"));
     fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
-    fireEvent.press(screen.getByText("保存"));
+    fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
 
     expect(await screen.findByText("追加失敗")).toBeTruthy();
   });
@@ -283,7 +283,7 @@ describe("GraphListScreen", () => {
 
     fireEvent.press(screen.getByText("open-quick-add"));
     fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
-    fireEvent.press(screen.getByText("保存"));
+    fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
 
     expect((await screen.findAllByText("追加成功")).length).toBeGreaterThan(0);
   });

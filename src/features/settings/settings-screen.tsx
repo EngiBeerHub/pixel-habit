@@ -215,7 +215,11 @@ export const SettingsScreen = () => {
           />
         </FormField>
         <ActionStack>
-          <Button isDisabled={isSubmitting} onPress={onPressUpdateToken}>
+          <Button
+            isDisabled={isSubmitting}
+            onPress={onPressUpdateToken}
+            testID="settings-update-token-button"
+          >
             トークン変更
           </Button>
           <Button
@@ -266,10 +270,18 @@ export const SettingsScreen = () => {
       {/* 危険操作セクション: アカウント削除とログアウト */}
       <SectionCard title="危険操作" tone="danger">
         <ActionStack>
-          <Button isDisabled={isSubmitting} onPress={onPressDeleteUser}>
+          <Button
+            isDisabled={isSubmitting}
+            onPress={onPressDeleteUser}
+            testID="settings-delete-user-button"
+          >
             ユーザー削除
           </Button>
-          <Button isDisabled={isSubmitting} onPress={onPressLogout}>
+          <Button
+            isDisabled={isSubmitting}
+            onPress={onPressLogout}
+            testID="settings-logout-button"
+          >
             ログアウト
           </Button>
         </ActionStack>

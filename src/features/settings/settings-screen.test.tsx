@@ -1,4 +1,5 @@
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -84,7 +85,7 @@ describe("SettingsScreen", () => {
     await waitForHydration();
 
     fireEvent.changeText(screen.getByPlaceholderText("new-token"), "short");
-    fireEvent.press(screen.getByText("トークン変更"));
+    fireEvent.press(screen.getByTestId("settings-update-token-button"));
 
     expect(
       await screen.findByText("新しいトークンは8文字以上で入力してください。")
@@ -99,7 +100,7 @@ describe("SettingsScreen", () => {
       screen.getByPlaceholderText("new-token"),
       "new-token-9999"
     );
-    fireEvent.press(screen.getByText("トークン変更"));
+    fireEvent.press(screen.getByTestId("settings-update-token-button"));
 
     await waitFor(() => {
       expect(mockUpdateUserToken).toHaveBeenCalledWith({
@@ -119,7 +120,7 @@ describe("SettingsScreen", () => {
   test("logs out after confirmation", async () => {
     render(<SettingsScreen />);
 
-    fireEvent.press(screen.getByText("ログアウト"));
+    fireEvent.press(screen.getByTestId("settings-logout-button"));
 
     const buttons = mockShowAlert.mock.calls[0]?.[2] as
       | AlertButton[]
@@ -128,7 +129,9 @@ describe("SettingsScreen", () => {
       (button) => button.text === "ログアウト"
     );
 
-    logoutButton?.onPress?.();
+    await act(() => {
+      logoutButton?.onPress?.();
+    });
 
     await waitFor(() => {
       expect(mockClearAuthCredentials).toHaveBeenCalled();
@@ -146,7 +149,7 @@ describe("SettingsScreen", () => {
       screen.getByPlaceholderText("new-token"),
       "new-token-9999"
     );
-    fireEvent.press(screen.getByText("トークン変更"));
+    fireEvent.press(screen.getByTestId("settings-update-token-button"));
 
     expect(
       await screen.findByText(
@@ -165,7 +168,7 @@ describe("SettingsScreen", () => {
       screen.getByPlaceholderText("new-token"),
       "new-token-9999"
     );
-    fireEvent.press(screen.getByText("トークン変更"));
+    fireEvent.press(screen.getByTestId("settings-update-token-button"));
 
     expect(await screen.findByText("トークン更新失敗")).toBeTruthy();
   });
@@ -176,12 +179,14 @@ describe("SettingsScreen", () => {
     render(<SettingsScreen />);
     await waitForHydration();
 
-    fireEvent.press(screen.getByText("ユーザー削除"));
+    fireEvent.press(screen.getByTestId("settings-delete-user-button"));
     const buttons = mockShowAlert.mock.calls[0]?.[2] as
       | AlertButton[]
       | undefined;
     const deleteButton = buttons?.find((button) => button.text === "削除する");
-    deleteButton?.onPress?.();
+    await act(() => {
+      deleteButton?.onPress?.();
+    });
 
     expect(await screen.findByText("ユーザー削除失敗")).toBeTruthy();
   });

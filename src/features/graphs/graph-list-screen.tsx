@@ -465,6 +465,7 @@ export const GraphListScreen = () => {
             onPress={() => {
               setViewMode("compact");
             }}
+            testID="graph-view-mode-compact-button"
           >
             Compact
           </Button>
@@ -473,6 +474,7 @@ export const GraphListScreen = () => {
             onPress={() => {
               setViewMode("full");
             }}
+            testID="graph-view-mode-full-button"
           >
             Full
           </Button>
@@ -491,7 +493,9 @@ export const GraphListScreen = () => {
       {!query.isLoading && errorMessage ? (
         <View className="rounded-xl border border-red-200 bg-red-50 p-4">
           <Text className="mb-3 text-red-700">{errorMessage}</Text>
-          <Button onPress={onRetry}>再試行</Button>
+          <Button onPress={onRetry} testID="graph-list-retry-button">
+            再試行
+          </Button>
         </View>
       ) : null}
       {/* 記録追加成功後に一定時間表示するトースト */}
@@ -629,6 +633,7 @@ export const GraphListScreen = () => {
             <Button
               isDisabled={addPixelMutation.isPending}
               onPress={onSubmitQuickAdd}
+              testID="graph-quick-add-save-button"
             >
               保存
             </Button>
