@@ -1,10 +1,11 @@
 import {
+  act,
   fireEvent,
   render,
   screen,
   waitFor,
 } from "@testing-library/react-native";
-import { Alert } from "react-native";
+import { Alert, Linking } from "react-native";
 import { SettingsScreen } from "./settings-screen";
 
 const mockReplace = jest.fn();
@@ -37,11 +38,6 @@ jest.mock("../../shared/storage/auth-storage", () => ({
   saveAuthCredentials: (...args: unknown[]) => mockSaveAuthCredentials(...args),
 }));
 
-jest.mock("react-native/Libraries/Linking/Linking", () => ({
-  canOpenURL: jest.fn(async () => true),
-  openURL: jest.fn(async () => undefined),
-}));
-
 describe("SettingsScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -60,6 +56,8 @@ describe("SettingsScreen", () => {
     mockClearAuthCredentials.mockResolvedValue(undefined);
     mockSaveAuthCredentials.mockResolvedValue(undefined);
     jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
+    jest.spyOn(Linking, "canOpenURL").mockResolvedValue(true);
+    jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -128,6 +126,73 @@ describe("SettingsScreen", () => {
     await waitFor(() => {
       expect(mockClearAuthCredentials).toHaveBeenCalled();
       expect(mockReplace).toHaveBeenCalledWith("/auth");
+    });
+  });
+
+  test("shows auth missing error on token update", async () => {
+    mockLoadAuthCredentials.mockResolvedValueOnce(null);
+
+    render(<SettingsScreen />);
+    await waitForHydration();
+
+    fireEvent.changeText(
+      screen.getByPlaceholderText("new-token"),
+      "new-token-9999"
+    );
+    fireEvent.press(screen.getByText("トークン変更"));
+
+    expect(
+      await screen.findByText(
+        "認証情報が見つかりません。再ログインしてください。"
+      )
+    ).toBeTruthy();
+  });
+
+  test("shows API error when token update fails", async () => {
+    mockUpdateUserToken.mockRejectedValueOnce(new Error("トークン更新失敗"));
+
+    render(<SettingsScreen />);
+    await waitForHydration();
+
+    fireEvent.changeText(
+      screen.getByPlaceholderText("new-token"),
+      "new-token-9999"
+    );
+    fireEvent.press(screen.getByText("トークン変更"));
+
+    expect(await screen.findByText("トークン更新失敗")).toBeTruthy();
+  });
+
+  test("shows API error when delete user fails", async () => {
+    mockDeleteUser.mockRejectedValueOnce(new Error("ユーザー削除失敗"));
+
+    render(<SettingsScreen />);
+    await waitForHydration();
+
+    fireEvent.press(screen.getByText("ユーザー削除"));
+    const alertSpy = jest.mocked(Alert.alert);
+    const buttons = alertSpy.mock.calls[0]?.[2] as AlertButton[] | undefined;
+    const deleteButton = buttons?.find((button) => button.text === "削除する");
+    await act(() => {
+      deleteButton?.onPress?.();
+    });
+
+    expect(await screen.findByText("ユーザー削除失敗")).toBeTruthy();
+  });
+
+  test("shows alert when external link cannot be opened", async () => {
+    jest.spyOn(Linking, "canOpenURL").mockResolvedValueOnce(false);
+
+    render(<SettingsScreen />);
+    await waitForHydration();
+
+    fireEvent.press(screen.getByText("ウェブサイト"));
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "エラー",
+        "リンクを開けませんでした。"
+      );
     });
   });
 });
