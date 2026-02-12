@@ -1,8 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ScrollView, Text, TextInput, View } from "react-native";
 import {
@@ -25,7 +25,6 @@ export const GraphEditScreen = () => {
     timezone?: string;
     unit?: string;
   }>();
-  const [authError, setAuthError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const graphId = typeof params.graphId === "string" ? params.graphId : "";
@@ -35,6 +34,18 @@ export const GraphEditScreen = () => {
     typeof params.timezone === "string" ? params.timezone : "Asia/Tokyo";
   const initialUnit = typeof params.unit === "string" ? params.unit : "";
   const initialColor = toGraphColor(params.color);
+  const authQuery = useQuery({
+    queryFn: loadAuthCredentials,
+    queryKey: ["authCredentials"],
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const credentials = authQuery.data ?? null;
+  const graphIdError = useMemo(() => {
+    if (graphId) {
+      return null;
+    }
+    return "グラフIDが不正です。Home画面からやり直してください。";
+  }, [graphId]);
 
   const {
     control,
@@ -51,16 +62,10 @@ export const GraphEditScreen = () => {
     resolver: zodResolver(graphEditSchema),
   });
 
-  useEffect(() => {
-    if (!graphId) {
-      setAuthError("グラフIDが不正です。Home画面からやり直してください。");
-    }
-  }, [graphId]);
-
   const mutation = useMutation({
     mutationFn: async (values: GraphEditFormValues) => {
-      const credentials = await loadAuthCredentials();
-      if (!credentials) {
+      const currentCredentials = credentials ?? (await loadAuthCredentials());
+      if (!currentCredentials) {
         throw new Error("認証情報が見つかりません。再ログインしてください。");
       }
       if (!graphId) {
@@ -72,9 +77,9 @@ export const GraphEditScreen = () => {
         graphId,
         name: values.name.trim(),
         timezone: values.timezone.trim(),
-        token: credentials.token,
+        token: currentCredentials.token,
         unit: values.unit.trim(),
-        username: credentials.username,
+        username: currentCredentials.username,
       });
     },
     onError: (error) => {
@@ -196,8 +201,8 @@ export const GraphEditScreen = () => {
       />
 
       {/* 事前チェックエラー（不正なgraphId等） */}
-      {authError ? (
-        <Text className="mb-4 text-red-600 text-sm">{authError}</Text>
+      {graphIdError ? (
+        <Text className="mb-4 text-red-600 text-sm">{graphIdError}</Text>
       ) : null}
       {/* API失敗時のフォーム共通エラー */}
       {errors.root?.message ? (
@@ -211,7 +216,7 @@ export const GraphEditScreen = () => {
       {/* 画面アクション: 保存実行 / Homeへ戻る */}
       <View className="gap-3">
         <Button
-          isDisabled={mutation.isPending || Boolean(authError)}
+          isDisabled={mutation.isPending || Boolean(graphIdError)}
           onPress={onSubmit}
         >
           保存

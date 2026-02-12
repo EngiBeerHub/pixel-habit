@@ -1,5 +1,7 @@
+import { notifyManager } from "@tanstack/query-core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -59,6 +61,20 @@ const renderScreen = () => {
 };
 
 describe("PixelListScreen", () => {
+  beforeAll(() => {
+    notifyManager.setNotifyFunction((callback) => {
+      act(() => {
+        callback();
+      });
+    });
+  });
+
+  afterAll(() => {
+    notifyManager.setNotifyFunction((callback) => {
+      callback();
+    });
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockLoadAuthCredentials.mockResolvedValue(credentials);
