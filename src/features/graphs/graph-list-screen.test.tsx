@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -116,7 +117,7 @@ jest.mock("./components/graph-card", () => {
   return { GraphCard };
 });
 
-const renderScreen = () => {
+const renderScreen = async () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       mutations: {
@@ -129,11 +130,15 @@ const renderScreen = () => {
     },
   });
 
-  return render(
+  const screenInstance = render(
     <QueryClientProvider client={queryClient}>
       <GraphListScreen />
     </QueryClientProvider>
   );
+  await act(async () => {
+    await Promise.resolve();
+  });
+  return screenInstance;
 };
 
 const credentials = {
@@ -157,11 +162,21 @@ describe("GraphListScreen", () => {
     mockGetGraphs.mockResolvedValue([graph]);
   });
 
+  /**
+   * 認証情報のhydrate完了を待ってから画面状態を検証する。
+   */
+  const waitForHydration = async () => {
+    await waitFor(() => {
+      expect(mockLoadAuthCredentials).toHaveBeenCalled();
+    });
+  };
+
   test("shows loading state while graph list is pending", async () => {
     const deferred = createDeferred<readonly [typeof graph]>();
     mockGetGraphs.mockImplementationOnce(() => deferred.promise);
 
-    renderScreen();
+    await renderScreen();
+    await waitForHydration();
 
     expect(await screen.findByText("読み込み中...")).toBeTruthy();
 
@@ -172,7 +187,8 @@ describe("GraphListScreen", () => {
   test("shows error state and allows retry", async () => {
     mockGetGraphs.mockRejectedValueOnce(new Error("取得失敗"));
 
-    renderScreen();
+    await renderScreen();
+    await waitForHydration();
 
     expect(await screen.findByText("取得失敗")).toBeTruthy();
     fireEvent.press(screen.getByText("再試行"));
@@ -185,7 +201,8 @@ describe("GraphListScreen", () => {
   test("shows empty state when no graphs exist", async () => {
     mockGetGraphs.mockResolvedValueOnce([]);
 
-    renderScreen();
+    await renderScreen();
+    await waitForHydration();
 
     expect(
       await screen.findByText("グラフがまだ登録されていません。")
@@ -193,7 +210,8 @@ describe("GraphListScreen", () => {
   });
 
   test("switches between compact and full modes", async () => {
-    renderScreen();
+    await renderScreen();
+    await waitForHydration();
 
     expect(await screen.findByText("mode:compact")).toBeTruthy();
 
@@ -203,7 +221,8 @@ describe("GraphListScreen", () => {
   });
 
   test("shows validation error in quick add when quantity is empty", async () => {
-    renderScreen();
+    await renderScreen();
+    await waitForHydration();
 
     expect(await screen.findByText("graph:Sleep")).toBeTruthy();
 
