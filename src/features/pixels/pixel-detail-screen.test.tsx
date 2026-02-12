@@ -12,7 +12,7 @@ const mockBack = jest.fn();
 const mockUpdatePixel = jest.fn();
 const mockDeletePixel = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
-const mockRouteParams: {
+let mockRouteParams: {
   date?: string;
   graphId?: string;
   graphName?: string;
@@ -82,6 +82,12 @@ describe("PixelDetailScreen", () => {
       isSuccess: true,
       message: "削除成功",
     });
+    mockRouteParams = {
+      date: "20260108",
+      graphId: "sleep",
+      graphName: "Sleep",
+      quantity: "2",
+    };
     jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
   });
 
@@ -150,5 +156,36 @@ describe("PixelDetailScreen", () => {
     okButton?.onPress?.();
 
     expect(mockBack).toHaveBeenCalled();
+  });
+
+  test("shows auth error when credentials are missing on update", async () => {
+    mockLoadAuthCredentials.mockResolvedValueOnce(null);
+
+    renderScreen();
+
+    fireEvent.changeText(screen.getByPlaceholderText("10"), "5");
+    fireEvent.press(screen.getByText("更新"));
+
+    expect(
+      await screen.findByText(
+        "認証情報が見つかりません。再ログインしてください。"
+      )
+    ).toBeTruthy();
+  });
+
+  test("shows graph/date error when route params are invalid", async () => {
+    mockRouteParams = {
+      graphId: "sleep",
+      graphName: "Sleep",
+      quantity: "2",
+    };
+
+    renderScreen();
+
+    fireEvent.press(screen.getByText("更新"));
+
+    expect(
+      await screen.findByText("graphIdまたはdateが不正です。")
+    ).toBeTruthy();
   });
 });

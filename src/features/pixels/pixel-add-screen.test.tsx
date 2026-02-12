@@ -97,6 +97,40 @@ describe("PixelAddScreen", () => {
     expect(await screen.findByText("追加失敗")).toBeTruthy();
   });
 
+  test("shows auth error when credentials are missing", async () => {
+    mockLoadAuthCredentials.mockResolvedValueOnce(null);
+
+    renderScreen();
+
+    fireEvent.changeText(screen.getByPlaceholderText("10"), "2");
+    fireEvent.press(screen.getByText("記録を追加"));
+
+    expect(
+      await screen.findByText(
+        "接続情報が見つかりません。先に接続設定を行ってください。"
+      )
+    ).toBeTruthy();
+  });
+
+  test("shows graphId error when route param is missing", async () => {
+    mockRouteParams = {
+      date: "20260108",
+      graphName: "Sleep",
+      quantity: "",
+    };
+
+    renderScreen();
+
+    fireEvent.changeText(screen.getByPlaceholderText("10"), "2");
+    fireEvent.press(screen.getByText("記録を追加"));
+
+    expect(
+      await screen.findByText(
+        "グラフIDが不正です。一覧画面からやり直してください。"
+      )
+    ).toBeTruthy();
+  });
+
   test("shows success message and calls addPixel", async () => {
     renderScreen();
 

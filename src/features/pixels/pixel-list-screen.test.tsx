@@ -124,4 +124,26 @@ describe("PixelListScreen", () => {
       pathname: "/graphs/[graphId]/pixels/[date]",
     });
   });
+
+  test("shows auth missing error", async () => {
+    mockLoadAuthCredentials.mockResolvedValueOnce(null);
+
+    renderScreen();
+
+    expect(
+      await screen.findByText(
+        "認証情報が見つかりません。再ログインしてください。"
+      )
+    ).toBeTruthy();
+  });
+
+  test("shows auth loading failure error", async () => {
+    mockLoadAuthCredentials.mockRejectedValueOnce(new Error("load failed"));
+
+    renderScreen();
+
+    expect(
+      await screen.findByText("認証情報の読み込みに失敗しました。")
+    ).toBeTruthy();
+  });
 });
