@@ -15,7 +15,6 @@ const mockPush = jest.fn();
 const mockGetGraphs = jest.fn();
 const mockAddPixel = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
-let consoleErrorSpy: jest.SpyInstance;
 
 /**
  * 非同期の完了タイミングをテスト側で制御するためのDeferred。
@@ -174,21 +173,6 @@ describe("GraphListScreen", () => {
   });
 
   beforeEach(() => {
-    const originalConsoleError = console.error;
-    consoleErrorSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation((...args) => {
-        const firstArg = args[0];
-        if (
-          typeof firstArg === "string" &&
-          firstArg.includes(
-            "GraphListScreen inside a test was not wrapped in act"
-          )
-        ) {
-          return;
-        }
-        originalConsoleError(...args);
-      });
     jest.clearAllMocks();
     mockLoadAuthCredentials.mockResolvedValue(credentials);
     mockGetGraphs.mockResolvedValue([graph]);
@@ -196,10 +180,6 @@ describe("GraphListScreen", () => {
       isSuccess: true,
       message: "追加成功",
     });
-  });
-
-  afterEach(() => {
-    consoleErrorSpy.mockRestore();
   });
 
   test("shows loading state while graph list is pending", async () => {

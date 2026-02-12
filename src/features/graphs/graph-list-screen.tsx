@@ -33,10 +33,7 @@ import {
   canOpenExternalUrl,
   openExternalUrl,
 } from "../../shared/platform/app-linking";
-import {
-  type AuthCredentials,
-  loadAuthCredentials,
-} from "../../shared/storage/auth-storage";
+import { loadAuthCredentials } from "../../shared/storage/auth-storage";
 import {
   type PixelAddFormValues,
   pixelAddSchema,
@@ -55,8 +52,6 @@ export const GraphListScreen = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const [credentials, setCredentials] = useState<AuthCredentials | null>(null);
-  const [authLoadError, setAuthLoadError] = useState<string | null>(null);
   const [sheetMessage, setSheetMessage] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selectedGraph, setSelectedGraph] = useState<GraphDefinition | null>(
@@ -88,35 +83,22 @@ export const GraphListScreen = () => {
     };
   }, []);
 
+  const authQuery = useQuery({
+    queryFn: loadAuthCredentials,
+    queryKey: ["authCredentials"],
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+
+  const credentials = authQuery.data ?? null;
+
   useEffect(() => {
-    let isMounted = true;
-
-    const hydrate = async () => {
-      try {
-        const stored = await loadAuthCredentials();
-        if (!isMounted) {
-          return;
-        }
-        setCredentials(stored);
-        if (!stored) {
-          setAuthLoadError("接続情報がありません。接続設定画面へ移動します。");
-          router.replace("/auth");
-        }
-      } catch {
-        if (isMounted) {
-          setAuthLoadError("接続情報の読み込みに失敗しました。");
-        }
-      }
-    };
-
-    hydrate();
-    return () => {
-      isMounted = false;
-    };
-  }, [router]);
+    if (authQuery.isSuccess && !authQuery.data) {
+      router.replace("/auth");
+    }
+  }, [authQuery.data, authQuery.isSuccess, router]);
 
   const query = useQuery({
-    enabled: Boolean(credentials),
+    enabled: Boolean(credentials) && !authQuery.isPending,
     queryFn: () => {
       if (!credentials) {
         return [];
@@ -127,8 +109,11 @@ export const GraphListScreen = () => {
   });
 
   const errorMessage = useMemo(() => {
-    if (authLoadError) {
-      return authLoadError;
+    if (authQuery.isError) {
+      return "接続情報の読み込みに失敗しました。";
+    }
+    if (authQuery.isSuccess && !authQuery.data) {
+      return "接続情報がありません。接続設定画面へ移動します。";
     }
     if (!query.error) {
       return null;
@@ -137,7 +122,7 @@ export const GraphListScreen = () => {
       return query.error.message;
     }
     return "グラフ一覧の取得に失敗しました。";
-  }, [authLoadError, query.error]);
+  }, [authQuery.data, authQuery.isError, authQuery.isSuccess, query.error]);
 
   const statsMutation = useMutation({
     mutationFn: (graph: GraphDefinition) => {
