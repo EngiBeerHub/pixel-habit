@@ -119,6 +119,7 @@ describe("SettingsScreen", () => {
 
   test("logs out after confirmation", async () => {
     render(<SettingsScreen />);
+    await waitForHydration();
 
     fireEvent.press(screen.getByTestId("settings-logout-button"));
 
@@ -129,8 +130,8 @@ describe("SettingsScreen", () => {
       (button) => button.text === "ログアウト"
     );
 
-    await act(() => {
-      logoutButton?.onPress?.();
+    await act(async () => {
+      await logoutButton?.onPress?.();
     });
 
     await waitFor(() => {
@@ -184,8 +185,8 @@ describe("SettingsScreen", () => {
       | AlertButton[]
       | undefined;
     const deleteButton = buttons?.find((button) => button.text === "削除する");
-    await act(() => {
-      deleteButton?.onPress?.();
+    await act(async () => {
+      await deleteButton?.onPress?.();
     });
 
     expect(await screen.findByText("ユーザー削除失敗")).toBeTruthy();

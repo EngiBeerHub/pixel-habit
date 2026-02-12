@@ -85,8 +85,8 @@ export const SettingsScreen = () => {
         text: "キャンセル",
       },
       {
-        onPress: () => {
-          onLogout();
+        onPress: async () => {
+          await onLogout();
         },
         style: "destructive",
         text: "ログアウト",
@@ -154,8 +154,8 @@ export const SettingsScreen = () => {
           text: "キャンセル",
         },
         {
-          onPress: () => {
-            onConfirmDeleteUser(username, currentToken);
+          onPress: async () => {
+            await onConfirmDeleteUser(username, currentToken);
           },
           style: "destructive",
           text: "削除する",
