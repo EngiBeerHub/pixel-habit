@@ -1,0 +1,17 @@
+appId: com.engibeer.pixelhabit
+---
+- launchApp
+- assertVisible: "ログインまたはアカウント作成を選択してください。"
+- tapOn:
+    id: "auth-hub-sign-in-button"
+- assertVisible: "Pixelaのusernameとtokenを入力してください。"
+- tapOn:
+    id: "auth-sign-in-username-input"
+- inputText: ${PIXELA_USERNAME}
+- tapOn:
+    id: "auth-sign-in-token-input"
+- inputText: ${PIXELA_TOKEN}
+- hideKeyboard
+- tapOn:
+    id: "auth-sign-in-submit-button"
+- assertVisible: "グラフ一覧"

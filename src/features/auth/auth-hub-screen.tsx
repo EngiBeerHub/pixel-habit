@@ -24,6 +24,7 @@ export const AuthHubScreen = () => {
           onPress={() => {
             router.push("/auth/sign-in");
           }}
+          testID="auth-hub-sign-in-button"
         >
           ログイン
         </Button>

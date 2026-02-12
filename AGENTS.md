@@ -44,8 +44,21 @@
 - https://docs.uniwind.dev/llms.txt
 
 ## Testing Guidelines
-- No formal test suite is configured yet. If you add tests, use `*.test.ts` / `*.test.tsx` naming and colocate near source or under `src/__tests__/`.
-- Prefer React Native Testing Library + Jest for UI logic.
+- Unit/Integration は Jest + React Native Testing Library を使用する。
+- E2E は Maestro を使用するが、MVP期間は保留運用（必要時のみ手動実行）とする。
+- テストファイルは `*.test.ts` / `*.test.tsx` で、対象コード近傍または `src/__tests__/` に配置する。
+- 実行コマンド:
+  - `npm run test`
+  - `npm run test:watch`
+  - `npm run test:ci`
+  - `npm run e2e:run`（手動スモーク用）
+- 最小必須テストセット:
+  - `src/shared/lib/date.test.ts`
+  - `src/shared/lib/class-name.test.ts`
+  - `src/features/graphs/components/compact-heatmap.test.tsx`
+  - `src/features/auth/auth-settings-screen.test.tsx`
+  - `src/features/auth/auth-sign-up-screen.test.tsx`
+  - `src/features/graphs/components/graph-card.test.tsx`
 - Keep tests deterministic; avoid `.only`/`.skip`; use async/await over done-callback patterns.
 
 ## Commit & Pull Request Guidelines

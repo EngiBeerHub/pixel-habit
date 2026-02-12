@@ -1,0 +1,14 @@
+appId: com.engibeer.pixelhabit
+---
+- launchApp
+- assertVisible: "グラフ一覧"
+- tapOn: "記録する"
+- assertVisible: "日付と数量を入力して保存してください。"
+- tapOn: "20260211"
+- eraseText
+- inputText: "20260108"
+- tapOn: "10"
+- eraseText
+- inputText: "5"
+- tapOn: "保存"
+- assertVisible: "Success"

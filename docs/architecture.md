@@ -130,10 +130,25 @@
 - パラメータや返り値の意味がコードだけで自明でない場合は `@param` / `@returns` を追加する
 - 実装変更で責務が変わったら、同じコミット内でDocコメントも更新する
 
+## テスト戦略
+
+- Unit: 純粋関数や日付/変換ロジックを `*.test.ts` で検証する
+- Integration: 画面の入力検証・分岐描画・エラー表示を RNTL で検証する
+- E2E: Maestro は導入済みだが、MVP期間は保留運用とする
+- Snapshot テストは原則採用しない（Expoガイド方針に合わせる）
+
+### テスト運用ルール
+
+- 仕様変更時は、影響する Unit/Integration/E2E のどれを更新するかをコミット内で明示する
+- 画面の重要分岐（loading/error/empty/success）は最低1つ以上 Integration テストで担保する
+- 日常開発の品質ゲートは `npm run test` / `npm run check` / `npx tsc --noEmit` を必須とする
+- E2E はリリース前の手動スモークでのみ実行し、失敗時は本番ブロッカーにしない
+
 ## Definition of Done (per feature)
 
 - 要件の受け入れ条件を満たす
 - `npm run check` が通る
+- `npm run test` が通る
 - 主要操作の手動確認が完了している
 - 仕様差分があれば `docs/mvp.md` に反映する
 

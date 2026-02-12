@@ -95,6 +95,7 @@ export const AuthSettingsScreen = () => {
               onBlur={onBlur}
               onChangeText={onChange}
               placeholder="your-username"
+              testID="auth-sign-in-username-input"
               value={value}
               variant="secondary"
             />
@@ -116,6 +117,7 @@ export const AuthSettingsScreen = () => {
               onChangeText={onChange}
               placeholder="pixela-token"
               secureTextEntry
+              testID="auth-sign-in-token-input"
               value={value}
               variant="secondary"
             />
@@ -138,7 +140,11 @@ export const AuthSettingsScreen = () => {
 
       {/* 画面アクション: ログイン実行 / サインアップ画面へ遷移 */}
       <ActionStack>
-        <Button isDisabled={signInMutation.isPending} onPress={onSubmit}>
+        <Button
+          isDisabled={signInMutation.isPending}
+          onPress={onSubmit}
+          testID="auth-sign-in-submit-button"
+        >
           ログイン
         </Button>
         <Button
