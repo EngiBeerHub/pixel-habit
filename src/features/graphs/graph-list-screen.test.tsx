@@ -14,8 +14,15 @@ import { GraphListScreen } from "./graph-list-screen";
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
 const mockGetGraphs = jest.fn();
+const mockGetGraphStats = jest.fn();
 const mockAddPixel = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
+const mockShowAlert = jest.fn();
+
+interface AlertButton {
+  onPress?: () => void;
+  text?: string;
+}
 
 /**
  * 非同期の完了タイミングをテスト側で制御するためのDeferred。
@@ -53,11 +60,15 @@ jest.mock("../../shared/storage/auth-storage", () => ({
 jest.mock("../../shared/api/graph", () => ({
   deleteGraph: jest.fn(),
   getGraphs: (...args: unknown[]) => mockGetGraphs(...args),
-  getGraphStats: jest.fn(),
+  getGraphStats: (...args: unknown[]) => mockGetGraphStats(...args),
 }));
 
 jest.mock("../../shared/api/pixel", () => ({
   addPixel: (...args: unknown[]) => mockAddPixel(...args),
+}));
+
+jest.mock("../../shared/platform/app-alert", () => ({
+  showAlert: (...args: unknown[]) => mockShowAlert(...args),
 }));
 
 jest.mock("@gorhom/bottom-sheet", () => {
@@ -96,10 +107,12 @@ jest.mock("./components/graph-card", () => {
   const GraphCard = ({
     graph,
     onPressAddPixel,
+    onPressGraphMenu,
     viewMode,
   }: {
     graph: { name: string };
     onPressAddPixel: (graph: { name: string }) => void;
+    onPressGraphMenu: (graph: { name: string }) => void;
     viewMode: string;
   }) => {
     return (
@@ -112,6 +125,13 @@ jest.mock("./components/graph-card", () => {
           }}
         >
           <Text>open-quick-add</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            onPressGraphMenu(graph);
+          }}
+        >
+          <Text>open-graph-menu</Text>
         </Pressable>
       </View>
     );
@@ -179,10 +199,16 @@ describe("GraphListScreen", () => {
     jest.clearAllMocks();
     mockLoadAuthCredentials.mockResolvedValue(credentials);
     mockGetGraphs.mockResolvedValue([graph]);
+    mockGetGraphStats.mockResolvedValue({
+      avgQuantity: 2,
+      totalQuantity: 10,
+      totalPixelsCount: 5,
+    });
     mockAddPixel.mockResolvedValue({
       isSuccess: true,
       message: "追加成功",
     });
+    mockShowAlert.mockImplementation(() => undefined);
   });
 
   test("shows loading state while graph list is pending", async () => {
@@ -264,6 +290,7 @@ describe("GraphListScreen", () => {
     fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
 
     expect(await screen.findByText("追加失敗")).toBeTruthy();
+    expect(screen.queryByTestId("graph-quick-add-toast")).toBeNull();
   });
 
   test("shows toast message when quick add succeeds", async () => {
@@ -274,6 +301,62 @@ describe("GraphListScreen", () => {
     fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
     fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
 
-    expect((await screen.findAllByText("追加成功")).length).toBeGreaterThan(0);
+    expect(await screen.findByTestId("graph-quick-add-toast")).toBeTruthy();
+    expect(await screen.findByText("追加成功")).toBeTruthy();
+  });
+
+  test("shows latest toast message on consecutive quick add success", async () => {
+    mockAddPixel
+      .mockResolvedValueOnce({
+        isSuccess: true,
+        message: "1回目成功",
+      })
+      .mockResolvedValueOnce({
+        isSuccess: true,
+        message: "2回目成功",
+      });
+
+    await renderScreen();
+    expect(await screen.findByText("graph:Sleep")).toBeTruthy();
+
+    fireEvent.press(screen.getByText("open-quick-add"));
+    fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
+    fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
+    expect(await screen.findByText("1回目成功")).toBeTruthy();
+
+    fireEvent.press(screen.getByText("open-quick-add"));
+    fireEvent.changeText(screen.getByPlaceholderText("10"), "4");
+    fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
+
+    expect(await screen.findByText("2回目成功")).toBeTruthy();
+    expect(screen.queryByText("1回目成功")).toBeNull();
+  });
+
+  test("shows stats only via graph menu action", async () => {
+    await renderScreen();
+    expect(await screen.findByText("graph:Sleep")).toBeTruthy();
+
+    fireEvent.press(screen.getByText("open-graph-menu"));
+    expect(mockShowAlert).toHaveBeenCalledWith(
+      "Sleep",
+      "操作を選択してください。",
+      expect.any(Array)
+    );
+
+    const menuButtons = mockShowAlert.mock.calls[0]?.[2] as
+      | AlertButton[]
+      | undefined;
+    const statsButton = menuButtons?.find((button) => button.text === "統計");
+    await act(async () => {
+      await statsButton?.onPress?.();
+    });
+
+    await waitFor(() => {
+      expect(mockGetGraphStats).toHaveBeenCalledWith({ graphId: "sleep" });
+    });
+    expect(mockShowAlert).toHaveBeenCalledWith(
+      "Sleep の統計",
+      expect.any(String)
+    );
   });
 });

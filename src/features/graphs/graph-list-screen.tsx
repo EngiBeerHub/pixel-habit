@@ -47,7 +47,6 @@ export const GraphListScreen = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const [sheetMessage, setSheetMessage] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selectedGraph, setSelectedGraph] = useState<GraphDefinition | null>(
     null
@@ -194,10 +193,8 @@ export const GraphListScreen = () => {
           ? error.message
           : "記録追加に失敗しました。再度お試しください。";
       setError("root", { message });
-      setSheetMessage(null);
     },
     onSuccess: async (response) => {
-      setSheetMessage(response.message);
       await query.refetch();
       if (api.username) {
         await queryClient.invalidateQueries({
@@ -248,7 +245,6 @@ export const GraphListScreen = () => {
    */
   const onPressAddPixel = (graph: GraphDefinition) => {
     setSelectedGraph(graph);
-    setSheetMessage(null);
     reset({
       date: getTodayAsYyyyMmDd(),
       quantity: "",
@@ -450,7 +446,10 @@ export const GraphListScreen = () => {
       ) : null}
       {/* 記録追加成功後に一定時間表示するトースト */}
       {toastMessage ? (
-        <View className="mb-3 rounded-lg border border-green-200 bg-green-50 p-3">
+        <View
+          className="mb-3 rounded-lg border border-green-200 bg-green-50 p-3"
+          testID="graph-quick-add-toast"
+        >
           <Text className="text-green-700 text-sm">{toastMessage}</Text>
         </View>
       ) : null}
@@ -506,7 +505,6 @@ export const GraphListScreen = () => {
         onChange={(index) => {
           if (index === -1) {
             setSelectedGraph(null);
-            setSheetMessage(null);
           }
         }}
         ref={bottomSheetRef}
@@ -572,11 +570,6 @@ export const GraphListScreen = () => {
               {pixelFormErrors.root.message}
             </Text>
           ) : null}
-          {/* API成功時のメッセージ */}
-          {sheetMessage ? (
-            <Text className="text-green-700 text-sm">{sheetMessage}</Text>
-          ) : null}
-
           {/* シート内アクション: 直接保存 or 詳細入力画面へ遷移 */}
           <View className="mt-2 gap-2">
             <Button

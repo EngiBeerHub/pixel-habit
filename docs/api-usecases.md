@@ -41,8 +41,10 @@
   - `Home` の Bottom Sheet
   - `/graphs/[graphId]/add`（詳細）
 - UX:
-  - 通常は Bottom Sheet で当日入力
+  - 通常は Bottom Sheet で `date` / `quantity` を入力
   - 日付指定は詳細画面へ委譲
+  - 追加成功時はToastのみで通知する（Inline成功表示は行わない）
+  - `optionalData` はMVPスコープ外とし、必要時は後続フェーズで検討する
 
 ## 早めに追加するユースケース（MVP後半）
 
@@ -147,8 +149,7 @@
 
 ## TODO（要判断）
 
-- Bottom Sheet の入力項目（`optionalData` を扱うか）
-- 追加成功時の通知方式（Toast / Inline）
+- Bottom Sheet の `optionalData` を将来追加するか
 - OpenAPI型自動生成を導入する時期
 
 ## 更新ルール

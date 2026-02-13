@@ -106,4 +106,11 @@ describe("GraphCard", () => {
     fireEvent.press(screen.getByText("Fullビューを開く"));
     expect(props.onPressOpenFullView).toHaveBeenCalledWith("sleep");
   });
+
+  test("does not render stats summary as always-visible content", () => {
+    render(<GraphCard {...buildProps()} viewMode="compact" />);
+
+    expect(screen.queryByText("総記録数")).toBeNull();
+    expect(screen.queryByText("合計")).toBeNull();
+  });
 });
