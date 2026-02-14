@@ -1,5 +1,9 @@
 # Repository Guidelines
 
+## ExecPlans
+
+When writing complex features or significant refactors, use an ExecPlan (as described in docs/PLANS.md) from design to implementation.
+
 ## Document Priority (Must Read Order)
 
 When implementing or modifying UI/UX, always read documents in the following order:
