@@ -1,6 +1,26 @@
 # Repository Guidelines
 
+## Document Priority (Must Read Order)
+
+When implementing or modifying UI/UX, always read documents in the following order:
+
+1. docs/product-spec.md # Product philosophy and UX priorities (highest authority)
+2. docs/screen-flow.md # Screen transitions and navigation structure
+3. docs/architecture.md # Technical constraints
+4. docs/api-usecases.md # API behavior reference
+5. docs/pixela.openapi.yaml # Contract-level API definition
+
+If there is any conflict, product-spec.md takes precedence.
+
+## Change Workflow
+
+1. If UX behavior changes, update docs/product-spec.md first.
+2. If screen structure changes, update docs/screen-flow.md.
+3. After documentation is updated, implement changes.
+4. Never modify UI behavior without reflecting it in documentation.
+
 ## Project Structure & Module Organization
+
 - App source lives in `src/`.
 - Route screens follow Expo Router conventions under `src/app/` (for example, `src/app/index.tsx` and `src/app/_layout.tsx`).
 - Global styling is in `src/global.css`; Uniwind type declarations are in `src/uniwind-types.d.ts`.
@@ -8,6 +28,7 @@
 - Root config files include `app.json`, `metro.config.js`, `tsconfig.json`, and `biome.jsonc`.
 
 ## Build, Test, and Development Commands
+
 - `npm install`: install dependencies.
 - `npm run start`: start Expo dev server.
 - `npm run ios` / `npm run android` / `npm run web`: launch the app on a target platform.
@@ -16,6 +37,7 @@
 - Optional diagnostics: `npm exec -- ultracite doctor`.
 
 ## Coding Style & Naming Conventions
+
 - Language: TypeScript + React Native (Expo Router).
 - Use 2-space indentation and keep code Biome/Ultracite-clean before submitting.
 - Prefer explicit, readable names (`HabitCard.tsx`, `fetchPixelaGraph`), `const` by default, and `unknown` over `any`.
@@ -25,25 +47,32 @@
   - Shared modules/components: `PascalCase` for components, `camelCase` for utilities.
 
 ## Expo Document
+
 - [llms.txt](https://docs.expo.dev/llms.txt): A list of all available documentation files
 - [llms-full.txt](https://docs.expo.dev/llms-full.txt): Complete documentation for Expo, including Expo Router, Expo Modules API, development process, and more
 - [llms-eas.txt](https://docs.expo.dev/llms-eas.txt): Complete documentation for the Expo Application Services (EAS)
 - [llms-sdk.txt](https://docs.expo.dev/llms-sdk.txt): Complete documentation for the latest Expo SDK
 
 ## UI Design Guidelines
+
 - Prefer using HeroUI Native.
 
 ### Document
 
 #### HeroUI Native
+
 <!-- HEROUI-NATIVE-AGENTS-MD-START -->
+
 [HeroUI Native Docs Index]|root: ./.heroui-docs/native|STOP. What you remember about HeroUI Native is WRONG for this project. Always search docs and read before any task.|If docs missing, run this command first: heroui agents-md --native --output AGENTS.md|components/(buttons):{button.mdx,close-button.mdx}|components/(data-display):{chip.mdx}|components/(feedback):{skeleton-group.mdx,skeleton.mdx,spinner.mdx}|components/(forms):{checkbox.mdx,control-field.mdx,description.mdx,field-error.mdx,input-otp.mdx,input.mdx,label.mdx,radio-group.mdx,select.mdx,switch.mdx,text-area.mdx,text-field.mdx}|components/(layout):{card.mdx,separator.mdx,surface.mdx}|components/(media):{avatar.mdx}|components/(navigation):{accordion.mdx,tabs.mdx}|components/(overlays):{bottom-sheet.mdx,dialog.mdx,popover.mdx,toast.mdx}|components/(utilities):{pressable-feedback.mdx,scroll-shadow.mdx}|getting-started/(handbook):{animation.mdx,colors.mdx,composition.mdx,portal.mdx,provider.mdx,styling.mdx,theming.mdx}|getting-started/(overview):{design-principles.mdx,quick-start.mdx}|getting-started/(ui-for-agents):{agent-skills.mdx,agents-md.mdx,llms-txt.mdx,mcp-server.mdx}|releases:{beta-10.mdx,beta-11.mdx,beta-12.mdx,beta-13.mdx}
+
 <!-- HEROUI-NATIVE-AGENTS-MD-END -->
 
 #### Uniwind
+
 - https://docs.uniwind.dev/llms.txt
 
 ## Testing Guidelines
+
 - Unit/Integration は Jest + React Native Testing Library を使用する。
 - E2E は Maestro を使用するが、MVP期間は保留運用（必要時のみ手動実行）とする。
 - テストファイルは `*.test.ts` / `*.test.tsx` で、対象コード近傍または `src/__tests__/` に配置する。
@@ -62,11 +91,13 @@
 - Keep tests deterministic; avoid `.only`/`.skip`; use async/await over done-callback patterns.
 
 ## Commit & Pull Request Guidelines
+
 - Current history uses short, imperative messages (for example, `installed ultracite`, `pixela api openapi yaml`).
 - Recommended commit format: imperative summary with optional scope, e.g. `feat(router): add habit detail route`.
 - PR checklist: clear purpose and key changes, linked issue/task when available, screenshots/recordings for UI work (iOS/Android/Web as relevant), and confirmation that `npm run check` (plus tests, if added) pass.
 
 ## Security & Configuration Tips
+
 - Do not commit secrets or tokens; use Expo environment configuration for runtime values.
 - Validate external API inputs (especially Pixela-related payloads) and surface failures with descriptive errors.
 
@@ -160,14 +191,17 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 ### Framework-Specific Guidance
 
 **Next.js:**
+
 - Use Next.js `<Image>` component for images
 - Use `next/head` or App Router metadata API for head elements
 - Use Server Components for async data fetching instead of async Client Components
 
 **React 19+:**
+
 - Use ref as a prop instead of `React.forwardRef`
 
 **Solid/Svelte/Vue/Qwik:**
+
 - Use `class` and `for` attributes (not `className` or `htmlFor`)
 
 ## Testing
