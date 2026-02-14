@@ -66,6 +66,7 @@
 - `query key / retry / staleTime` は `useAuthCredentialsQuery` に集約し、画面側で再定義しない
 - 既ログイン時に表示不要な認証画面は `useAuthSession` の `status/credentials` で Home へリダイレクトする
 - `useAuthedPixelaApi` は互換レイヤとして維持し、次フェーズで不要性を評価して削除判断する
+- `quantity` の入力バリデーションは `zod` スキーマで `1以上` を保証し、UIごとの差異を作らない
 - HomeのQuick Add成功フィードバックはToastのみに統一し、Bottom Sheet内に成功メッセージを重複表示しない
 - Homeカードの統計情報は常時表示せず、`...` メニューの `統計` 操作でのみ表示する
 

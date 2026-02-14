@@ -36,7 +36,6 @@ const buildProps = () => ({
   isActionDisabled: false,
   onPressAddPixel: jest.fn(),
   onPressGraphMenu: jest.fn(),
-  onPressOpenFullView: jest.fn(),
   onPressOpenPixels: jest.fn(),
 });
 
@@ -56,7 +55,7 @@ describe("GraphCard", () => {
     });
   });
 
-  test("renders loading state in compact mode", () => {
+  test("renders loading state", () => {
     mockUseQuery.mockReturnValueOnce({
       data: undefined,
       error: null,
@@ -64,12 +63,12 @@ describe("GraphCard", () => {
       refetch: mockRefetch,
     });
 
-    render(<GraphCard {...buildProps()} viewMode="compact" />);
+    render(<GraphCard {...buildProps()} />);
 
     expect(screen.getByText("記録を読み込み中...")).toBeTruthy();
   });
 
-  test("renders error state and retries in compact mode", () => {
+  test("renders error state and retries", () => {
     mockUseQuery.mockReturnValueOnce({
       data: undefined,
       error: new Error("failed"),
@@ -77,14 +76,14 @@ describe("GraphCard", () => {
       refetch: mockRefetch,
     });
 
-    render(<GraphCard {...buildProps()} viewMode="compact" />);
+    render(<GraphCard {...buildProps()} />);
 
     expect(screen.getByText("ヒートマップの取得に失敗しました。")).toBeTruthy();
     fireEvent.press(screen.getByText("再取得"));
     expect(mockRefetch).toHaveBeenCalled();
   });
 
-  test("renders compact heatmap on success", () => {
+  test("renders heatmap on success", () => {
     mockUseQuery.mockReturnValueOnce({
       data: [{ date: "20260101", quantity: "2" }],
       error: null,
@@ -92,23 +91,23 @@ describe("GraphCard", () => {
       refetch: mockRefetch,
     });
 
-    render(<GraphCard {...buildProps()} viewMode="compact" />);
+    render(<GraphCard {...buildProps()} />);
 
     expect(screen.getByText("COMPACT_HEATMAP")).toBeTruthy();
   });
 
-  test("renders full mode action", () => {
+  test("triggers quick add and pixel list actions", () => {
     const props = buildProps();
 
-    render(<GraphCard {...props} viewMode="full" />);
-
-    expect(screen.getByText("Fullビューを開く")).toBeTruthy();
-    fireEvent.press(screen.getByText("Fullビューを開く"));
-    expect(props.onPressOpenFullView).toHaveBeenCalledWith("sleep");
+    render(<GraphCard {...props} />);
+    fireEvent.press(screen.getByText("記録する"));
+    fireEvent.press(screen.getByText("記録一覧"));
+    expect(props.onPressAddPixel).toHaveBeenCalledWith(graph);
+    expect(props.onPressOpenPixels).toHaveBeenCalledWith(graph);
   });
 
   test("does not render stats summary as always-visible content", () => {
-    render(<GraphCard {...buildProps()} viewMode="compact" />);
+    render(<GraphCard {...buildProps()} />);
 
     expect(screen.queryByText("総記録数")).toBeNull();
     expect(screen.queryByText("合計")).toBeNull();

@@ -111,7 +111,7 @@ describe("PixelDetailScreen", () => {
     fireEvent.press(screen.getByText("更新"));
 
     expect(
-      await screen.findByText("数量は0以上の数値で入力してください")
+      await screen.findByText("数量は1以上の数値で入力してください")
     ).toBeTruthy();
   });
 

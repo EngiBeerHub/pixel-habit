@@ -42,6 +42,9 @@
   - `/graphs/[graphId]/add`（詳細）
 - UX:
   - 通常は Bottom Sheet で `date` / `quantity` を入力
+  - `quantity` は 1以上のみ入力可能（0は禁止）
+  - 未入力判定は「当日レコードが存在しない」場合のみ
+  - 仕様上 `quantity <= 0` は生成しないが、受信した場合は防御的に未入力相当で扱う
   - 日付指定は詳細画面へ委譲
   - 追加成功時はToastのみで通知する（Inline成功表示は行わない）
   - `optionalData` はMVPスコープ外とし、必要時は後続フェーズで検討する
@@ -126,16 +129,13 @@
 
 ## ヒートマップ表示方針とAPI
 
-- `Compact`:
+- Home:
   - 自前描画を基本とし、必要データはピクセル一覧APIで取得
   - API: `GET /v1/users/{username}/graphs/{graphID}/pixels?withBody=true&from={yyyyMMdd}&to={yyyyMMdd}`
   - 表示期間: 14週（98日）
   - 段階表現: 5段階（`0=薄灰`, `1-4=テーマ色の濃淡`）
   - 取得期間: 表示期間と一致する14週分を `from/to` で指定する
-  - データ再取得: Homeのpull-to-refreshと記録追加成功時に、一覧とカード単位のCompactデータを同期再取得する
-- `Full`:
-  - MVPはPixela画像（既存方式）を許容
-  - 将来的に自前描画へ統一
+  - データ再取得: Homeのpull-to-refreshと記録追加成功時に、一覧とカード単位のヒートマップデータを同期再取得する
 - カラー反映:
   - グラフ定義の `color` を表示テーマの単一ソースとして扱う
   - カード/ヒートマップ/操作UIの色トーンを同じマッピングで描画する

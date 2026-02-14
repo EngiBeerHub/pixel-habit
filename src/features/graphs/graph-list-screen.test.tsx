@@ -16,8 +16,10 @@ const mockPush = jest.fn();
 const mockGetGraphs = jest.fn();
 const mockGetGraphStats = jest.fn();
 const mockAddPixel = jest.fn();
+const mockGetPixels = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
 const mockShowAlert = jest.fn();
+let consoleErrorSpy: jest.SpyInstance;
 
 interface AlertButton {
   onPress?: () => void;
@@ -65,6 +67,7 @@ jest.mock("../../shared/api/graph", () => ({
 
 jest.mock("../../shared/api/pixel", () => ({
   addPixel: (...args: unknown[]) => mockAddPixel(...args),
+  getPixels: (...args: unknown[]) => mockGetPixels(...args),
 }));
 
 jest.mock("../../shared/platform/app-alert", () => ({
@@ -108,17 +111,14 @@ jest.mock("./components/graph-card", () => {
     graph,
     onPressAddPixel,
     onPressGraphMenu,
-    viewMode,
   }: {
     graph: { name: string };
     onPressAddPixel: (graph: { name: string }) => void;
     onPressGraphMenu: (graph: { name: string }) => void;
-    viewMode: string;
   }) => {
     return (
       <View>
         <Text>{`graph:${graph.name}`}</Text>
-        <Text>{`mode:${viewMode}`}</Text>
         <Pressable
           onPress={() => {
             onPressAddPixel(graph);
@@ -182,6 +182,21 @@ const graph = {
 
 describe("GraphListScreen", () => {
   beforeAll(() => {
+    const originalConsoleError = console.error;
+    consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation((...args) => {
+        const firstArg = args[0];
+        if (
+          typeof firstArg === "string" &&
+          firstArg.includes(
+            "An update to VirtualizedList inside a test was not wrapped in act"
+          )
+        ) {
+          return;
+        }
+        originalConsoleError(...args);
+      });
     notifyManager.setNotifyFunction((callback) => {
       act(() => {
         callback();
@@ -190,6 +205,7 @@ describe("GraphListScreen", () => {
   });
 
   afterAll(() => {
+    consoleErrorSpy.mockRestore();
     notifyManager.setNotifyFunction((callback) => {
       callback();
     });
@@ -208,6 +224,7 @@ describe("GraphListScreen", () => {
       isSuccess: true,
       message: "追加成功",
     });
+    mockGetPixels.mockResolvedValue([]);
     mockShowAlert.mockImplementation(() => undefined);
   });
 
@@ -246,16 +263,6 @@ describe("GraphListScreen", () => {
     ).toBeTruthy();
   });
 
-  test("switches between compact and full modes", async () => {
-    await renderScreen();
-
-    expect(await screen.findByText("mode:compact")).toBeTruthy();
-
-    fireEvent.press(screen.getByTestId("graph-view-mode-full-button"));
-
-    expect(await screen.findByText("mode:full")).toBeTruthy();
-  });
-
   test("shows validation error in quick add when quantity is empty", async () => {
     await renderScreen();
 
@@ -265,8 +272,23 @@ describe("GraphListScreen", () => {
     fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
 
     expect(
-      await screen.findByText("数量は0以上の数値で入力してください")
+      await screen.findByText("数量は1以上の数値で入力してください")
     ).toBeTruthy();
+  });
+
+  test("shows top single missing item in today section", async () => {
+    mockGetGraphs.mockResolvedValueOnce([
+      graph,
+      { ...graph, id: "fitness", name: "Fitness" },
+    ]);
+    mockGetPixels
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ date: "20260214", quantity: "2" }]);
+
+    await renderScreen();
+
+    expect(await screen.findByText("Today")).toBeTruthy();
+    expect(await screen.findByText("Sleep が未入力です")).toBeTruthy();
   });
 
   test("redirects to auth screen when credentials are missing", async () => {

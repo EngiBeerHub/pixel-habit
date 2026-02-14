@@ -5,7 +5,12 @@ import BottomSheet, {
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -26,23 +31,16 @@ import {
 } from "../../shared/lib/date";
 import { showAlert } from "../../shared/platform/app-alert";
 import {
-  canOpenExternalUrl,
-  openExternalUrl,
-} from "../../shared/platform/app-linking";
-import {
   type PixelAddFormValues,
   pixelAddSchema,
 } from "../pixels/pixel-add-schema";
+import { getCompactHeatmapDateRange } from "./components/compact-heatmap";
 import { GraphCard } from "./components/graph-card";
-
-/**
- * Home画面で利用する表示モード。
- */
-type GraphViewMode = "compact" | "full";
 
 /**
  * 認証情報を使って Pixela のグラフ一覧を表示する画面。
  */
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Home画面は複数API状態とシート操作を1箇所で統合するため。
 export const GraphListScreen = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -52,7 +50,8 @@ export const GraphListScreen = () => {
     null
   );
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [viewMode, setViewMode] = useState<GraphViewMode>("compact");
+  const todayYyyyMmDd = getTodayAsYyyyMmDd();
+  const compactHeatmapRange = getCompactHeatmapDateRange(14);
   const snapPoints = useMemo(() => ["50%"], []);
   const {
     control,
@@ -92,20 +91,39 @@ export const GraphListScreen = () => {
     queryKey: ["graphs", api.username],
   });
 
+  const todayRecordQueries = useQueries({
+    queries:
+      query.data?.map((graph) => ({
+        enabled: api.isAuthenticated,
+        queryFn: () =>
+          api.getPixels({
+            from: todayYyyyMmDd,
+            graphId: graph.id,
+            to: todayYyyyMmDd,
+          }),
+        queryKey: ["graphPixelsToday", api.username, graph.id, todayYyyyMmDd],
+      })) ?? [],
+  });
+
+  const todayMissingGraphs = useMemo(() => {
+    return resolveTodayMissingGraphs({
+      graphs: query.data,
+      todayRecordQueries,
+      todayYyyyMmDd,
+    });
+  }, [query.data, todayRecordQueries, todayYyyyMmDd]);
+
+  const topMissingGraph = todayMissingGraphs[0] ?? null;
+  const remainingMissingCount =
+    todayMissingGraphs.length > 0 ? todayMissingGraphs.length - 1 : 0;
+
   const errorMessage = useMemo(() => {
-    if (hasLoadError) {
-      return "接続情報の読み込みに失敗しました。";
-    }
-    if (status === "anonymous" && !credentials) {
-      return "接続情報がありません。接続設定画面へ移動します。";
-    }
-    if (!query.error) {
-      return null;
-    }
-    if (query.error instanceof Error) {
-      return query.error.message;
-    }
-    return "グラフ一覧の取得に失敗しました。";
+    return resolveGraphListErrorMessage({
+      credentials,
+      hasLoadError,
+      queryError: query.error,
+      status,
+    });
   }, [credentials, hasLoadError, query.error, status]);
 
   const statsMutation = useMutation({
@@ -350,22 +368,6 @@ export const GraphListScreen = () => {
   };
 
   /**
-   * Full表示用のPixelaグラフURLを開く。
-   */
-  const onPressOpenFullView = async (graphId: string) => {
-    if (!api.username) {
-      return;
-    }
-    const url = buildPixelaGraphUrl(api.username, graphId);
-    const canOpen = await canOpenExternalUrl(url);
-    if (!canOpen) {
-      showAlert("エラー", "グラフURLを開けませんでした。");
-      return;
-    }
-    await openExternalUrl(url);
-  };
-
-  /**
    * Bottom Sheet内の記録追加を実行する。
    */
   const onSubmitQuickAdd = handleSubmit((values) => {
@@ -397,33 +399,19 @@ export const GraphListScreen = () => {
 
   return (
     <View className="flex-1 bg-white px-6 pt-16 pb-6">
-      {/* 画面ヘッダー: タイトル、グラフ追加、表示モード切替 */}
+      {/* 画面ヘッダー: タイトル、14週表示の期間ラベル、グラフ追加 */}
       <View className="mb-4 gap-3">
         <View className="flex-row items-center justify-between">
-          <Text className="font-bold text-2xl text-neutral-900">
-            グラフ一覧
-          </Text>
+          <View className="gap-1">
+            <Text className="font-bold text-2xl text-neutral-900">Home</Text>
+            <Text className="text-neutral-500 text-sm">
+              {formatPeriodLabel(
+                compactHeatmapRange.from,
+                compactHeatmapRange.to
+              )}
+            </Text>
+          </View>
           <Button onPress={onPressCreateGraph}>グラフ追加</Button>
-        </View>
-        <View className="flex-row gap-2">
-          <Button
-            isDisabled={viewMode === "compact"}
-            onPress={() => {
-              setViewMode("compact");
-            }}
-            testID="graph-view-mode-compact-button"
-          >
-            Compact
-          </Button>
-          <Button
-            isDisabled={viewMode === "full"}
-            onPress={() => {
-              setViewMode("full");
-            }}
-            testID="graph-view-mode-full-button"
-          >
-            Full
-          </Button>
         </View>
       </View>
 
@@ -454,6 +442,36 @@ export const GraphListScreen = () => {
         </View>
       ) : null}
 
+      {/* Todayエリア: 未入力グラフは上位1件のみ表示し、Homeの情報密度を上げすぎない */}
+      {!(query.isLoading || errorMessage) &&
+      query.data &&
+      query.data.length > 0 &&
+      topMissingGraph ? (
+        <View className="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+          <Text className="font-medium text-amber-900 text-sm">Today</Text>
+          <Text className="mt-1 text-amber-800 text-sm">
+            {topMissingGraph.name} が未入力です
+          </Text>
+          {remainingMissingCount > 0 ? (
+            <Text className="mt-1 text-amber-700 text-xs">
+              他{remainingMissingCount}件未入力
+            </Text>
+          ) : null}
+          <View className="mt-2">
+            <Button
+              onPress={() => {
+                onPressAddPixel(topMissingGraph);
+              }}
+              size="sm"
+              testID="today-quick-add-button"
+              variant="secondary"
+            >
+              今日を入力
+            </Button>
+          </View>
+        </View>
+      ) : null}
+
       {/* 正常取得かつ0件時の空状態 */}
       {!(query.isLoading || errorMessage) && query.data?.length === 0 ? (
         <View className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
@@ -471,6 +489,7 @@ export const GraphListScreen = () => {
           className="mt-2"
           contentContainerClassName="px-1 pb-2"
           data={query.data}
+          disableVirtualization
           keyExtractor={(item) => item.id}
           refreshControl={
             <RefreshControl
@@ -488,9 +507,7 @@ export const GraphListScreen = () => {
                 }
                 onPressAddPixel={onPressAddPixel}
                 onPressGraphMenu={onPressGraphMenu}
-                onPressOpenFullView={onPressOpenFullView}
                 onPressOpenPixels={onPressOpenPixels}
-                viewMode={viewMode}
               />
             ) : null
           }
@@ -515,7 +532,7 @@ export const GraphListScreen = () => {
           <Text className="font-semibold text-lg text-neutral-900">
             {selectedGraph ? `${selectedGraph.name} に記録追加` : "記録追加"}
           </Text>
-          <Text className="text-neutral-600">
+          <Text className="text-neutral-500 text-sm">
             日付と数量を入力して保存してください。
           </Text>
 
@@ -575,11 +592,15 @@ export const GraphListScreen = () => {
             <Button
               isDisabled={addPixelMutation.isPending}
               onPress={onSubmitQuickAdd}
+              size="sm"
               testID="graph-quick-add-save-button"
+              variant="secondary"
             >
               保存
             </Button>
-            <Button onPress={onPressDetailedInput}>詳細入力へ</Button>
+            <Button onPress={onPressDetailedInput} size="sm" variant="ghost">
+              詳細入力へ
+            </Button>
           </View>
         </BottomSheetView>
       </BottomSheet>
@@ -588,8 +609,85 @@ export const GraphListScreen = () => {
 };
 
 /**
- * PixelaグラフページのURLを生成する。
+ * 当日ピクセルが1件でも存在し、かつ数量が1以上なら「入力済み」と判定する。
  */
-const buildPixelaGraphUrl = (username: string, graphId: string): string => {
-  return `https://pixe.la/v1/users/${username}/graphs/${graphId}.html`;
+const hasTodayRecord = (
+  pixels: Array<{ date: string; quantity: string }>,
+  todayYyyyMmDd: string
+): boolean => {
+  return pixels.some((pixel) => {
+    if (pixel.date !== todayYyyyMmDd) {
+      return false;
+    }
+    const quantity = Number(pixel.quantity);
+    return Number.isFinite(quantity) && quantity >= 1;
+  });
+};
+
+/**
+ * 14週範囲の `from/to` を Homeヘッダー用の月表示へ整形する。
+ */
+const formatPeriodLabel = (from: string, to: string): string => {
+  const fromYear = from.slice(0, 4);
+  const fromMonth = String(Number(from.slice(4, 6)));
+  const toYear = to.slice(0, 4);
+  const toMonth = String(Number(to.slice(4, 6)));
+
+  if (fromYear === toYear) {
+    return `${fromYear}年${fromMonth}月 - ${toMonth}月`;
+  }
+  return `${fromYear}年${fromMonth}月 - ${toYear}年${toMonth}月`;
+};
+
+/**
+ * 一覧取得エラーと認証読み込みエラーをUI表示文言へ変換する。
+ */
+const resolveGraphListErrorMessage = ({
+  credentials,
+  hasLoadError,
+  queryError,
+  status,
+}: {
+  credentials: { token: string; username: string } | null;
+  hasLoadError: boolean;
+  queryError: unknown;
+  status: "anonymous" | "authenticated" | "loading";
+}): string | null => {
+  if (hasLoadError) {
+    return "接続情報の読み込みに失敗しました。";
+  }
+  if (status === "anonymous" && !credentials) {
+    return "接続情報がありません。接続設定画面へ移動します。";
+  }
+  if (!queryError) {
+    return null;
+  }
+  if (queryError instanceof Error) {
+    return queryError.message;
+  }
+  return "グラフ一覧の取得に失敗しました。";
+};
+
+/**
+ * Todayエリア用に、当日未入力のグラフ一覧を算出する。
+ */
+const resolveTodayMissingGraphs = ({
+  graphs,
+  todayRecordQueries,
+  todayYyyyMmDd,
+}: {
+  graphs: GraphDefinition[] | undefined;
+  todayRecordQueries: Array<{
+    data?: Array<{ date: string; quantity: string }>;
+  }>;
+  todayYyyyMmDd: string;
+}): GraphDefinition[] => {
+  if (!graphs || graphs.length === 0) {
+    return [];
+  }
+
+  return graphs.filter((_graph, index) => {
+    const todayPixels = todayRecordQueries[index]?.data ?? [];
+    return !hasTodayRecord(todayPixels, todayYyyyMmDd);
+  });
 };

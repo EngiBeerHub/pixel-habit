@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const PIXEL_QUANTITY_PATTERN = /^\d+(\.\d+)?$/;
+const PIXEL_POSITIVE_QUANTITY_PATTERN = /^(?:[1-9]\d*)(?:\.\d+)?$/;
 
 /**
  * ピクセル編集フォームの入力検証スキーマ。
@@ -8,7 +8,10 @@ const PIXEL_QUANTITY_PATTERN = /^\d+(\.\d+)?$/;
 export const pixelEditSchema = z.object({
   quantity: z
     .string()
-    .regex(PIXEL_QUANTITY_PATTERN, "数量は0以上の数値で入力してください"),
+    .regex(
+      PIXEL_POSITIVE_QUANTITY_PATTERN,
+      "数量は1以上の数値で入力してください"
+    ),
 });
 
 /**

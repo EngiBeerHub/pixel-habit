@@ -19,28 +19,24 @@ export interface GraphCardProps {
   isActionDisabled: boolean;
   onPressAddPixel: (graph: GraphDefinition) => void;
   onPressGraphMenu: (graph: GraphDefinition) => void;
-  onPressOpenFullView: (graphId: string) => void;
   onPressOpenPixels: (graph: GraphDefinition) => void;
-  viewMode: "compact" | "full";
 }
 
 /**
- * グラフ1件分のカードを描画し、Compact時はカード単位でヒートマップを取得する。
+ * グラフ1件分のカードを描画し、カード単位で14週ヒートマップを取得する。
  */
 export const GraphCard = ({
   graph,
   isActionDisabled,
   onPressAddPixel,
   onPressGraphMenu,
-  onPressOpenFullView,
   onPressOpenPixels,
-  viewMode,
 }: GraphCardProps) => {
   const api = useAuthedPixelaApi();
   const compactHeatmapRange = getCompactHeatmapDateRange(COMPACT_HEATMAP_WEEKS);
 
   const pixelQuery = useQuery({
-    enabled: viewMode === "compact" && api.isAuthenticated,
+    enabled: api.isAuthenticated,
     queryFn: () => {
       return api.getPixels({
         from: compactHeatmapRange.from,
@@ -95,59 +91,44 @@ export const GraphCard = ({
       <Text className="text-neutral-600">
         単位: {graph.unit} / タイムゾーン: {graph.timezone}
       </Text>
-      {viewMode === "compact" ? (
-        <View>
-          {/* Compact表示: カード内ヒートマップ取得中のプレースホルダー */}
-          {pixelQuery.isLoading ? (
+      <View>
+        {/* カード内ヒートマップ取得中のプレースホルダー */}
+        {pixelQuery.isLoading ? (
+          <InlineMessage
+            className="mt-3"
+            message="記録を読み込み中..."
+            variant="info"
+          />
+        ) : null}
+        {/* カード単位エラー。再取得だけを局所的に実行する */}
+        {!pixelQuery.isLoading && pixelQuery.error ? (
+          <View className="mt-3 rounded-lg p-3">
             <InlineMessage
-              className="mt-3"
-              message="記録を読み込み中..."
-              variant="info"
+              className="mb-2"
+              message="ヒートマップの取得に失敗しました。"
+              variant="error"
             />
-          ) : null}
-          {/* Compact表示: カード単位エラー。再取得だけを局所的に実行する */}
-          {!pixelQuery.isLoading && pixelQuery.error ? (
-            <View className="mt-3 rounded-lg p-3">
-              <InlineMessage
-                className="mb-2"
-                message="ヒートマップの取得に失敗しました。"
-                variant="error"
-              />
-              <Button onPress={onRetryPixels}>再取得</Button>
-            </View>
-          ) : null}
-          {/* Compact表示: 取得成功時のみヒートマップを描画 */}
-          {pixelQuery.isLoading || pixelQuery.error ? null : (
-            <CompactHeatmap
-              graphColor={graph.color}
-              pixels={pixelQuery.data ?? []}
-              weeks={COMPACT_HEATMAP_WEEKS}
-            />
-          )}
-        </View>
-      ) : null}
-      {viewMode === "full" ? (
-        /* Full表示: MVP中はPixelaのWebページへ遷移する導線を表示 */
-        <View className="mt-3 rounded-lg bg-neutral-50 p-3">
-          <Text className="mb-2 text-neutral-700 text-sm">
-            Fullビューは現在Pixelaページを開く方式です。
-          </Text>
-          <Button
-            onPress={() => {
-              onPressOpenFullView(graph.id);
-            }}
-          >
-            Fullビューを開く
-          </Button>
-        </View>
-      ) : null}
-      {/* 主操作: クイック記録追加 */}
+            <Button onPress={onRetryPixels}>再取得</Button>
+          </View>
+        ) : null}
+        {/* 取得成功時のみヒートマップを描画 */}
+        {pixelQuery.isLoading || pixelQuery.error ? null : (
+          <CompactHeatmap
+            graphColor={graph.color}
+            pixels={pixelQuery.data ?? []}
+            weeks={COMPACT_HEATMAP_WEEKS}
+          />
+        )}
+      </View>
+      {/* 主操作: Quick Addを控えめにしつつカード内で完結させる */}
       <ActionStack className="mt-3">
         <Button
           isDisabled={isActionDisabled}
           onPress={() => {
             onPressAddPixel(graph);
           }}
+          size="sm"
+          variant="secondary"
         >
           記録する
         </Button>
@@ -156,6 +137,8 @@ export const GraphCard = ({
           onPress={() => {
             onPressOpenPixels(graph);
           }}
+          size="sm"
+          variant="ghost"
         >
           記録一覧
         </Button>
