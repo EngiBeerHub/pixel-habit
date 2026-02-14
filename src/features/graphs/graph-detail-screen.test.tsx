@@ -10,7 +10,6 @@ import {
 import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { GraphDetailScreen } from "./graph-detail-screen";
 
-const mockBack = jest.fn();
 const mockGetPixels = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
 const MONTH_RANGE_LABEL_PATTERN = /2026年2月: 20260201 - 20260228/;
@@ -24,9 +23,6 @@ let mockRouteParams: {
 
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => mockRouteParams,
-  useRouter: () => ({
-    back: mockBack,
-  }),
 }));
 
 jest.mock("../../shared/api/pixel", () => ({

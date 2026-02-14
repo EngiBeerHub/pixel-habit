@@ -133,7 +133,7 @@ export const PixelDetailScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-white px-6 pt-16 pb-6">
+    <View className="flex-1 bg-white px-6 pt-6 pb-6">
       {/* 画面ヘッダー: 編集対象ピクセルの文脈情報 */}
       <Text className="font-bold text-2xl text-neutral-900">
         {graphName || "記録編集"}
@@ -175,7 +175,7 @@ export const PixelDetailScreen = () => {
         <Text className="mb-4 text-green-700 text-sm">{message}</Text>
       ) : null}
 
-      {/* 画面アクション: 更新 / 削除 / 一覧へ戻る */}
+      {/* 画面アクション: 更新 / 削除 */}
       <View className="gap-3">
         <Button
           isDisabled={updateMutation.isPending || deleteMutation.isPending}
@@ -189,7 +189,6 @@ export const PixelDetailScreen = () => {
         >
           削除
         </Button>
-        <Button onPress={router.back}>一覧へ戻る</Button>
       </View>
     </View>
   );

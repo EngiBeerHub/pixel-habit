@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { Button } from "heroui-native";
 import { useMemo, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
@@ -28,7 +28,6 @@ interface GraphDetailSummary {
  * Graph詳細画面。Month/Yearで記録を確認する。
  */
 export const GraphDetailScreen = () => {
-  const router = useRouter();
   const params = useLocalSearchParams<{
     graphId?: string;
     graphName?: string;
@@ -93,12 +92,9 @@ export const GraphDetailScreen = () => {
   }, [pixels]);
 
   return (
-    <ScreenContainer contentClassName="gap-3" scrollable>
-      {/* 画面上部: 戻る導線、タイトル、対象グラフ */}
+    <ScreenContainer contentClassName="gap-3" scrollable withTopInset={false}>
+      {/* 画面上部: タイトルと対象グラフ */}
       <View className="mb-1 gap-2">
-        <Button onPress={router.back} size="sm" variant="ghost">
-          Homeへ戻る
-        </Button>
         <Text className="font-bold text-2xl text-neutral-900">{graphName}</Text>
         <Text className="text-neutral-600">ID: {graphId || "-"}</Text>
       </View>

@@ -30,6 +30,12 @@
 - `src/shared/ui/`: 汎用UIコンポーネント
 - `src/shared/config/`: 環境値、定数
 
+## Navigation Rules
+
+- `src/app/graphs/_layout.tsx` の `Stack` を Graph/Pixel関連画面の標準ナビゲーションとして扱う
+- Graph/Pixel関連画面では、画面内の戻るボタンよりStackヘッダーの戻る導線を優先する
+- Stackヘッダーを使う画面は上余白を二重にしない（`ScreenContainer` の `withTopInset` または同等の調整を行う）
+
 ## Data Flow
 
 1. 画面 (`src/app/*`) で feature コンポーネントを呼ぶ

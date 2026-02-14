@@ -10,6 +10,7 @@ export interface ScreenContainerProps {
   children: ReactNode;
   contentClassName?: string;
   scrollable?: boolean;
+  withTopInset?: boolean;
 }
 
 /**
@@ -19,10 +20,11 @@ export const ScreenContainer = ({
   children,
   contentClassName,
   scrollable = false,
+  withTopInset = true,
 }: ScreenContainerProps) => {
   const contentClassNames = mergeClassNames(
     spacingTokens.screenHorizontalClass,
-    spacingTokens.screenPaddingTopClass,
+    withTopInset ? spacingTokens.screenPaddingTopClass : "pt-6",
     spacingTokens.screenPaddingBottomClass,
     contentClassName
   );

@@ -73,7 +73,7 @@ export const GraphCreateScreen = () => {
   });
 
   return (
-    <ScrollView className="flex-1 bg-white px-6 pt-16 pb-6">
+    <ScrollView className="flex-1 bg-white px-6 pt-6 pb-6">
       {/* 画面ヘッダー: 作成目的の説明 */}
       <Text className="mb-2 font-bold text-2xl text-neutral-900">
         グラフ作成
@@ -227,12 +227,11 @@ export const GraphCreateScreen = () => {
         <Text className="mb-4 text-green-700 text-sm">{successMessage}</Text>
       ) : null}
 
-      {/* 画面アクション: 作成実行 / Homeへ戻る */}
+      {/* 画面アクション: 作成実行 */}
       <View className="gap-3">
         <Button isDisabled={mutation.isPending} onPress={onSubmit}>
           作成
         </Button>
-        <Button onPress={router.back}>Homeへ戻る</Button>
       </View>
     </ScrollView>
   );

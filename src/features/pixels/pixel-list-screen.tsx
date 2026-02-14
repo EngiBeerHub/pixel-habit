@@ -73,7 +73,7 @@ export const PixelListScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-white px-6 pt-16 pb-6">
+    <View className="flex-1 bg-white px-6 pt-6 pb-6">
       {/* 画面ヘッダー: 対象グラフ情報 */}
       <Text className="font-bold text-2xl text-neutral-900">
         {graphName || "ピクセル一覧"}
@@ -98,17 +98,6 @@ export const PixelListScreen = () => {
           記録を追加
         </Button>
       </View>
-      {/* 補助導線: Homeへ戻る */}
-      <View className="mb-4">
-        <Button
-          onPress={() => {
-            router.push("/(tabs)/home");
-          }}
-        >
-          Homeへ戻る
-        </Button>
-      </View>
-
       {/* 一覧取得中のローディング */}
       {query.isLoading ? (
         <View className="flex-1 items-center justify-center">

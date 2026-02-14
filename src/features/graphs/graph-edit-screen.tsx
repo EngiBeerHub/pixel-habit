@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { Button } from "heroui-native";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -13,7 +13,6 @@ import { type GraphEditFormValues, graphEditSchema } from "./graph-edit-schema";
  * グラフ設定を編集する画面。
  */
 export const GraphEditScreen = () => {
-  const router = useRouter();
   const params = useLocalSearchParams<{
     color?: string;
     graphId?: string;
@@ -88,7 +87,7 @@ export const GraphEditScreen = () => {
   });
 
   return (
-    <ScrollView className="flex-1 bg-white px-6 pt-16 pb-6">
+    <ScrollView className="flex-1 bg-white px-6 pt-6 pb-6">
       {/* 画面ヘッダー: 編集対象グラフの文脈情報 */}
       <Text className="mb-2 font-bold text-2xl text-neutral-900">
         グラフ編集
@@ -198,7 +197,7 @@ export const GraphEditScreen = () => {
         <Text className="mb-4 text-green-700 text-sm">{successMessage}</Text>
       ) : null}
 
-      {/* 画面アクション: 保存実行 / Homeへ戻る */}
+      {/* 画面アクション: 保存実行 */}
       <View className="gap-3">
         <Button
           isDisabled={mutation.isPending || Boolean(graphIdError)}
@@ -206,7 +205,6 @@ export const GraphEditScreen = () => {
         >
           保存
         </Button>
-        <Button onPress={router.back}>Homeへ戻る</Button>
       </View>
     </ScrollView>
   );

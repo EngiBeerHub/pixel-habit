@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { Button } from "heroui-native";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -16,7 +16,6 @@ import { type PixelAddFormValues, pixelAddSchema } from "./pixel-add-schema";
  * 指定グラフに日次記録を追加する画面。
  */
 export const PixelAddScreen = () => {
-  const router = useRouter();
   const params = useLocalSearchParams<{
     date?: string;
     graphId?: string;
@@ -92,7 +91,7 @@ export const PixelAddScreen = () => {
   });
 
   return (
-    <View className="flex-1 bg-white px-6 pt-16 pb-6">
+    <View className="flex-1 bg-white px-6 pt-6 pb-6">
       {/* 画面ヘッダー: 対象グラフと追加対象の文脈を表示 */}
       <Text className="font-bold text-2xl text-neutral-900">{headingText}</Text>
       <Text className="mt-2 mb-6 text-neutral-600">
@@ -163,12 +162,11 @@ export const PixelAddScreen = () => {
         <Text className="mb-4 text-green-700 text-sm">{submitMessage}</Text>
       ) : null}
 
-      {/* 画面アクション: 追加実行 / 一覧へ戻る */}
+      {/* 画面アクション: 追加実行 */}
       <View className="gap-3">
         <Button isDisabled={mutation.isPending} onPress={onSubmit}>
           記録を追加
         </Button>
-        <Button onPress={router.back}>一覧へ戻る</Button>
       </View>
     </View>
   );
