@@ -35,6 +35,7 @@ const buildProps = () => ({
   graph,
   isActionDisabled: false,
   onPressAddPixel: jest.fn(),
+  onPressOpenDetail: jest.fn(),
   onPressGraphMenu: jest.fn(),
   onPressOpenPixels: jest.fn(),
 });
@@ -104,6 +105,15 @@ describe("GraphCard", () => {
     fireEvent.press(screen.getByText("記録一覧"));
     expect(props.onPressAddPixel).toHaveBeenCalledWith(graph);
     expect(props.onPressOpenPixels).toHaveBeenCalledWith(graph);
+  });
+
+  test("triggers detail action from card header", () => {
+    const props = buildProps();
+
+    render(<GraphCard {...props} />);
+    fireEvent.press(screen.getByTestId("graph-card-open-detail-sleep"));
+
+    expect(props.onPressOpenDetail).toHaveBeenCalledWith(graph);
   });
 
   test("does not render stats summary as always-visible content", () => {

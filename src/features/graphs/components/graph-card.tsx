@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "heroui-native";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../../shared/api/authed-pixela-api";
 import type { GraphDefinition } from "../../../shared/api/graph";
 import { getGraphThemeColor } from "../../../shared/lib/graph-theme";
@@ -18,6 +18,7 @@ export interface GraphCardProps {
   graph: GraphDefinition;
   isActionDisabled: boolean;
   onPressAddPixel: (graph: GraphDefinition) => void;
+  onPressOpenDetail: (graph: GraphDefinition) => void;
   onPressGraphMenu: (graph: GraphDefinition) => void;
   onPressOpenPixels: (graph: GraphDefinition) => void;
 }
@@ -29,6 +30,7 @@ export const GraphCard = ({
   graph,
   isActionDisabled,
   onPressAddPixel,
+  onPressOpenDetail,
   onPressGraphMenu,
   onPressOpenPixels,
 }: GraphCardProps) => {
@@ -65,17 +67,24 @@ export const GraphCard = ({
       {/* カード上部: タイトルと操作メニュー */}
       <View className="flex-row items-start justify-between">
         <View className="flex-1 pr-4">
-          <View className="mb-2 flex-row items-center gap-2">
-            <View
-              className="h-2 w-2 rounded-full"
-              style={{
-                backgroundColor: getGraphThemeColor(graph.color),
-              }}
-            />
-            <Text className="font-semibold text-lg text-neutral-900">
-              {graph.name}
-            </Text>
-          </View>
+          <Pressable
+            onPress={() => {
+              onPressOpenDetail(graph);
+            }}
+            testID={`graph-card-open-detail-${graph.id}`}
+          >
+            <View className="mb-2 flex-row items-center gap-2">
+              <View
+                className="h-2 w-2 rounded-full"
+                style={{
+                  backgroundColor: getGraphThemeColor(graph.color),
+                }}
+              />
+              <Text className="font-semibold text-lg text-neutral-900">
+                {graph.name}
+              </Text>
+            </View>
+          </Pressable>
         </View>
         <Button
           isDisabled={isActionDisabled}

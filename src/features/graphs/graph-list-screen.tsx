@@ -291,6 +291,19 @@ export const GraphListScreen = () => {
   };
 
   /**
+   * グラフ詳細画面へ遷移する。
+   */
+  const onPressOpenDetail = (graph: GraphDefinition) => {
+    router.push({
+      params: {
+        graphId: graph.id,
+        graphName: graph.name,
+      },
+      pathname: "/graphs/[graphId]",
+    });
+  };
+
+  /**
    * グラフ編集画面へ遷移する。
    */
   const onPressEditGraph = (graph: GraphDefinition) => {
@@ -507,6 +520,7 @@ export const GraphListScreen = () => {
                 }
                 onPressAddPixel={onPressAddPixel}
                 onPressGraphMenu={onPressGraphMenu}
+                onPressOpenDetail={onPressOpenDetail}
                 onPressOpenPixels={onPressOpenPixels}
               />
             ) : null

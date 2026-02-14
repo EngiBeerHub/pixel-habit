@@ -1,0 +1,240 @@
+import { useQuery } from "@tanstack/react-query";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Button } from "heroui-native";
+import { useMemo, useState } from "react";
+import { ActivityIndicator, Text, View } from "react-native";
+import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
+import type { Pixel } from "../../shared/api/pixel";
+import { useAuthSession } from "../../shared/auth/use-auth-session";
+import {
+  type CalendarMode,
+  formatCalendarModeLabel,
+  getCalendarMonthRange,
+  getCalendarYearRange,
+} from "../../shared/lib/calendar-range";
+import { ScreenContainer } from "../../shared/ui/screen-container";
+import { SectionCard } from "../../shared/ui/section-card";
+
+/**
+ * グラフ詳細画面で表示する軽量統計情報。
+ */
+interface GraphDetailSummary {
+  maxQuantityText: string;
+  positiveRecordCount: number;
+  totalQuantityText: string;
+}
+
+/**
+ * Graph詳細画面。Month/Yearで記録を確認する。
+ */
+export const GraphDetailScreen = () => {
+  const router = useRouter();
+  const params = useLocalSearchParams<{
+    graphId?: string;
+    graphName?: string;
+  }>();
+  const graphId = typeof params.graphId === "string" ? params.graphId : "";
+  const graphName =
+    typeof params.graphName === "string" ? params.graphName : "グラフ詳細";
+  const [mode, setMode] = useState<CalendarMode>("month");
+  const { credentials, hasLoadError, status } = useAuthSession();
+  const api = useAuthedPixelaApi();
+
+  const activeRange = useMemo(() => {
+    if (mode === "month") {
+      return getCalendarMonthRange();
+    }
+    return getCalendarYearRange();
+  }, [mode]);
+
+  const query = useQuery({
+    enabled: Boolean(api.isAuthenticated && graphId) && status !== "loading",
+    queryFn: () => {
+      if (!graphId) {
+        return [];
+      }
+      return api.getPixels({
+        from: activeRange.from,
+        graphId,
+        to: activeRange.to,
+      });
+    },
+    queryKey: ["graphDetailPixels", api.username, graphId, mode],
+  });
+
+  const errorMessage = useMemo(() => {
+    if (hasLoadError) {
+      return "認証情報の読み込みに失敗しました。";
+    }
+    if (status === "anonymous" && !credentials) {
+      return "認証情報が見つかりません。再ログインしてください。";
+    }
+    if (!graphId) {
+      return "グラフIDが不正です。Home画面からやり直してください。";
+    }
+    if (!query.error) {
+      return null;
+    }
+    if (query.error instanceof Error) {
+      return query.error.message;
+    }
+    return "記録一覧の取得に失敗しました。";
+  }, [credentials, graphId, hasLoadError, query.error, status]);
+
+  const pixels = useMemo(() => {
+    if (!query.data) {
+      return [];
+    }
+    return [...query.data].sort((a, b) => b.date.localeCompare(a.date));
+  }, [query.data]);
+
+  const summary = useMemo(() => {
+    return buildGraphDetailSummary(pixels);
+  }, [pixels]);
+
+  return (
+    <ScreenContainer contentClassName="gap-3" scrollable>
+      {/* 画面上部: 戻る導線、タイトル、対象グラフ */}
+      <View className="mb-1 gap-2">
+        <Button onPress={router.back} size="sm" variant="ghost">
+          Homeへ戻る
+        </Button>
+        <Text className="font-bold text-2xl text-neutral-900">{graphName}</Text>
+        <Text className="text-neutral-600">ID: {graphId || "-"}</Text>
+      </View>
+
+      {/* 表示モード切替: Month=暦月、Year=暦年 */}
+      <SectionCard>
+        <View className="gap-3">
+          <View className="flex-row gap-2">
+            <Button
+              isDisabled={mode === "month"}
+              onPress={() => {
+                setMode("month");
+              }}
+              size="sm"
+              testID="graph-detail-mode-month"
+              variant="secondary"
+            >
+              Month
+            </Button>
+            <Button
+              isDisabled={mode === "year"}
+              onPress={() => {
+                setMode("year");
+              }}
+              size="sm"
+              testID="graph-detail-mode-year"
+              variant="secondary"
+            >
+              Year
+            </Button>
+          </View>
+          <Text
+            className="text-neutral-700 text-sm"
+            testID="graph-detail-range"
+          >
+            {formatCalendarModeLabel(mode)}: {activeRange.from} -{" "}
+            {activeRange.to}
+          </Text>
+        </View>
+      </SectionCard>
+
+      {/* データ取得中 */}
+      {query.isLoading ? (
+        <View className="items-center justify-center py-6">
+          <ActivityIndicator />
+          <Text className="mt-2 text-neutral-600">読み込み中...</Text>
+        </View>
+      ) : null}
+
+      {/* 取得失敗時の表示 */}
+      {!query.isLoading && errorMessage ? (
+        <SectionCard className="border border-red-200" tone="danger">
+          <View className="gap-3">
+            <Text className="text-red-700 text-sm">{errorMessage}</Text>
+            <Button
+              onPress={() => {
+                query.refetch();
+              }}
+              size="sm"
+              testID="graph-detail-retry"
+              variant="secondary"
+            >
+              再試行
+            </Button>
+          </View>
+        </SectionCard>
+      ) : null}
+
+      {/* 取得成功時の統計と記録一覧 */}
+      {query.isLoading || errorMessage ? null : (
+        <View className="gap-3">
+          <SectionCard title="Light統計">
+            <View className="gap-1">
+              <Text className="text-neutral-700 text-sm">
+                合計: {summary.totalQuantityText}
+              </Text>
+              <Text className="text-neutral-700 text-sm">
+                記録日数: {summary.positiveRecordCount}
+              </Text>
+              <Text className="text-neutral-700 text-sm">
+                最大値: {summary.maxQuantityText}
+              </Text>
+            </View>
+          </SectionCard>
+
+          <SectionCard title="記録一覧">
+            {pixels.length === 0 ? (
+              <Text className="text-neutral-600 text-sm">
+                この期間の記録はまだありません。
+              </Text>
+            ) : (
+              <View className="gap-2">
+                {pixels.map((pixel) => (
+                  <View
+                    className="rounded-lg border border-neutral-200 px-3 py-2"
+                    key={pixel.date}
+                  >
+                    <Text className="font-medium text-neutral-900 text-sm">
+                      {pixel.date}
+                    </Text>
+                    <Text className="text-neutral-600 text-sm">
+                      数量: {pixel.quantity || "-"}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </SectionCard>
+        </View>
+      )}
+    </ScreenContainer>
+  );
+};
+
+/**
+ * 取得済みピクセル配列からLight統計を算出する。
+ */
+const buildGraphDetailSummary = (pixels: Pixel[]): GraphDetailSummary => {
+  const positiveValues = pixels
+    .map((pixel) => Number(pixel.quantity))
+    .filter((value) => Number.isFinite(value) && value >= 1);
+
+  if (positiveValues.length === 0) {
+    return {
+      maxQuantityText: "-",
+      positiveRecordCount: 0,
+      totalQuantityText: "0",
+    };
+  }
+
+  const total = positiveValues.reduce((sum, value) => sum + value, 0);
+  const max = Math.max(...positiveValues);
+
+  return {
+    maxQuantityText: String(max),
+    positiveRecordCount: positiveValues.length,
+    totalQuantityText: String(total),
+  };
+};

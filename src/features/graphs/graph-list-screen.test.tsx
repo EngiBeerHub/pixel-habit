@@ -110,10 +110,12 @@ jest.mock("./components/graph-card", () => {
   const GraphCard = ({
     graph,
     onPressAddPixel,
+    onPressOpenDetail,
     onPressGraphMenu,
   }: {
     graph: { name: string };
     onPressAddPixel: (graph: { name: string }) => void;
+    onPressOpenDetail: (graph: { name: string }) => void;
     onPressGraphMenu: (graph: { name: string }) => void;
   }) => {
     return (
@@ -132,6 +134,13 @@ jest.mock("./components/graph-card", () => {
           }}
         >
           <Text>open-graph-menu</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            onPressOpenDetail(graph);
+          }}
+        >
+          <Text>open-graph-detail</Text>
         </Pressable>
       </View>
     );
@@ -189,9 +198,7 @@ describe("GraphListScreen", () => {
         const firstArg = args[0];
         if (
           typeof firstArg === "string" &&
-          firstArg.includes(
-            "An update to VirtualizedList inside a test was not wrapped in act"
-          )
+          firstArg.includes("inside a test was not wrapped in act")
         ) {
           return;
         }
@@ -380,5 +387,19 @@ describe("GraphListScreen", () => {
       "Sleep の統計",
       expect.any(String)
     );
+  });
+
+  test("navigates to graph detail from card", async () => {
+    await renderScreen();
+    expect(await screen.findByText("graph:Sleep")).toBeTruthy();
+
+    fireEvent.press(screen.getByText("open-graph-detail"));
+    expect(mockPush).toHaveBeenCalledWith({
+      params: {
+        graphId: "sleep",
+        graphName: "Sleep",
+      },
+      pathname: "/graphs/[graphId]",
+    });
   });
 });
