@@ -1,3 +1,4 @@
+import { useBottomSheetInternal } from "@gorhom/bottom-sheet";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
@@ -8,11 +9,18 @@ import {
 import { useRouter } from "expo-router";
 import { BottomSheet, Button, Input, useToast } from "heroui-native";
 import { useEffect, useMemo, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import {
+  type Control,
+  Controller,
+  type FieldErrors,
+  useForm,
+} from "react-hook-form";
 import {
   ActivityIndicator,
   FlatList,
+  type NativeSyntheticEvent,
   RefreshControl,
+  type TargetedEvent,
   Text,
   View,
 } from "react-native";
@@ -39,12 +47,144 @@ import { getCompactHeatmapDateRange } from "./components/compact-heatmap";
 import { GraphCard } from "./components/graph-card";
 
 /**
+ * Quick Addシート内の入力フォーム。
+ * HeroUI InputをBottom Sheet内で安定動作させるため、キーボード状態を同期する。
+ */
+interface QuickAddSheetFormProps {
+  control: Control<PixelAddFormValues>;
+  isSubmitting: boolean;
+  onSubmit: () => void;
+  pixelFormErrors: FieldErrors<PixelAddFormValues>;
+  selectedGraph: GraphDefinition | null;
+}
+
+const QuickAddSheetForm = ({
+  control,
+  isSubmitting,
+  onSubmit,
+  pixelFormErrors,
+  selectedGraph,
+}: QuickAddSheetFormProps) => {
+  const { animatedKeyboardState } = useBottomSheetInternal();
+
+  /**
+   * フォーカス中の入力をBottom Sheetへ通知し、キーボード追従を安定させる。
+   */
+  const onFocusInput = (event: NativeSyntheticEvent<TargetedEvent>) => {
+    animatedKeyboardState.set((state) => ({
+      ...state,
+      target: event.nativeEvent.target,
+    }));
+  };
+
+  /**
+   * 対象入力のフォーカス解除時にキーボードターゲットをクリアする。
+   */
+  const onBlurInput = (event: NativeSyntheticEvent<TargetedEvent>) => {
+    const keyboardState = animatedKeyboardState.get();
+    if (keyboardState.target === event.nativeEvent.target) {
+      animatedKeyboardState.set((state) => ({
+        ...state,
+        target: undefined,
+      }));
+    }
+  };
+
+  return (
+    <>
+      {/* シート見出し: 対象グラフ名を文脈として表示 */}
+      <BottomSheet.Title className="font-semibold text-lg text-neutral-900">
+        {selectedGraph ? `${selectedGraph.name} に記録追加` : "記録追加"}
+      </BottomSheet.Title>
+      <BottomSheet.Description className="text-neutral-500 text-sm">
+        日付と数量を入力して保存してください。
+      </BottomSheet.Description>
+
+      {/* 日付入力: yyyyMMdd形式。入力時に正規化してフォーム値へ反映 */}
+      <Text className="mt-2 text-neutral-800">日付 (yyyyMMdd)</Text>
+      <Controller
+        control={control}
+        name="date"
+        render={({ field: { onBlur, onChange, value } }) => (
+          <Input
+            onBlur={(event) => {
+              onBlurInput(event);
+              onBlur();
+            }}
+            onChangeText={(text) => {
+              onChange(normalizeYyyyMmDdInput(text));
+            }}
+            onFocus={onFocusInput}
+            placeholder="20260211"
+            testID="graph-quick-add-date-input"
+            value={value}
+            variant="secondary"
+          />
+        )}
+      />
+      {/* 日付バリデーションエラー */}
+      {pixelFormErrors.date?.message ? (
+        <Text className="text-red-600 text-sm">
+          {pixelFormErrors.date.message}
+        </Text>
+      ) : null}
+
+      {/* 数量入力 */}
+      <Text className="mt-1 text-neutral-800">数量</Text>
+      <Controller
+        control={control}
+        name="quantity"
+        render={({ field: { onBlur, onChange, value } }) => (
+          <Input
+            onBlur={(event) => {
+              onBlurInput(event);
+              onBlur();
+            }}
+            onChangeText={onChange}
+            onFocus={onFocusInput}
+            placeholder="10"
+            testID="graph-quick-add-quantity-input"
+            value={value}
+            variant="secondary"
+          />
+        )}
+      />
+      {/* 数量バリデーションエラー */}
+      {pixelFormErrors.quantity?.message ? (
+        <Text className="text-red-600 text-sm">
+          {pixelFormErrors.quantity.message}
+        </Text>
+      ) : null}
+      {/* API失敗時のフォーム共通エラー */}
+      {pixelFormErrors.root?.message ? (
+        <Text className="text-red-600 text-sm">
+          {pixelFormErrors.root.message}
+        </Text>
+      ) : null}
+      {/* シート内アクション: 直接保存 */}
+      <View className="mt-2">
+        <Button
+          isDisabled={isSubmitting}
+          onPress={onSubmit}
+          size="sm"
+          testID="graph-quick-add-save-button"
+          variant="primary"
+        >
+          保存
+        </Button>
+      </View>
+    </>
+  );
+};
+
+/**
  * 認証情報を使って Pixela のグラフ一覧を表示する画面。
  */
 export const GraphListScreen = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [isPullRefreshing, setIsPullRefreshing] = useState(false);
   const [selectedGraph, setSelectedGraph] = useState<GraphDefinition | null>(
     null
   );
@@ -161,12 +301,17 @@ export const GraphListScreen = () => {
    * pull-to-refreshでグラフ一覧を再取得する。
    */
   const onRefresh = async () => {
-    await query.refetch();
-    if (api.username) {
-      await queryClient.refetchQueries({
-        queryKey: ["graphPixelsCompact", api.username],
-        type: "active",
-      });
+    setIsPullRefreshing(true);
+    try {
+      await query.refetch();
+      if (api.username) {
+        await queryClient.refetchQueries({
+          queryKey: ["graphPixelsCompact", api.username],
+          type: "active",
+        });
+      }
+    } finally {
+      setIsPullRefreshing(false);
     }
   };
 
@@ -334,7 +479,7 @@ export const GraphListScreen = () => {
           refreshControl={
             <RefreshControl
               onRefresh={onRefresh}
-              refreshing={query.isFetching}
+              refreshing={isPullRefreshing}
             />
           }
           removeClippedSubviews={false}
@@ -369,79 +514,13 @@ export const GraphListScreen = () => {
             enablePanDownToClose
             snapPoints={snapPoints}
           >
-            {/* シート見出し: 対象グラフ名を文脈として表示 */}
-            <BottomSheet.Title className="font-semibold text-lg text-neutral-900">
-              {selectedGraph ? `${selectedGraph.name} に記録追加` : "記録追加"}
-            </BottomSheet.Title>
-            <BottomSheet.Description className="text-neutral-500 text-sm">
-              日付と数量を入力して保存してください。
-            </BottomSheet.Description>
-
-            {/* 日付入力: yyyyMMdd形式。入力時に正規化してフォーム値へ反映 */}
-            <Text className="mt-2 text-neutral-800">日付 (yyyyMMdd)</Text>
-            <Controller
+            <QuickAddSheetForm
               control={control}
-              name="date"
-              render={({ field: { onBlur, onChange, value } }) => (
-                <Input
-                  onBlur={onBlur}
-                  onChangeText={(text) => {
-                    onChange(normalizeYyyyMmDdInput(text));
-                  }}
-                  placeholder="20260211"
-                  testID="graph-quick-add-date-input"
-                  value={value}
-                  variant="secondary"
-                />
-              )}
+              isSubmitting={addPixelMutation.isPending}
+              onSubmit={onSubmitQuickAdd}
+              pixelFormErrors={pixelFormErrors}
+              selectedGraph={selectedGraph}
             />
-            {/* 日付バリデーションエラー */}
-            {pixelFormErrors.date?.message ? (
-              <Text className="text-red-600 text-sm">
-                {pixelFormErrors.date.message}
-              </Text>
-            ) : null}
-
-            {/* 数量入力 */}
-            <Text className="mt-1 text-neutral-800">数量</Text>
-            <Controller
-              control={control}
-              name="quantity"
-              render={({ field: { onBlur, onChange, value } }) => (
-                <Input
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  placeholder="10"
-                  testID="graph-quick-add-quantity-input"
-                  value={value}
-                  variant="secondary"
-                />
-              )}
-            />
-            {/* 数量バリデーションエラー */}
-            {pixelFormErrors.quantity?.message ? (
-              <Text className="text-red-600 text-sm">
-                {pixelFormErrors.quantity.message}
-              </Text>
-            ) : null}
-            {/* API失敗時のフォーム共通エラー */}
-            {pixelFormErrors.root?.message ? (
-              <Text className="text-red-600 text-sm">
-                {pixelFormErrors.root.message}
-              </Text>
-            ) : null}
-            {/* シート内アクション: 直接保存 */}
-            <View className="mt-2">
-              <Button
-                isDisabled={addPixelMutation.isPending}
-                onPress={onSubmitQuickAdd}
-                size="sm"
-                testID="graph-quick-add-save-button"
-                variant="primary"
-              >
-                保存
-              </Button>
-            </View>
           </BottomSheet.Content>
         </BottomSheet.Portal>
       </BottomSheet>

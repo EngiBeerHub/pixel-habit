@@ -64,6 +64,15 @@ jest.mock("../../shared/api/pixel", () => ({
   getPixels: (...args: unknown[]) => mockGetPixels(...args),
 }));
 
+jest.mock("@gorhom/bottom-sheet", () => ({
+  useBottomSheetInternal: () => ({
+    animatedKeyboardState: {
+      get: () => ({ target: undefined }),
+      set: jest.fn(),
+    },
+  }),
+}));
+
 jest.mock("heroui-native", () => {
   const { Pressable, Text, TextInput, View } = require("react-native");
   const Card = ({ children }: { children?: ReactNode }) => (
