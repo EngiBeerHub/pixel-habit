@@ -6,6 +6,7 @@ import {
 
 interface MockResponseOptions {
   body: unknown;
+  contentType?: string;
   ok?: boolean;
   status?: number;
 }
@@ -15,13 +16,14 @@ interface MockResponseOptions {
  */
 const createMockResponse = ({
   body,
+  contentType = "application/json",
   ok = true,
   status = 200,
 }: MockResponseOptions): Response => {
   const jsonBody = JSON.stringify(body);
   return {
     headers: new Headers({
-      "content-type": "application/json",
+      "content-type": contentType,
     }),
     json: jest.fn().mockResolvedValue(body),
     ok,
@@ -34,6 +36,7 @@ describe("pixelaRequest", () => {
   const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     clearApiAuthCredentials();
     globalThis.fetch = jest.fn().mockResolvedValue(
       createMockResponse({
@@ -44,6 +47,10 @@ describe("pixelaRequest", () => {
 
   afterAll(() => {
     globalThis.fetch = originalFetch;
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   test("sets explicit token header when token is provided", async () => {
@@ -85,5 +92,65 @@ describe("pixelaRequest", () => {
         path: "/v1/users/demo-user/graphs",
       })
     ).rejects.toBeInstanceOf(AuthRequiredError);
+  });
+
+  test("retries rejected 503 response and succeeds", async () => {
+    (globalThis.fetch as jest.Mock)
+      .mockResolvedValueOnce(
+        createMockResponse({
+          body: {
+            isRejected: true,
+            message: "Please retry this request.",
+          },
+          ok: false,
+          status: 503,
+        })
+      )
+      .mockResolvedValueOnce(
+        createMockResponse({
+          body: { isSuccess: true, message: "ok" },
+        })
+      );
+
+    const requestPromise = pixelaRequest<{
+      isSuccess: boolean;
+      message: string;
+    }>({
+      method: "GET",
+      path: "/v1/users/demo-user/graphs",
+      token: "explicit-token",
+    });
+    await jest.advanceTimersByTimeAsync(100);
+
+    await expect(requestPromise).resolves.toEqual({
+      isSuccess: true,
+      message: "ok",
+    });
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  test("does not retry non-rejected 503 response", async () => {
+    (globalThis.fetch as jest.Mock).mockResolvedValueOnce(
+      createMockResponse({
+        body: {
+          message: "Service unavailable",
+        },
+        ok: false,
+        status: 503,
+      })
+    );
+
+    await expect(
+      pixelaRequest({
+        method: "GET",
+        path: "/v1/users/demo-user/graphs",
+        token: "explicit-token",
+      })
+    ).rejects.toMatchObject({
+      message: "Service unavailable",
+      name: "PixelaApiError",
+      status: 503,
+    });
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
   });
 });

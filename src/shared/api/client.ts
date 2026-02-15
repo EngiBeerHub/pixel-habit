@@ -4,11 +4,14 @@ import { getApiAuthCredentials } from "./client-auth-context";
  * Pixela API のベースURL。
  */
 const PIXELA_BASE_URL = "https://pixe.la";
+const PIXELA_RETRY_MAX_COUNT = 10;
+const PIXELA_RETRY_DELAY_MS = 100;
 
 /**
  * Pixela API の標準的なメッセージ形式。
  */
 interface PixelaMessageResponse {
+  isRejected?: boolean;
   isSuccess?: boolean;
   message?: string;
 }
@@ -68,22 +71,37 @@ export const pixelaRequest = async <TResponse>({
     headers.set("X-USER-TOKEN", resolvedToken);
   }
 
-  const response = await fetch(`${PIXELA_BASE_URL}${path}`, {
-    body: body ? JSON.stringify(body) : undefined,
-    headers,
-    method,
-  });
+  let retryCount = 0;
+  while (true) {
+    const response = await fetch(`${PIXELA_BASE_URL}${path}`, {
+      body: body ? JSON.stringify(body) : undefined,
+      headers,
+      method,
+    });
 
-  const contentType = response.headers.get("content-type") ?? "";
-  const isJson = contentType.includes("application/json");
-  const responseBody = isJson ? await response.json() : await response.text();
+    const contentType = response.headers.get("content-type") ?? "";
+    const isJson = contentType.includes("application/json");
+    const responseBody = isJson ? await response.json() : await response.text();
 
-  if (!response.ok) {
+    if (response.ok) {
+      return responseBody as TResponse;
+    }
+
+    if (
+      shouldRetryPixelaRejectedRequest({
+        responseBody,
+        retryCount,
+        status: response.status,
+      })
+    ) {
+      retryCount += 1;
+      await wait(PIXELA_RETRY_DELAY_MS);
+      continue;
+    }
+
     const message = extractErrorMessage(responseBody);
     throw new PixelaApiError(message, response.status);
   }
-
-  return responseBody as TResponse;
 };
 
 /**
@@ -100,4 +118,35 @@ const extractErrorMessage = (body: unknown): string => {
   }
 
   return "Pixela API request failed.";
+};
+
+/**
+ * Pixela無料枠の一時拒否（503 + isRejected=true）のみ自動再試行する。
+ */
+const shouldRetryPixelaRejectedRequest = ({
+  responseBody,
+  retryCount,
+  status,
+}: {
+  responseBody: unknown;
+  retryCount: number;
+  status: number;
+}): boolean => {
+  if (status !== 503 || retryCount >= PIXELA_RETRY_MAX_COUNT) {
+    return false;
+  }
+  if (typeof responseBody !== "object" || responseBody === null) {
+    return false;
+  }
+  const candidate = responseBody as PixelaMessageResponse;
+  return candidate.isRejected === true;
+};
+
+/**
+ * 指定ミリ秒だけ待機する。
+ */
+const wait = async (ms: number): Promise<void> => {
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
 };
