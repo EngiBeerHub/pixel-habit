@@ -86,14 +86,22 @@
 - API:
   - `PUT /v1/users/{username}/graphs/{graphID}/{yyyyMMdd}`
 - 主画面:
-  - 記録詳細画面
+  - `/graphs/[graphId]/pixels/[date]`
+- 導線:
+  - `/graphs/[graphId]` の記録一覧行タップ
+- UX要件:
+  - 成功時はGraph詳細へ戻り、対象グラフの関連クエリを再取得する
 
 ### UC-08 日次記録を削除する
 
 - API:
   - `DELETE /v1/users/{username}/graphs/{graphID}/{yyyyMMdd}`
 - 主画面:
-  - 記録詳細画面（確認ダイアログ必須）
+  - `/graphs/[graphId]/pixels/[date]`（確認ダイアログ必須）
+- 導線:
+  - `/graphs/[graphId]` の記録一覧行タップ
+- UX要件:
+  - 成功時はGraph詳細へ戻り、対象グラフの関連クエリを再取得する
 
 ### UC-13 グラフ詳細を期間別に確認する（Month/Year）
 

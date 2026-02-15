@@ -115,7 +115,7 @@ describe("PixelDetailScreen", () => {
     ).toBeTruthy();
   });
 
-  test("updates pixel and shows success message", async () => {
+  test("updates pixel, shows completion alert, and returns", async () => {
     renderScreen();
 
     fireEvent.changeText(screen.getByPlaceholderText("10"), "5");
@@ -129,7 +129,17 @@ describe("PixelDetailScreen", () => {
       });
     });
 
-    expect(await screen.findByText("更新成功")).toBeTruthy();
+    expect(mockShowAlert).toHaveBeenCalledWith(
+      "更新完了",
+      "更新成功",
+      expect.any(Array)
+    );
+    const completionButtons = mockShowAlert.mock.calls[0]?.[2] as
+      | AlertButton[]
+      | undefined;
+    const okButton = completionButtons?.find((button) => button.text === "OK");
+    okButton?.onPress?.();
+    expect(mockBack).toHaveBeenCalled();
   });
 
   test("deletes pixel after confirmation", async () => {

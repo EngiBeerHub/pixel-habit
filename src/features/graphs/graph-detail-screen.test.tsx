@@ -165,6 +165,49 @@ describe("GraphDetailScreen", () => {
     expect(await screen.findByText("最大値: 4")).toBeTruthy();
   });
 
+  test("navigates to pixel detail when tapping a record row", async () => {
+    renderScreen();
+    await screen.findByText("Sleep");
+
+    fireEvent.press(await screen.findByTestId("graph-detail-record-20260213"));
+
+    expect(mockPush).toHaveBeenCalledWith({
+      params: {
+        date: "20260213",
+        graphId: "sleep",
+        graphName: "Sleep",
+        quantity: "2",
+      },
+      pathname: "/graphs/[graphId]/pixels/[date]",
+    });
+  });
+
+  test("keeps record navigation params after switching to year mode", async () => {
+    renderScreen();
+    await screen.findByText("Sleep");
+
+    fireEvent.press(screen.getByTestId("graph-detail-mode-year"));
+    await waitFor(() => {
+      expect(mockGetPixels).toHaveBeenCalledWith({
+        from: "20260101",
+        graphId: "sleep",
+        to: "20261231",
+      });
+    });
+
+    fireEvent.press(await screen.findByTestId("graph-detail-record-20260211"));
+
+    expect(mockPush).toHaveBeenCalledWith({
+      params: {
+        date: "20260211",
+        graphId: "sleep",
+        graphName: "Sleep",
+        quantity: "4",
+      },
+      pathname: "/graphs/[graphId]/pixels/[date]",
+    });
+  });
+
   test("shows error and allows retry", async () => {
     mockGetPixels.mockRejectedValueOnce(new Error("取得失敗"));
 

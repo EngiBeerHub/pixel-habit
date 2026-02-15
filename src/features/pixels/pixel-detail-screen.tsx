@@ -2,7 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
-import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, TextInput, View } from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
@@ -21,7 +20,6 @@ export const PixelDetailScreen = () => {
     graphName?: string;
     quantity?: string;
   }>();
-  const [message, setMessage] = useState<string | null>(null);
   const graphId = typeof params.graphId === "string" ? params.graphId : "";
   const graphName =
     typeof params.graphName === "string" ? params.graphName : "";
@@ -59,13 +57,17 @@ export const PixelDetailScreen = () => {
           ? error.message
           : "記録更新に失敗しました。再度お試しください。";
       setError("root", { message: errorMessage });
-      setMessage(null);
     },
     onSuccess: async (response) => {
-      setMessage(response.message);
-      await queryClient.invalidateQueries({
-        queryKey: ["pixels", graphId],
-      });
+      await invalidatePixelRelatedQueries(queryClient, graphId);
+      showAlert("更新完了", response.message, [
+        {
+          onPress: () => {
+            router.back();
+          },
+          text: "OK",
+        },
+      ]);
     },
   });
 
@@ -85,12 +87,9 @@ export const PixelDetailScreen = () => {
           ? error.message
           : "記録削除に失敗しました。再度お試しください。";
       setError("root", { message: errorMessage });
-      setMessage(null);
     },
     onSuccess: async (response) => {
-      await queryClient.invalidateQueries({
-        queryKey: ["pixels", graphId],
-      });
+      await invalidatePixelRelatedQueries(queryClient, graphId);
       showAlert("削除完了", response.message, [
         {
           onPress: () => {
@@ -170,10 +169,6 @@ export const PixelDetailScreen = () => {
       {errors.root?.message ? (
         <Text className="mb-4 text-red-600 text-sm">{errors.root.message}</Text>
       ) : null}
-      {/* API成功メッセージ */}
-      {message ? (
-        <Text className="mb-4 text-green-700 text-sm">{message}</Text>
-      ) : null}
 
       {/* 画面アクション: 更新 / 削除 */}
       <View className="gap-3">
@@ -192,4 +187,27 @@ export const PixelDetailScreen = () => {
       </View>
     </View>
   );
+};
+
+/**
+ * 記録更新/削除後に関連クエリを再取得し、各画面の表示を同期する。
+ */
+const invalidatePixelRelatedQueries = async (
+  queryClient: ReturnType<typeof useQueryClient>,
+  graphId: string
+) => {
+  await Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: ["pixels", graphId],
+    }),
+    queryClient.invalidateQueries({
+      queryKey: ["graphDetailPixels"],
+    }),
+    queryClient.invalidateQueries({
+      queryKey: ["graphPixelsCompact"],
+    }),
+    queryClient.invalidateQueries({
+      queryKey: ["graphPixelsToday"],
+    }),
+  ]);
 };

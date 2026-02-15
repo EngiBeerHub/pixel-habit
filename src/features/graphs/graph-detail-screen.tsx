@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import type { Pixel } from "../../shared/api/pixel";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
@@ -167,6 +167,21 @@ export const GraphDetailScreen = () => {
     ]);
   };
 
+  /**
+   * 選択した日付の記録詳細画面へ遷移する。
+   */
+  const onPressOpenPixelDetail = (pixel: Pixel) => {
+    router.push({
+      params: {
+        date: pixel.date,
+        graphId,
+        graphName,
+        quantity: pixel.quantity,
+      },
+      pathname: "/graphs/[graphId]/pixels/[date]",
+    });
+  };
+
   return (
     <ScreenContainer contentClassName="gap-3" scrollable withTopInset={false}>
       {/* 画面上部: タイトルと対象グラフ */}
@@ -283,9 +298,13 @@ export const GraphDetailScreen = () => {
             ) : (
               <View className="gap-2">
                 {pixels.map((pixel) => (
-                  <View
+                  <Pressable
                     className="rounded-lg border border-neutral-200 px-3 py-2"
                     key={pixel.date}
+                    onPress={() => {
+                      onPressOpenPixelDetail(pixel);
+                    }}
+                    testID={`graph-detail-record-${pixel.date}`}
                   >
                     <Text className="font-medium text-neutral-900 text-sm">
                       {pixel.date}
@@ -293,7 +312,7 @@ export const GraphDetailScreen = () => {
                     <Text className="text-neutral-600 text-sm">
                       数量: {pixel.quantity || "-"}
                     </Text>
-                  </View>
+                  </Pressable>
                 ))}
               </View>
             )}
