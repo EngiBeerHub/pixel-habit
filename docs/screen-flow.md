@@ -46,6 +46,9 @@
 - ルート案: `/graphs/*`
 - 役割: Graph/Pixel系画面のヘッダーと戻る導線をネイティブStackで統一
 
+補足:
+- 記録一覧専用画面（`/graphs/[graphId]/pixels`）は持たず、Graph詳細の期間内一覧を唯一の記録参照導線とする
+
 ## HomeタブのUI方針
 
 - Home/SettingsはExpo標準ヘッダーを使用する（画面内ヘッダーの重複表示はしない）

@@ -59,7 +59,7 @@ export const PixelDetailScreen = () => {
       setError("root", { message: errorMessage });
     },
     onSuccess: async (response) => {
-      await invalidatePixelRelatedQueries(queryClient, graphId);
+      await invalidatePixelRelatedQueries(queryClient);
       showAlert("更新完了", response.message, [
         {
           onPress: () => {
@@ -89,7 +89,7 @@ export const PixelDetailScreen = () => {
       setError("root", { message: errorMessage });
     },
     onSuccess: async (response) => {
-      await invalidatePixelRelatedQueries(queryClient, graphId);
+      await invalidatePixelRelatedQueries(queryClient);
       showAlert("削除完了", response.message, [
         {
           onPress: () => {
@@ -193,13 +193,9 @@ export const PixelDetailScreen = () => {
  * 記録更新/削除後に関連クエリを再取得し、各画面の表示を同期する。
  */
 const invalidatePixelRelatedQueries = async (
-  queryClient: ReturnType<typeof useQueryClient>,
-  graphId: string
+  queryClient: ReturnType<typeof useQueryClient>
 ) => {
   await Promise.all([
-    queryClient.invalidateQueries({
-      queryKey: ["pixels", graphId],
-    }),
     queryClient.invalidateQueries({
       queryKey: ["graphDetailPixels"],
     }),
