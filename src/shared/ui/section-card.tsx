@@ -1,6 +1,10 @@
 import { Card } from "heroui-native";
 import type { ReactNode } from "react";
-import { colorTokens, typographyTokens } from "../config/ui-tokens";
+import {
+  colorTokens,
+  surfaceTokens,
+  typographyTokens,
+} from "../config/ui-tokens";
 import { mergeClassNames } from "../lib/class-name";
 
 /**
@@ -30,7 +34,7 @@ export const SectionCard = ({
   const toneClassNames =
     tone === "danger"
       ? {
-          root: "bg-red-50",
+          root: surfaceTokens.dangerSubtleClass,
           title: colorTokens.dangerTextClass,
           variant: "secondary" as const,
         }

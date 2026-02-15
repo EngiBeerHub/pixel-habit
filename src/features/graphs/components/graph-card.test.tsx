@@ -2,6 +2,10 @@ import { fireEvent, render, screen } from "@testing-library/react-native";
 import type { GraphDefinition } from "../../../shared/api/graph";
 import { GraphCard } from "./graph-card";
 
+const METADATA_ID_PATTERN = /ID:/;
+const METADATA_UNIT_PATTERN = /単位:/;
+const METADATA_TIMEZONE_PATTERN = /タイムゾーン/;
+
 const mockUseQuery = jest.fn();
 const mockRefetch = jest.fn();
 const mockUseAuthedPixelaApi = jest.fn();
@@ -135,6 +139,14 @@ describe("GraphCard", () => {
 
     expect(screen.queryByText("総記録数")).toBeNull();
     expect(screen.queryByText("合計")).toBeNull();
+  });
+
+  test("does not render metadata lines on home card", () => {
+    render(<GraphCard {...buildProps()} />);
+
+    expect(screen.queryByText(METADATA_ID_PATTERN)).toBeNull();
+    expect(screen.queryByText(METADATA_UNIT_PATTERN)).toBeNull();
+    expect(screen.queryByText(METADATA_TIMEZONE_PATTERN)).toBeNull();
   });
 
   test("calls add for date when a heatmap cell is tapped", () => {

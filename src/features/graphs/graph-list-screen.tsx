@@ -26,6 +26,13 @@ import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import type { GraphDefinition } from "../../shared/api/graph";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
 import {
+  borderTokens,
+  spacingTokens,
+  surfaceTokens,
+  textTokens,
+} from "../../shared/config/ui-tokens";
+import { mergeClassNames } from "../../shared/lib/class-name";
+import {
   getTodayAsYyyyMmDd,
   normalizeYyyyMmDdInput,
 } from "../../shared/lib/date";
@@ -255,23 +262,44 @@ export const GraphListScreen = () => {
    */
   const renderListHeader = () => {
     return (
-      <View className="gap-3 pb-3">
-        <Text className="text-neutral-500 text-sm">
+      <View
+        className={mergeClassNames(spacingTokens.listHeaderGapClass, "pb-3")}
+      >
+        <Text className={`text-sm ${textTokens.mutedClass}`}>
           {formatPeriodLabel(compactHeatmapRange.from, compactHeatmapRange.to)}
         </Text>
         {/* Todayエリア: 未入力グラフは上位1件のみ表示し、一覧と同じスクロール文脈で扱う */}
         {topMissingGraph ? (
-          <SectionCard className="border border-amber-200 bg-amber-50">
+          <SectionCard
+            className={mergeClassNames(
+              "border",
+              borderTokens.warningClass,
+              surfaceTokens.warningSubtleClass
+            )}
+          >
             <View testID="today-focus-card">
-              <Text className="font-medium text-amber-900 text-xs">
+              <Text
+                className={mergeClassNames(
+                  "font-medium text-xs",
+                  textTokens.warningClass
+                )}
+              >
                 Today 未入力
               </Text>
-              <Text className="mt-1 text-amber-800 text-sm">
+              <Text
+                className={mergeClassNames(
+                  "mt-1 text-sm",
+                  textTokens.warningEmphasisClass
+                )}
+              >
                 {topMissingGraph.name} が未入力です
               </Text>
               {remainingMissingCount > 0 ? (
                 <Text
-                  className="mt-1 text-amber-700 text-xs"
+                  className={mergeClassNames(
+                    "mt-1 text-xs",
+                    textTokens.warningSubtleClass
+                  )}
                   testID="today-focus-remaining"
                 >
                   他{remainingMissingCount}件未入力
@@ -284,7 +312,7 @@ export const GraphListScreen = () => {
                   }}
                   size="sm"
                   testID="today-quick-add-button"
-                  variant="secondary"
+                  variant="primary"
                 >
                   今日を入力
                 </Button>
@@ -297,20 +325,30 @@ export const GraphListScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-white px-6 pt-4 pb-6">
+    <View
+      className={mergeClassNames(
+        "flex-1 px-6 pt-4 pb-6",
+        surfaceTokens.screenClass
+      )}
+    >
       {/* 初回ロード時の全画面ローディング */}
       {query.isLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
-          <Text className="mt-3 text-neutral-600">読み込み中...</Text>
+          <Text className={mergeClassNames("mt-3", textTokens.secondaryClass)}>
+            読み込み中...
+          </Text>
         </View>
       ) : null}
 
       {/* 一覧取得失敗時の全画面エラー。再試行で一覧を再取得 */}
       {!query.isLoading && errorMessage ? (
-        <SectionCard className="border border-red-200" tone="danger">
+        <SectionCard
+          className={mergeClassNames("border", borderTokens.dangerClass)}
+          tone="danger"
+        >
           <View className="gap-3">
-            <Text className="text-red-700">{errorMessage}</Text>
+            <Text className={textTokens.dangerClass}>{errorMessage}</Text>
             <Button onPress={onRetry} testID="graph-list-retry-button">
               再試行
             </Button>

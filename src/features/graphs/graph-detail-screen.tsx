@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
@@ -6,12 +7,14 @@ import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import type { Pixel } from "../../shared/api/pixel";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
+import { borderTokens, textTokens } from "../../shared/config/ui-tokens";
 import {
   type CalendarMode,
   formatCalendarModeLabel,
   getCalendarMonthRange,
   getCalendarYearRange,
 } from "../../shared/lib/calendar-range";
+import { mergeClassNames } from "../../shared/lib/class-name";
 import { showAlert } from "../../shared/platform/app-alert";
 import { ScreenContainer } from "../../shared/ui/screen-container";
 import { SectionCard } from "../../shared/ui/section-card";
@@ -183,23 +186,33 @@ export const GraphDetailScreen = () => {
   };
 
   return (
-    <ScreenContainer contentClassName="gap-3" scrollable withTopInset={false}>
+    <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
       {/* 画面上部: タイトルと対象グラフ */}
-      <View className="mb-1 flex-row items-start justify-between gap-2">
+      <View className="mb-1 flex-row items-center justify-between gap-2">
         <View className="flex-1 gap-2">
-          <Text className="font-bold text-2xl text-neutral-900">
+          <Text
+            className={mergeClassNames(
+              "font-bold text-2xl",
+              textTokens.primaryClass
+            )}
+          >
             {graphName}
           </Text>
-          <Text className="text-neutral-600">ID: {graphId || "-"}</Text>
+          <Text
+            className={mergeClassNames("text-sm", textTokens.secondaryClass)}
+          >
+            ID: {graphId || "-"}
+          </Text>
         </View>
         <Button
           isDisabled={deleteMutation.isPending || !graphId}
+          isIconOnly
           onPress={onPressOpenGraphActions}
-          size="md"
+          size="sm"
           testID="graph-detail-menu-button"
           variant="tertiary"
         >
-          ...
+          <Ionicons name="ellipsis-horizontal" size={16} />
         </Button>
       </View>
 
@@ -231,7 +244,7 @@ export const GraphDetailScreen = () => {
             </Button>
           </View>
           <Text
-            className="text-neutral-500 text-xs"
+            className={mergeClassNames("text-xs", textTokens.mutedClass)}
             testID="graph-detail-mode-help"
           >
             Month=暦月 / Year=暦年
@@ -250,15 +263,24 @@ export const GraphDetailScreen = () => {
       {query.isLoading ? (
         <View className="items-center justify-center py-6">
           <ActivityIndicator />
-          <Text className="mt-2 text-neutral-600">読み込み中...</Text>
+          <Text className={mergeClassNames("mt-2", textTokens.secondaryClass)}>
+            読み込み中...
+          </Text>
         </View>
       ) : null}
 
       {/* 取得失敗時の表示 */}
       {!query.isLoading && errorMessage ? (
-        <SectionCard className="border border-red-200" tone="danger">
+        <SectionCard
+          className={mergeClassNames("border", borderTokens.dangerClass)}
+          tone="danger"
+        >
           <View className="gap-3">
-            <Text className="text-red-700 text-sm">{errorMessage}</Text>
+            <Text
+              className={mergeClassNames("text-sm", textTokens.dangerClass)}
+            >
+              {errorMessage}
+            </Text>
             <Button
               onPress={() => {
                 query.refetch();
@@ -299,19 +321,37 @@ export const GraphDetailScreen = () => {
               <View className="gap-2">
                 {pixels.map((pixel) => (
                   <Pressable
-                    className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3"
+                    className={mergeClassNames(
+                      "rounded-xl border bg-neutral-50 px-3 py-3 active:opacity-80",
+                      borderTokens.defaultClass
+                    )}
                     key={pixel.date}
                     onPress={() => {
                       onPressOpenPixelDetail(pixel);
                     }}
                     testID={`graph-detail-record-${pixel.date}`}
                   >
-                    <Text className="font-medium text-neutral-900 text-sm">
-                      {pixel.date}
-                    </Text>
-                    <Text className="text-neutral-600 text-sm">
-                      数量: {pixel.quantity || "-"}
-                    </Text>
+                    <View className="flex-row items-center justify-between">
+                      <View className="gap-1">
+                        <Text
+                          className={mergeClassNames(
+                            "font-medium text-sm",
+                            textTokens.primaryClass
+                          )}
+                        >
+                          {pixel.date}
+                        </Text>
+                        <Text
+                          className={mergeClassNames(
+                            "text-sm",
+                            textTokens.secondaryClass
+                          )}
+                        >
+                          数量: {pixel.quantity || "-"}
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={14} />
+                    </View>
                   </Pressable>
                 ))}
               </View>

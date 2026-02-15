@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { ScrollView, View } from "react-native";
-import { colorTokens, spacingTokens } from "../config/ui-tokens";
+import { spacingTokens, surfaceTokens } from "../config/ui-tokens";
 import { mergeClassNames } from "../lib/class-name";
 
 /**
@@ -32,7 +32,7 @@ export const ScreenContainer = ({
   if (scrollable) {
     return (
       <ScrollView
-        className={mergeClassNames("flex-1", colorTokens.screenBackgroundClass)}
+        className={mergeClassNames("flex-1", surfaceTokens.screenClass)}
         contentContainerClassName={contentClassNames}
       >
         {children}
@@ -44,7 +44,7 @@ export const ScreenContainer = ({
     <View
       className={mergeClassNames(
         "flex-1",
-        colorTokens.screenBackgroundClass,
+        surfaceTokens.screenClass,
         contentClassNames
       )}
     >

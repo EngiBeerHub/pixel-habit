@@ -4,6 +4,7 @@ import { Button } from "heroui-native";
 import { Pressable, Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../../shared/api/authed-pixela-api";
 import type { GraphDefinition } from "../../../shared/api/graph";
+import { surfaceTokens, textTokens } from "../../../shared/config/ui-tokens";
 import { getGraphThemeColor } from "../../../shared/lib/graph-theme";
 import { InlineMessage } from "../../../shared/ui/inline-message";
 import { SectionCard } from "../../../shared/ui/section-card";
@@ -63,8 +64,9 @@ export const GraphCard = ({
   return (
     <SectionCard className="mb-4">
       <View className="relative">
-        <View className="absolute top-0 right-0 z-10">
+        <View className="absolute top-1 right-1 z-10">
           <Button
+            className={surfaceTokens.accentSubtleClass}
             isDisabled={isActionDisabled}
             isIconOnly
             onPress={() => {
@@ -84,14 +86,16 @@ export const GraphCard = ({
           testID={`graph-card-open-detail-${graph.id}`}
         >
           {/* グラフ基本情報 */}
-          <View className="mb-1 min-h-10 flex-row items-center gap-2 pr-12">
+          <View className="mb-2 min-h-10 flex-row items-center gap-2 pr-12">
             <View
               className="h-2 w-2 rounded-full"
               style={{
                 backgroundColor: getGraphThemeColor(graph.color),
               }}
             />
-            <Text className="font-semibold text-lg text-neutral-900">
+            <Text
+              className={`font-semibold text-lg ${textTokens.primaryClass}`}
+            >
               {graph.name}
             </Text>
           </View>
