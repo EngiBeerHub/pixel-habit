@@ -76,6 +76,7 @@
 - `useAuthedPixelaApi` は互換レイヤとして維持し、次フェーズで不要性を評価して削除判断する
 - `quantity` の入力バリデーションは `zod` スキーマで `1以上` を保証し、UIごとの差異を作らない
 - HomeのQuick Add成功フィードバックはToastのみに統一し、Bottom Sheet内に成功メッセージを重複表示しない
+- 記録追加導線はHomeのQuick Addに一本化し、`/graphs/[graphId]/add` は採用しない
 - Homeカードでは管理導線（`...` / 統計 / 編集 / 削除）を表示せず、管理操作はGraph詳細画面へ集約する
 - Graph詳細の `Month/Year` 期間計算は `src/shared/lib/calendar-range.ts` を使い、画面側で日付計算を再実装しない
 

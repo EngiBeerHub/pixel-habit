@@ -1,9 +1,3 @@
-import BottomSheet, {
-  BottomSheetBackdrop,
-  type BottomSheetBackdropProps,
-  BottomSheetTextInput,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useMutation,
@@ -12,8 +6,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Button, useToast } from "heroui-native";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BottomSheet, Button, Input, useToast } from "heroui-native";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -50,7 +44,7 @@ import { GraphCard } from "./components/graph-card";
 export const GraphListScreen = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [selectedGraph, setSelectedGraph] = useState<GraphDefinition | null>(
     null
   );
@@ -61,7 +55,6 @@ export const GraphListScreen = () => {
   const {
     control,
     formState: { errors: pixelFormErrors },
-    getValues,
     handleSubmit,
     reset,
     setError,
@@ -148,7 +141,7 @@ export const GraphListScreen = () => {
           queryKey: ["graphPixelsCompact", api.username],
         });
       }
-      bottomSheetRef.current?.close();
+      setIsQuickAddOpen(false);
       toast.show({
         description: response.message,
         label: "記録を追加しました",
@@ -156,20 +149,6 @@ export const GraphListScreen = () => {
       });
     },
   });
-
-  /**
-   * Bottom Sheet のバックドロップを描画する。
-   */
-  const renderBackdrop = useCallback(
-    (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-        {...props}
-      />
-    ),
-    []
-  );
 
   /**
    * グラフ一覧を再取得する。
@@ -200,7 +179,7 @@ export const GraphListScreen = () => {
       date: date ?? getTodayAsYyyyMmDd(),
       quantity: "",
     });
-    bottomSheetRef.current?.snapToIndex(0);
+    setIsQuickAddOpen(true);
   };
 
   const onPressAddToday = (graph: GraphDefinition) => {
@@ -233,29 +212,6 @@ export const GraphListScreen = () => {
   const onSubmitQuickAdd = handleSubmit((values) => {
     addPixelMutation.mutate(values);
   });
-
-  /**
-   * 選択中グラフの詳細入力画面へ遷移する。
-   */
-  const onPressDetailedInput = () => {
-    if (!selectedGraph) {
-      return;
-    }
-    const values = {
-      date: normalizeYyyyMmDdInput(getValues("date")),
-      quantity: getValues("quantity"),
-    };
-    router.push({
-      params: {
-        date: values.date,
-        graphId: selectedGraph.id,
-        graphName: selectedGraph.name,
-        quantity: values.quantity,
-      },
-      pathname: "/graphs/[graphId]/add",
-    });
-    bottomSheetRef.current?.close();
-  };
 
   /**
    * 一覧の先頭に表示するHome補助情報（期間、成功トースト、Today）。
@@ -398,93 +354,96 @@ export const GraphListScreen = () => {
 
       {/* クイック記録追加用Bottom Sheet */}
       <BottomSheet
-        backdropComponent={renderBackdrop}
-        enablePanDownToClose
-        index={-1}
-        onChange={(index) => {
-          if (index === -1) {
+        isOpen={isQuickAddOpen}
+        onOpenChange={(isOpen) => {
+          setIsQuickAddOpen(isOpen);
+          if (!isOpen) {
             setSelectedGraph(null);
           }
         }}
-        ref={bottomSheetRef}
-        snapPoints={snapPoints}
       >
-        <BottomSheetView className="flex-1 gap-3 px-6 pt-4">
-          {/* シート見出し: 対象グラフ名を文脈として表示 */}
-          <Text className="font-semibold text-lg text-neutral-900">
-            {selectedGraph ? `${selectedGraph.name} に記録追加` : "記録追加"}
-          </Text>
-          <Text className="text-neutral-500 text-sm">
-            日付と数量を入力して保存してください。
-          </Text>
+        <BottomSheet.Portal>
+          <BottomSheet.Overlay />
+          <BottomSheet.Content
+            contentContainerClassName="gap-3 px-6 pt-4 pb-6"
+            enablePanDownToClose
+            snapPoints={snapPoints}
+          >
+            {/* シート見出し: 対象グラフ名を文脈として表示 */}
+            <BottomSheet.Title className="font-semibold text-lg text-neutral-900">
+              {selectedGraph ? `${selectedGraph.name} に記録追加` : "記録追加"}
+            </BottomSheet.Title>
+            <BottomSheet.Description className="text-neutral-500 text-sm">
+              日付と数量を入力して保存してください。
+            </BottomSheet.Description>
 
-          {/* 日付入力: yyyyMMdd形式。入力時に正規化してフォーム値へ反映 */}
-          <Text className="mt-2 text-neutral-800">日付 (yyyyMMdd)</Text>
-          <Controller
-            control={control}
-            name="date"
-            render={({ field: { onBlur, onChange, value } }) => (
-              <BottomSheetTextInput
-                className="rounded-xl border border-neutral-300 px-4 py-3 text-base"
-                onBlur={onBlur}
-                onChangeText={(text) => {
-                  onChange(normalizeYyyyMmDdInput(text));
-                }}
-                placeholder="20260211"
-                value={value}
-              />
-            )}
-          />
-          {/* 日付バリデーションエラー */}
-          {pixelFormErrors.date?.message ? (
-            <Text className="text-red-600 text-sm">
-              {pixelFormErrors.date.message}
-            </Text>
-          ) : null}
+            {/* 日付入力: yyyyMMdd形式。入力時に正規化してフォーム値へ反映 */}
+            <Text className="mt-2 text-neutral-800">日付 (yyyyMMdd)</Text>
+            <Controller
+              control={control}
+              name="date"
+              render={({ field: { onBlur, onChange, value } }) => (
+                <Input
+                  onBlur={onBlur}
+                  onChangeText={(text) => {
+                    onChange(normalizeYyyyMmDdInput(text));
+                  }}
+                  placeholder="20260211"
+                  testID="graph-quick-add-date-input"
+                  value={value}
+                  variant="secondary"
+                />
+              )}
+            />
+            {/* 日付バリデーションエラー */}
+            {pixelFormErrors.date?.message ? (
+              <Text className="text-red-600 text-sm">
+                {pixelFormErrors.date.message}
+              </Text>
+            ) : null}
 
-          {/* 数量入力 */}
-          <Text className="mt-1 text-neutral-800">数量</Text>
-          <Controller
-            control={control}
-            name="quantity"
-            render={({ field: { onBlur, onChange, value } }) => (
-              <BottomSheetTextInput
-                className="rounded-xl border border-neutral-300 px-4 py-3 text-base"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                placeholder="10"
-                value={value}
-              />
-            )}
-          />
-          {/* 数量バリデーションエラー */}
-          {pixelFormErrors.quantity?.message ? (
-            <Text className="text-red-600 text-sm">
-              {pixelFormErrors.quantity.message}
-            </Text>
-          ) : null}
-          {/* API失敗時のフォーム共通エラー */}
-          {pixelFormErrors.root?.message ? (
-            <Text className="text-red-600 text-sm">
-              {pixelFormErrors.root.message}
-            </Text>
-          ) : null}
-          {/* シート内アクション: 直接保存 or 詳細入力画面へ遷移 */}
-          <View className="mt-2 gap-2">
-            <Button
-              isDisabled={addPixelMutation.isPending}
-              onPress={onSubmitQuickAdd}
-              size="sm"
-              testID="graph-quick-add-save-button"
-              variant="primary"
-            >
-              保存
-            </Button>
-            <Button onPress={onPressDetailedInput} size="sm" variant="tertiary">
-              詳細入力へ
-            </Button>
-          </View>
-        </BottomSheetView>
+            {/* 数量入力 */}
+            <Text className="mt-1 text-neutral-800">数量</Text>
+            <Controller
+              control={control}
+              name="quantity"
+              render={({ field: { onBlur, onChange, value } }) => (
+                <Input
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  placeholder="10"
+                  testID="graph-quick-add-quantity-input"
+                  value={value}
+                  variant="secondary"
+                />
+              )}
+            />
+            {/* 数量バリデーションエラー */}
+            {pixelFormErrors.quantity?.message ? (
+              <Text className="text-red-600 text-sm">
+                {pixelFormErrors.quantity.message}
+              </Text>
+            ) : null}
+            {/* API失敗時のフォーム共通エラー */}
+            {pixelFormErrors.root?.message ? (
+              <Text className="text-red-600 text-sm">
+                {pixelFormErrors.root.message}
+              </Text>
+            ) : null}
+            {/* シート内アクション: 直接保存 */}
+            <View className="mt-2">
+              <Button
+                isDisabled={addPixelMutation.isPending}
+                onPress={onSubmitQuickAdd}
+                size="sm"
+                testID="graph-quick-add-save-button"
+                variant="primary"
+              >
+                保存
+              </Button>
+            </View>
+          </BottomSheet.Content>
+        </BottomSheet.Portal>
       </BottomSheet>
     </View>
   );

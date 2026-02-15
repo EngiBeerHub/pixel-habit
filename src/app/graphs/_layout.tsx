@@ -50,12 +50,6 @@ export default function GraphStackLayout() {
         }}
       />
       <Stack.Screen
-        name="[graphId]/add"
-        options={{
-          title: "記録追加",
-        }}
-      />
-      <Stack.Screen
         name="[graphId]/pixels/[date]"
         options={{
           title: "記録編集",

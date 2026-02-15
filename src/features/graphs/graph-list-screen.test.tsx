@@ -65,7 +65,7 @@ jest.mock("../../shared/api/pixel", () => ({
 }));
 
 jest.mock("heroui-native", () => {
-  const { Pressable, Text, View } = require("react-native");
+  const { Pressable, Text, TextInput, View } = require("react-native");
   const Card = ({ children }: { children?: ReactNode }) => (
     <View>{children}</View>
   );
@@ -78,8 +78,29 @@ jest.mock("heroui-native", () => {
   Card.Body = ({ children }: { children?: ReactNode }) => (
     <View>{children}</View>
   );
+  const BottomSheet = ({
+    children,
+    isOpen,
+  }: {
+    children?: ReactNode;
+    isOpen?: boolean;
+  }) => (isOpen ? <View>{children}</View> : null);
+  BottomSheet.Portal = ({ children }: { children?: ReactNode }) => (
+    <View>{children}</View>
+  );
+  BottomSheet.Overlay = () => null;
+  BottomSheet.Content = ({ children }: { children?: ReactNode }) => (
+    <View>{children}</View>
+  );
+  BottomSheet.Title = ({ children }: { children?: ReactNode }) => (
+    <Text>{children}</Text>
+  );
+  BottomSheet.Description = ({ children }: { children?: ReactNode }) => (
+    <Text>{children}</Text>
+  );
 
   return {
+    BottomSheet,
     Button: ({
       children,
       onPress,
@@ -94,41 +115,32 @@ jest.mock("heroui-native", () => {
       </Pressable>
     ),
     Card,
+    Input: ({
+      onBlur,
+      onChangeText,
+      placeholder,
+      testID,
+      value,
+    }: {
+      onBlur?: () => void;
+      onChangeText?: (text: string) => void;
+      placeholder?: string;
+      testID?: string;
+      value?: string;
+    }) => (
+      <TextInput
+        onBlur={onBlur}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        testID={testID}
+        value={value}
+      />
+    ),
     useToast: () => ({
       toast: {
         show: (...args: unknown[]) => mockToastShow(...args),
       },
     }),
-  };
-});
-
-jest.mock("@gorhom/bottom-sheet", () => {
-  const React = require("react");
-  const { TextInput, View } = require("react-native");
-
-  const BottomSheet = React.forwardRef(
-    ({ children }: { children: ReactNode }, ref: unknown) => {
-      React.useImperativeHandle(ref, () => ({
-        close: jest.fn(),
-        snapToIndex: jest.fn(),
-      }));
-
-      return <View>{children}</View>;
-    }
-  );
-
-  const BottomSheetBackdrop = () => null;
-  const BottomSheetTextInput = ({ ...props }) => <TextInput {...props} />;
-  const BottomSheetView = ({ children }: { children: ReactNode }) => {
-    return <View>{children}</View>;
-  };
-
-  return {
-    __esModule: true,
-    BottomSheetBackdrop,
-    BottomSheetTextInput,
-    BottomSheetView,
-    default: BottomSheet,
   };
 });
 
@@ -462,5 +474,13 @@ describe("GraphListScreen", () => {
       },
       pathname: "/graphs/[graphId]",
     });
+  });
+
+  test("does not show detailed input navigation in quick add", async () => {
+    await renderScreen();
+    expect(await screen.findByText("graph:Sleep")).toBeTruthy();
+    fireEvent.press(screen.getByText("open-add-today"));
+
+    expect(screen.queryByText("詳細入力へ")).toBeNull();
   });
 });

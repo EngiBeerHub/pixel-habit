@@ -33,13 +33,12 @@
   - pull-to-refresh
   - 再試行
 
-### UC-03 ピクセルを追加する（クイック追加/詳細入力）
+### UC-03 ピクセルを追加する（クイック追加）
 
 - API:
   - `POST /v1/users/{username}/graphs/{graphID}`
 - 主画面:
   - `Home` の Bottom Sheet
-  - `/graphs/[graphId]/add`（詳細）
 - UX:
   - 通常は Bottom Sheet で `date` / `quantity` を入力
   - `quantity` は 1以上のみ入力可能（0は禁止）
