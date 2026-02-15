@@ -14,10 +14,26 @@ jest.mock("../../../shared/api/authed-pixela-api", () => ({
   useAuthedPixelaApi: (...args: unknown[]) => mockUseAuthedPixelaApi(...args),
 }));
 
+jest.mock("@expo/vector-icons", () => ({
+  Ionicons: () => null,
+}));
+
 jest.mock("./compact-heatmap", () => ({
-  CompactHeatmap: () => {
-    const { Text } = require("react-native");
-    return <Text>COMPACT_HEATMAP</Text>;
+  CompactHeatmap: ({
+    onPressCell,
+  }: {
+    onPressCell?: (date: string) => void;
+  }) => {
+    const { Pressable, Text } = require("react-native");
+    return (
+      <Pressable
+        onPress={() => {
+          onPressCell?.("20260103");
+        }}
+      >
+        <Text>COMPACT_HEATMAP</Text>
+      </Pressable>
+    );
   },
   getCompactHeatmapDateRange: () => ({ from: "20251005", to: "20260108" }),
 }));
@@ -34,10 +50,9 @@ const graph: GraphDefinition = {
 const buildProps = () => ({
   graph,
   isActionDisabled: false,
-  onPressAddPixel: jest.fn(),
+  onPressAddForDate: jest.fn(),
+  onPressAddToday: jest.fn(),
   onPressOpenDetail: jest.fn(),
-  onPressGraphMenu: jest.fn(),
-  onPressOpenPixels: jest.fn(),
 });
 
 describe("GraphCard", () => {
@@ -97,14 +112,13 @@ describe("GraphCard", () => {
     expect(screen.getByText("COMPACT_HEATMAP")).toBeTruthy();
   });
 
-  test("triggers quick add and pixel list actions", () => {
+  test("triggers add today action from + button", () => {
     const props = buildProps();
 
     render(<GraphCard {...props} />);
-    fireEvent.press(screen.getByText("記録する"));
-    fireEvent.press(screen.getByText("記録一覧"));
-    expect(props.onPressAddPixel).toHaveBeenCalledWith(graph);
-    expect(props.onPressOpenPixels).toHaveBeenCalledWith(graph);
+    fireEvent.press(screen.getByTestId("graph-card-add-today-sleep"));
+
+    expect(props.onPressAddToday).toHaveBeenCalledWith(graph);
   });
 
   test("triggers detail action from card header", () => {
@@ -121,5 +135,14 @@ describe("GraphCard", () => {
 
     expect(screen.queryByText("総記録数")).toBeNull();
     expect(screen.queryByText("合計")).toBeNull();
+  });
+
+  test("calls add for date when a heatmap cell is tapped", () => {
+    const props = buildProps();
+
+    render(<GraphCard {...props} />);
+    fireEvent.press(screen.getByText("COMPACT_HEATMAP"));
+
+    expect(props.onPressAddForDate).toHaveBeenCalledWith(graph, "20260103");
   });
 });

@@ -29,7 +29,6 @@ import {
   getTodayAsYyyyMmDd,
   normalizeYyyyMmDdInput,
 } from "../../shared/lib/date";
-import { showAlert } from "../../shared/platform/app-alert";
 import {
   type PixelAddFormValues,
   pixelAddSchema,
@@ -125,60 +124,6 @@ export const GraphListScreen = () => {
     });
   }, [credentials, hasLoadError, query.error, status]);
 
-  const statsMutation = useMutation({
-    mutationFn: (graph: GraphDefinition) =>
-      api.getGraphStats({ graphId: graph.id }),
-    onError: (error) => {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "統計の取得に失敗しました。再度お試しください。";
-      showAlert("統計取得エラー", message);
-    },
-    onSuccess: (stats, graph) => {
-      const lines = [
-        "[統計]",
-        `総記録数: ${stats.totalPixelsCount ?? "-"}`,
-        `合計: ${stats.totalQuantity ?? "-"}`,
-        `平均: ${stats.avgQuantity ?? "-"}`,
-        `今日: ${stats.todaysQuantity ?? "-"}`,
-        `昨日: ${stats.yesterdayQuantity ?? "-"}`,
-        `最大値: ${stats.maxQuantity ?? "-"} (${stats.maxDate ?? "-"})`,
-        `最小値: ${stats.minQuantity ?? "-"} (${stats.minDate ?? "-"})`,
-        "",
-        "[グラフ定義]",
-        `ID: ${graph.id}`,
-        `名前: ${graph.name}`,
-        `単位: ${graph.unit}`,
-        `種類: ${graph.type}`,
-        `色: ${graph.color}`,
-        `タイムゾーン: ${graph.timezone}`,
-      ];
-      showAlert(`${graph.name} の統計`, lines.join("\n"));
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (graph: GraphDefinition) =>
-      api.deleteGraph({ graphId: graph.id }),
-    onError: (error) => {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "グラフ削除に失敗しました。再度お試しください。";
-      showAlert("削除エラー", message);
-    },
-    onSuccess: async (response) => {
-      showAlert("削除完了", response.message);
-      await query.refetch();
-      if (api.username) {
-        await queryClient.invalidateQueries({
-          queryKey: ["graphPixelsCompact", api.username],
-        });
-      }
-    },
-  });
-
   /**
    * 一定時間だけ表示する成功トーストを表示する。
    */
@@ -260,26 +205,21 @@ export const GraphListScreen = () => {
   /**
    * 記録追加のBottom Sheetを開く。
    */
-  const onPressAddPixel = (graph: GraphDefinition) => {
+  const openQuickAdd = (graph: GraphDefinition, date?: string) => {
     setSelectedGraph(graph);
     reset({
-      date: getTodayAsYyyyMmDd(),
+      date: date ?? getTodayAsYyyyMmDd(),
       quantity: "",
     });
     bottomSheetRef.current?.snapToIndex(0);
   };
 
-  /**
-   * ピクセル一覧画面へ遷移する。
-   */
-  const onPressOpenPixels = (graph: GraphDefinition) => {
-    router.push({
-      params: {
-        graphId: graph.id,
-        graphName: graph.name,
-      },
-      pathname: "/graphs/[graphId]/pixels",
-    });
+  const onPressAddToday = (graph: GraphDefinition) => {
+    openQuickAdd(graph, getTodayAsYyyyMmDd());
+  };
+
+  const onPressAddForDate = (graph: GraphDefinition, date: string) => {
+    openQuickAdd(graph, date);
   };
 
   /**
@@ -288,88 +228,14 @@ export const GraphListScreen = () => {
   const onPressOpenDetail = (graph: GraphDefinition) => {
     router.push({
       params: {
-        graphId: graph.id,
-        graphName: graph.name,
-      },
-      pathname: "/graphs/[graphId]",
-    });
-  };
-
-  /**
-   * グラフ編集画面へ遷移する。
-   */
-  const onPressEditGraph = (graph: GraphDefinition) => {
-    router.push({
-      params: {
         color: graph.color,
         graphId: graph.id,
         graphName: graph.name,
         timezone: graph.timezone,
         unit: graph.unit,
       },
-      pathname: "/graphs/[graphId]/edit",
+      pathname: "/graphs/[graphId]",
     });
-  };
-
-  /**
-   * グラフ統計を取得してダイアログ表示する。
-   */
-  const onPressShowStats = (graph: GraphDefinition) => {
-    statsMutation.mutate(graph);
-  };
-
-  /**
-   * グラフ削除確認ダイアログを表示する。
-   */
-  const onPressDeleteGraph = (graph: GraphDefinition) => {
-    showAlert(
-      "グラフ削除",
-      `${graph.name} を削除しますか？この操作は取り消せません。`,
-      [
-        {
-          style: "cancel",
-          text: "キャンセル",
-        },
-        {
-          onPress: () => {
-            deleteMutation.mutate(graph);
-          },
-          style: "destructive",
-          text: "削除する",
-        },
-      ]
-    );
-  };
-
-  /**
-   * グラフカードの追加操作メニューを表示する。
-   */
-  const onPressGraphMenu = (graph: GraphDefinition) => {
-    showAlert(graph.name, "操作を選択してください。", [
-      {
-        onPress: () => {
-          onPressEditGraph(graph);
-        },
-        text: "編集",
-      },
-      {
-        onPress: () => {
-          onPressShowStats(graph);
-        },
-        text: "統計",
-      },
-      {
-        onPress: () => {
-          onPressDeleteGraph(graph);
-        },
-        style: "destructive",
-        text: "削除",
-      },
-      {
-        style: "cancel",
-        text: "キャンセル",
-      },
-    ]);
   };
 
   /**
@@ -443,7 +309,7 @@ export const GraphListScreen = () => {
             <View className="mt-2">
               <Button
                 onPress={() => {
-                  onPressAddPixel(topMissingGraph);
+                  onPressAddToday(topMissingGraph);
                 }}
                 size="sm"
                 testID="today-quick-add-button"
@@ -508,13 +374,10 @@ export const GraphListScreen = () => {
             api.isAuthenticated ? (
               <GraphCard
                 graph={item}
-                isActionDisabled={
-                  statsMutation.isPending || deleteMutation.isPending
-                }
-                onPressAddPixel={onPressAddPixel}
-                onPressGraphMenu={onPressGraphMenu}
+                isActionDisabled={addPixelMutation.isPending}
+                onPressAddForDate={onPressAddForDate}
+                onPressAddToday={onPressAddToday}
                 onPressOpenDetail={onPressOpenDetail}
-                onPressOpenPixels={onPressOpenPixels}
               />
             ) : null
           }

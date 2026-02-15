@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react-native";
+import { fireEvent, render, screen } from "@testing-library/react-native";
 import { CompactHeatmap, getCompactHeatmapDateRange } from "./compact-heatmap";
 
 const parseYyyyMmDd = (value: string): Date => {
@@ -41,5 +41,23 @@ describe("compact heatmap", () => {
     expect(screen.getByText("Mon")).toBeTruthy();
     expect(screen.getByText("Wed")).toBeTruthy();
     expect(screen.getByText("Fri")).toBeTruthy();
+  });
+
+  test("calls onPressCell when past date cell is tapped", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 0, 8, 10, 0, 0));
+    const onPressCell = jest.fn();
+
+    render(
+      <CompactHeatmap
+        graphColor="sora"
+        onPressCell={onPressCell}
+        pixels={[{ date: "20260107", quantity: "2" }]}
+        weeks={14}
+      />
+    );
+
+    fireEvent.press(screen.getByTestId("compact-heatmap-cell-20260107"));
+    expect(onPressCell).toHaveBeenCalledWith("20260107");
   });
 });

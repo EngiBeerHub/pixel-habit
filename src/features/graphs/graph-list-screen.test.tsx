@@ -15,17 +15,10 @@ import { GraphListScreen } from "./graph-list-screen";
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
 const mockGetGraphs = jest.fn();
-const mockGetGraphStats = jest.fn();
 const mockAddPixel = jest.fn();
 const mockGetPixels = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
-const mockShowAlert = jest.fn();
 let consoleErrorSpy: jest.SpyInstance;
-
-interface AlertButton {
-  onPress?: () => void;
-  text?: string;
-}
 
 /**
  * 非同期の完了タイミングをテスト側で制御するためのDeferred。
@@ -63,16 +56,11 @@ jest.mock("../../shared/storage/auth-storage", () => ({
 jest.mock("../../shared/api/graph", () => ({
   deleteGraph: jest.fn(),
   getGraphs: (...args: unknown[]) => mockGetGraphs(...args),
-  getGraphStats: (...args: unknown[]) => mockGetGraphStats(...args),
 }));
 
 jest.mock("../../shared/api/pixel", () => ({
   addPixel: (...args: unknown[]) => mockAddPixel(...args),
   getPixels: (...args: unknown[]) => mockGetPixels(...args),
-}));
-
-jest.mock("../../shared/platform/app-alert", () => ({
-  showAlert: (...args: unknown[]) => mockShowAlert(...args),
 }));
 
 jest.mock("@gorhom/bottom-sheet", () => {
@@ -110,31 +98,31 @@ jest.mock("./components/graph-card", () => {
 
   const GraphCard = ({
     graph,
-    onPressAddPixel,
+    onPressAddForDate,
+    onPressAddToday,
     onPressOpenDetail,
-    onPressGraphMenu,
   }: {
     graph: { name: string };
-    onPressAddPixel: (graph: { name: string }) => void;
+    onPressAddForDate: (graph: { name: string }, date: string) => void;
+    onPressAddToday: (graph: { name: string }) => void;
     onPressOpenDetail: (graph: { name: string }) => void;
-    onPressGraphMenu: (graph: { name: string }) => void;
   }) => {
     return (
       <View>
         <Text>{`graph:${graph.name}`}</Text>
         <Pressable
           onPress={() => {
-            onPressAddPixel(graph);
+            onPressAddToday(graph);
           }}
         >
-          <Text>open-quick-add</Text>
+          <Text>open-add-today</Text>
         </Pressable>
         <Pressable
           onPress={() => {
-            onPressGraphMenu(graph);
+            onPressAddForDate(graph, "20260209");
           }}
         >
-          <Text>open-graph-menu</Text>
+          <Text>open-add-for-date</Text>
         </Pressable>
         <Pressable
           onPress={() => {
@@ -223,17 +211,11 @@ describe("GraphListScreen", () => {
     jest.clearAllMocks();
     mockLoadAuthCredentials.mockResolvedValue(credentials);
     mockGetGraphs.mockResolvedValue([graph]);
-    mockGetGraphStats.mockResolvedValue({
-      avgQuantity: 2,
-      totalQuantity: 10,
-      totalPixelsCount: 5,
-    });
     mockAddPixel.mockResolvedValue({
       isSuccess: true,
       message: "追加成功",
     });
     mockGetPixels.mockResolvedValue([]);
-    mockShowAlert.mockImplementation(() => undefined);
   });
 
   test("shows loading state while graph list is pending", async () => {
@@ -282,7 +264,7 @@ describe("GraphListScreen", () => {
 
     expect(await screen.findByText("graph:Sleep")).toBeTruthy();
 
-    fireEvent.press(screen.getByText("open-quick-add"));
+    fireEvent.press(screen.getByText("open-add-today"));
     fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
 
     expect(
@@ -346,7 +328,7 @@ describe("GraphListScreen", () => {
     await renderScreen();
     expect(await screen.findByText("graph:Sleep")).toBeTruthy();
 
-    fireEvent.press(screen.getByText("open-quick-add"));
+    fireEvent.press(screen.getByText("open-add-today"));
     fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
     fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
 
@@ -358,7 +340,7 @@ describe("GraphListScreen", () => {
     await renderScreen();
     expect(await screen.findByText("graph:Sleep")).toBeTruthy();
 
-    fireEvent.press(screen.getByText("open-quick-add"));
+    fireEvent.press(screen.getByText("open-add-today"));
     fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
     fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
 
@@ -380,12 +362,12 @@ describe("GraphListScreen", () => {
     await renderScreen();
     expect(await screen.findByText("graph:Sleep")).toBeTruthy();
 
-    fireEvent.press(screen.getByText("open-quick-add"));
+    fireEvent.press(screen.getByText("open-add-today"));
     fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
     fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
     expect(await screen.findByText("1回目成功")).toBeTruthy();
 
-    fireEvent.press(screen.getByText("open-quick-add"));
+    fireEvent.press(screen.getByText("open-add-today"));
     fireEvent.changeText(screen.getByPlaceholderText("10"), "4");
     fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
 
@@ -393,32 +375,20 @@ describe("GraphListScreen", () => {
     expect(screen.queryByText("1回目成功")).toBeNull();
   });
 
-  test("shows stats only via graph menu action", async () => {
+  test("opens quick add with tapped date from heatmap cell", async () => {
     await renderScreen();
     expect(await screen.findByText("graph:Sleep")).toBeTruthy();
 
-    fireEvent.press(screen.getByText("open-graph-menu"));
-    expect(mockShowAlert).toHaveBeenCalledWith(
-      "Sleep",
-      "操作を選択してください。",
-      expect.any(Array)
-    );
+    fireEvent.press(screen.getByText("open-add-for-date"));
+    expect(await screen.findByDisplayValue("20260209")).toBeTruthy();
+  });
 
-    const menuButtons = mockShowAlert.mock.calls[0]?.[2] as
-      | AlertButton[]
-      | undefined;
-    const statsButton = menuButtons?.find((button) => button.text === "統計");
-    await act(async () => {
-      await statsButton?.onPress?.();
-    });
+  test("today quick add button keeps current date as initial value", async () => {
+    await renderScreen();
+    expect(await screen.findByText("graph:Sleep")).toBeTruthy();
 
-    await waitFor(() => {
-      expect(mockGetGraphStats).toHaveBeenCalledWith({ graphId: "sleep" });
-    });
-    expect(mockShowAlert).toHaveBeenCalledWith(
-      "Sleep の統計",
-      expect.any(String)
-    );
+    fireEvent.press(screen.getByTestId("today-quick-add-button"));
+    expect(await screen.findByDisplayValue(getTodayAsYyyyMmDd())).toBeTruthy();
   });
 
   test("navigates to graph detail from card", async () => {
@@ -428,8 +398,11 @@ describe("GraphListScreen", () => {
     fireEvent.press(screen.getByText("open-graph-detail"));
     expect(mockPush).toHaveBeenCalledWith({
       params: {
+        color: "sora",
         graphId: "sleep",
         graphName: "Sleep",
+        timezone: "Asia/Tokyo",
+        unit: "hour",
       },
       pathname: "/graphs/[graphId]",
     });

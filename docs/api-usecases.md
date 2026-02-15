@@ -45,7 +45,7 @@
   - `quantity` は 1以上のみ入力可能（0は禁止）
   - 未入力判定は「当日レコードが存在しない」場合のみ
   - 仕様上 `quantity <= 0` は生成しないが、受信した場合は防御的に未入力相当で扱う
-  - 日付指定は詳細画面へ委譲
+  - Homeヒートマップセルから起動した場合は、タップした日付を初期値に設定する
   - 追加成功時はToastのみで通知する（Inline成功表示は行わない）
   - `optionalData` はMVPスコープ外とし、必要時は後続フェーズで検討する
 
@@ -68,7 +68,7 @@
 - API:
   - `PUT /v1/users/{username}/graphs/{graphID}`
 - 主画面:
-  - Homeカードの `...` メニュー
+  - `/graphs/[graphId]` の `...` メニュー
 - 入力:
   - `name` / `unit` / `color` など
 - UX要件:
@@ -79,7 +79,7 @@
 - API:
   - `DELETE /v1/users/{username}/graphs/{graphID}`
 - 主画面:
-  - Homeカードの `...` メニュー（確認ダイアログ必須）
+  - `/graphs/[graphId]` の `...` メニュー（確認ダイアログ必須）
 
 ### UC-07 日次記録を更新する
 

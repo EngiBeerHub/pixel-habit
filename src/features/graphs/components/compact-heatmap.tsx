@@ -1,4 +1,4 @@
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import type { GraphDefinition } from "../../../shared/api/graph";
 import type { Pixel } from "../../../shared/api/pixel";
 import { heatmapTokens } from "../../../shared/config/ui-tokens";
@@ -24,6 +24,7 @@ const ROW_KEYS = [
  */
 export interface CompactHeatmapProps {
   graphColor: GraphDefinition["color"];
+  onPressCell?: (date: string) => void;
   pixels: Pixel[];
   weeks?: number;
 }
@@ -41,6 +42,7 @@ export interface CompactHeatmapDateRange {
  */
 interface HeatmapCell {
   date: string;
+  isFutureDate: boolean;
   level: number;
 }
 
@@ -71,6 +73,7 @@ export const getCompactHeatmapDateRange = (
  */
 export const CompactHeatmap = ({
   graphColor,
+  onPressCell,
   pixels,
   weeks = DEFAULT_WEEKS,
 }: CompactHeatmapProps) => {
@@ -142,9 +145,13 @@ export const CompactHeatmap = ({
                 style={{ columnGap: CELL_GAP }}
               >
                 {row.cells.map((cell) => (
-                  <View
+                  <Pressable
                     className="rounded-[3px]"
+                    disabled={cell.isFutureDate}
                     key={cell.date}
+                    onPress={() => {
+                      onPressCell?.(cell.date);
+                    }}
                     style={{
                       backgroundColor: resolveCellColor({
                         baseColor,
@@ -153,6 +160,7 @@ export const CompactHeatmap = ({
                       height: CELL_SIZE,
                       width: CELL_SIZE,
                     }}
+                    testID={`compact-heatmap-cell-${cell.date}`}
                   />
                 ))}
               </View>
@@ -253,6 +261,7 @@ const buildHeatmapRows = ({
 
       return {
         date: yyyyMmDd,
+        isFutureDate,
         level: resolveLevel(quantity, maxQuantity),
       };
     }),

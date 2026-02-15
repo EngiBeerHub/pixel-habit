@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { useLocalSearchParams } from "expo-router";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "heroui-native";
 import { useMemo, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
@@ -12,6 +12,7 @@ import {
   getCalendarMonthRange,
   getCalendarYearRange,
 } from "../../shared/lib/calendar-range";
+import { showAlert } from "../../shared/platform/app-alert";
 import { ScreenContainer } from "../../shared/ui/screen-container";
 import { SectionCard } from "../../shared/ui/section-card";
 
@@ -28,13 +29,21 @@ interface GraphDetailSummary {
  * Graph詳細画面。Month/Yearで記録を確認する。
  */
 export const GraphDetailScreen = () => {
+  const router = useRouter();
   const params = useLocalSearchParams<{
+    color?: string;
     graphId?: string;
     graphName?: string;
+    timezone?: string;
+    unit?: string;
   }>();
   const graphId = typeof params.graphId === "string" ? params.graphId : "";
   const graphName =
     typeof params.graphName === "string" ? params.graphName : "グラフ詳細";
+  const graphColor = typeof params.color === "string" ? params.color : "";
+  const graphTimezone =
+    typeof params.timezone === "string" ? params.timezone : "Asia/Tokyo";
+  const graphUnit = typeof params.unit === "string" ? params.unit : "";
   const [mode, setMode] = useState<CalendarMode>("month");
   const { credentials, hasLoadError, status } = useAuthSession();
   const api = useAuthedPixelaApi();
@@ -91,12 +100,92 @@ export const GraphDetailScreen = () => {
     return buildGraphDetailSummary(pixels);
   }, [pixels]);
 
+  const deleteMutation = useMutation({
+    mutationFn: () => {
+      if (!graphId) {
+        throw new Error("グラフIDが不正です。Home画面からやり直してください。");
+      }
+      return api.deleteGraph({ graphId });
+    },
+    onError: (error) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "グラフ削除に失敗しました。再度お試しください。";
+      showAlert("削除エラー", message);
+    },
+    onSuccess: (response) => {
+      showAlert("削除完了", response.message);
+      router.replace("/(tabs)/home");
+    },
+  });
+
+  const onPressOpenGraphActions = () => {
+    showAlert(graphName, "操作を選択してください。", [
+      {
+        onPress: () => {
+          router.push({
+            params: {
+              color: graphColor,
+              graphId,
+              graphName,
+              timezone: graphTimezone,
+              unit: graphUnit,
+            },
+            pathname: "/graphs/[graphId]/edit",
+          });
+        },
+        text: "編集",
+      },
+      {
+        onPress: () => {
+          showAlert(
+            "グラフ削除",
+            `${graphName} を削除しますか？この操作は取り消せません。`,
+            [
+              {
+                style: "cancel",
+                text: "キャンセル",
+              },
+              {
+                onPress: () => {
+                  deleteMutation.mutate();
+                },
+                style: "destructive",
+                text: "削除する",
+              },
+            ]
+          );
+        },
+        style: "destructive",
+        text: "削除",
+      },
+      {
+        style: "cancel",
+        text: "キャンセル",
+      },
+    ]);
+  };
+
   return (
     <ScreenContainer contentClassName="gap-3" scrollable withTopInset={false}>
       {/* 画面上部: タイトルと対象グラフ */}
-      <View className="mb-1 gap-2">
-        <Text className="font-bold text-2xl text-neutral-900">{graphName}</Text>
-        <Text className="text-neutral-600">ID: {graphId || "-"}</Text>
+      <View className="mb-1 flex-row items-start justify-between gap-2">
+        <View className="flex-1 gap-2">
+          <Text className="font-bold text-2xl text-neutral-900">
+            {graphName}
+          </Text>
+          <Text className="text-neutral-600">ID: {graphId || "-"}</Text>
+        </View>
+        <Button
+          isDisabled={deleteMutation.isPending || !graphId}
+          onPress={onPressOpenGraphActions}
+          size="sm"
+          testID="graph-detail-menu-button"
+          variant="ghost"
+        >
+          ...
+        </Button>
       </View>
 
       {/* 表示モード切替: Month=暦月、Year=暦年 */}
