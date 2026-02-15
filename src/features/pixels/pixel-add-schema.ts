@@ -16,6 +16,7 @@ export const pixelAddSchema = z.object({
   date: z
     .string()
     .regex(PIXEL_DATE_PATTERN, "日付は yyyyMMdd 形式で入力してください"),
+  optionalData: z.string().optional(),
   quantity: z
     .string()
     .regex(PIXEL_QUANTITY_PATTERN, "数量は1以上の数値で入力してください"),

@@ -79,6 +79,7 @@ interface GetPixelsInput {
 interface AddPixelInput {
   date: string;
   graphId: string;
+  optionalData?: string;
   quantity: string;
 }
 
@@ -88,6 +89,7 @@ interface AddPixelInput {
 interface UpdatePixelInput {
   date: string;
   graphId: string;
+  optionalData?: string;
   quantity: string;
 }
 

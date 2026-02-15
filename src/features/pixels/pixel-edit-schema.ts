@@ -6,6 +6,7 @@ const PIXEL_POSITIVE_QUANTITY_PATTERN = /^(?:[1-9]\d*)(?:\.\d+)?$/;
  * ピクセル編集フォームの入力検証スキーマ。
  */
 export const pixelEditSchema = z.object({
+  optionalData: z.string().optional(),
   quantity: z
     .string()
     .regex(

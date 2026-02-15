@@ -18,11 +18,13 @@ let mockRouteParams: {
   date?: string;
   graphId?: string;
   graphName?: string;
+  optionalData?: string;
   quantity?: string;
 } = {
   date: "20260108",
   graphId: "sleep",
   graphName: "Sleep",
+  optionalData: "就寝前にストレッチ",
   quantity: "2",
 };
 
@@ -99,6 +101,7 @@ describe("PixelDetailScreen", () => {
       date: "20260108",
       graphId: "sleep",
       graphName: "Sleep",
+      optionalData: "就寝前にストレッチ",
       quantity: "2",
     };
     mockShowAlert.mockImplementation(() => undefined);
@@ -119,12 +122,17 @@ describe("PixelDetailScreen", () => {
     renderScreen();
 
     fireEvent.changeText(screen.getByPlaceholderText("10"), "5");
+    fireEvent.changeText(
+      screen.getByTestId("pixel-detail-optional-data-input"),
+      "朝ラン30分"
+    );
     fireEvent.press(screen.getByText("更新"));
 
     await waitFor(() => {
       expect(mockUpdatePixel).toHaveBeenCalledWith({
         date: "20260108",
         graphId: "sleep",
+        optionalData: "朝ラン30分",
         quantity: "5",
       });
     });
@@ -187,6 +195,12 @@ describe("PixelDetailScreen", () => {
         "認証情報が見つかりません。再ログインしてください。"
       )
     ).toBeTruthy();
+  });
+
+  test("shows optionalData as initial value", () => {
+    renderScreen();
+
+    expect(screen.getByDisplayValue("就寝前にストレッチ")).toBeTruthy();
   });
 
   test("shows graph/date error when route params are invalid", async () => {

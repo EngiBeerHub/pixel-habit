@@ -414,6 +414,53 @@ describe("GraphListScreen", () => {
     });
   });
 
+  test("passes optionalData when quick add memo is filled", async () => {
+    await renderScreen();
+    expect(await screen.findByText("graph:Sleep")).toBeTruthy();
+
+    fireEvent.press(screen.getByText("open-add-today"));
+    fireEvent.changeText(
+      screen.getByTestId("graph-quick-add-quantity-input"),
+      "3"
+    );
+    fireEvent.changeText(
+      screen.getByTestId("graph-quick-add-optional-data-input"),
+      "夕方にランニング"
+    );
+    fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
+
+    await waitFor(() => {
+      expect(mockAddPixel).toHaveBeenCalledWith({
+        date: getTodayAsYyyyMmDd(),
+        graphId: "sleep",
+        optionalData: "夕方にランニング",
+        quantity: "3",
+      });
+    });
+  });
+
+  test("allows quick add without optionalData", async () => {
+    await renderScreen();
+    expect(await screen.findByText("graph:Sleep")).toBeTruthy();
+
+    fireEvent.press(screen.getByText("open-add-today"));
+    fireEvent.changeText(
+      screen.getByTestId("graph-quick-add-quantity-input"),
+      "3"
+    );
+    fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
+
+    await waitFor(() => {
+      expect(mockAddPixel).toHaveBeenCalledWith(
+        expect.objectContaining({
+          date: getTodayAsYyyyMmDd(),
+          graphId: "sleep",
+          quantity: "3",
+        })
+      );
+    });
+  });
+
   test("uses latest message for consecutive toast success calls", async () => {
     mockAddPixel
       .mockResolvedValueOnce({

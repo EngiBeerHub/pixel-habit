@@ -155,6 +155,27 @@ const QuickAddSheetForm = ({
           {pixelFormErrors.quantity.message}
         </Text>
       ) : null}
+
+      {/* 任意メモ入力 */}
+      <Text className="mt-1 text-neutral-800">メモ（任意）</Text>
+      <Controller
+        control={control}
+        name="optionalData"
+        render={({ field: { onBlur, onChange, value } }) => (
+          <Input
+            onBlur={(event) => {
+              onBlurInput(event);
+              onBlur();
+            }}
+            onChangeText={onChange}
+            onFocus={onFocusInput}
+            placeholder="補足メモ"
+            testID="graph-quick-add-optional-data-input"
+            value={value}
+            variant="secondary"
+          />
+        )}
+      />
       {/* API失敗時のフォーム共通エラー */}
       {pixelFormErrors.root?.message ? (
         <Text className="text-red-600 text-sm">
@@ -201,6 +222,7 @@ export const GraphListScreen = () => {
   } = useForm<PixelAddFormValues>({
     defaultValues: {
       date: getTodayAsYyyyMmDd(),
+      optionalData: "",
       quantity: "",
     },
     resolver: zodResolver(pixelAddSchema),
@@ -264,6 +286,7 @@ export const GraphListScreen = () => {
       return api.addPixel({
         date: values.date,
         graphId: selectedGraph.id,
+        optionalData: values.optionalData,
         quantity: values.quantity,
       });
     },
@@ -322,6 +345,7 @@ export const GraphListScreen = () => {
     setSelectedGraph(graph);
     reset({
       date: date ?? getTodayAsYyyyMmDd(),
+      optionalData: "",
       quantity: "",
     });
     setIsQuickAddOpen(true);

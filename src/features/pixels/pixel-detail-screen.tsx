@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button } from "heroui-native";
+import { Button, Input } from "heroui-native";
 import { Controller, useForm } from "react-hook-form";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import { showAlert } from "../../shared/platform/app-alert";
 import { type PixelEditFormValues, pixelEditSchema } from "./pixel-edit-schema";
@@ -18,6 +18,7 @@ export const PixelDetailScreen = () => {
     date?: string;
     graphId?: string;
     graphName?: string;
+    optionalData?: string;
     quantity?: string;
   }>();
   const graphId = typeof params.graphId === "string" ? params.graphId : "";
@@ -26,6 +27,8 @@ export const PixelDetailScreen = () => {
   const date = typeof params.date === "string" ? params.date : "";
   const initialQuantity =
     typeof params.quantity === "string" ? params.quantity : "";
+  const initialOptionalData =
+    typeof params.optionalData === "string" ? params.optionalData : "";
   const api = useAuthedPixelaApi();
 
   const {
@@ -35,6 +38,7 @@ export const PixelDetailScreen = () => {
     setError,
   } = useForm<PixelEditFormValues>({
     defaultValues: {
+      optionalData: initialOptionalData,
       quantity: initialQuantity,
     },
     resolver: zodResolver(pixelEditSchema),
@@ -48,6 +52,7 @@ export const PixelDetailScreen = () => {
       return api.updatePixel({
         date,
         graphId,
+        optionalData: values.optionalData,
         quantity: values.quantity,
       });
     },
@@ -146,13 +151,14 @@ export const PixelDetailScreen = () => {
         control={control}
         name="quantity"
         render={({ field: { onBlur, onChange, value } }) => (
-          <TextInput
-            className="mb-2 rounded-xl border border-neutral-300 px-4 py-3 text-base"
+          <Input
             keyboardType="decimal-pad"
             onBlur={onBlur}
             onChangeText={onChange}
             placeholder="10"
+            testID="pixel-detail-quantity-input"
             value={value}
+            variant="secondary"
           />
         )}
       />
@@ -164,6 +170,24 @@ export const PixelDetailScreen = () => {
       ) : (
         <View className="mb-4" />
       )}
+
+      {/* 任意メモ入力 */}
+      <Text className="mb-2 text-neutral-800">メモ（任意）</Text>
+      <Controller
+        control={control}
+        name="optionalData"
+        render={({ field: { onBlur, onChange, value } }) => (
+          <Input
+            onBlur={onBlur}
+            onChangeText={onChange}
+            placeholder="補足メモ"
+            testID="pixel-detail-optional-data-input"
+            value={value}
+            variant="secondary"
+          />
+        )}
+      />
+      <View className="mb-4" />
 
       {/* API失敗時のフォーム共通エラー */}
       {errors.root?.message ? (

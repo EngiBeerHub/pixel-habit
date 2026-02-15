@@ -17,6 +17,7 @@ const mockPush = jest.fn();
 const mockReplace = jest.fn();
 const mockShowAlert = jest.fn();
 const MONTH_RANGE_LABEL_PATTERN = /2026年2月: 20260201 - 20260228/;
+const OPTIONAL_DATA_PREVIEW_PATTERN = /^これはとても長い補足メモ.*…$/;
 let mockRouteParams: {
   color?: string;
   graphId?: string;
@@ -110,7 +111,12 @@ describe("GraphDetailScreen", () => {
     };
     mockLoadAuthCredentials.mockResolvedValue(credentials);
     mockGetPixels.mockResolvedValue([
-      { date: "20260213", quantity: "2" },
+      {
+        date: "20260213",
+        optionalData:
+          "これはとても長い補足メモで一覧では省略表示される想定です",
+        quantity: "2",
+      },
       { date: "20260211", quantity: "4" },
       { date: "20260210", quantity: "0" },
     ]);
@@ -176,6 +182,8 @@ describe("GraphDetailScreen", () => {
         date: "20260213",
         graphId: "sleep",
         graphName: "Sleep",
+        optionalData:
+          "これはとても長い補足メモで一覧では省略表示される想定です",
         quantity: "2",
       },
       pathname: "/graphs/[graphId]/pixels/[date]",
@@ -202,10 +210,23 @@ describe("GraphDetailScreen", () => {
         date: "20260211",
         graphId: "sleep",
         graphName: "Sleep",
+        optionalData: undefined,
         quantity: "4",
       },
       pathname: "/graphs/[graphId]/pixels/[date]",
     });
+  });
+
+  test("shows memo summary only when optionalData exists", async () => {
+    renderScreen();
+
+    expect(
+      await screen.findByTestId("graph-detail-record-memo-20260213")
+    ).toBeTruthy();
+    expect(screen.getByText(OPTIONAL_DATA_PREVIEW_PATTERN)).toBeTruthy();
+    expect(
+      screen.queryByTestId("graph-detail-record-memo-20260211")
+    ).toBeNull();
   });
 
   test("shows error and allows retry", async () => {

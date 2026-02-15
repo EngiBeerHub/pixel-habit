@@ -75,6 +75,7 @@
 - 既ログイン時に表示不要な認証画面は `useAuthSession` の `status/credentials` で Home へリダイレクトする
 - `useAuthedPixelaApi` は互換レイヤとして維持し、次フェーズで不要性を評価して削除判断する
 - `quantity` の入力バリデーションは `zod` スキーマで `1以上` を保証し、UIごとの差異を作らない
+- `optionalData` は日次記録の補助メモとして扱い、集計ロジック（合計・最大・記録日数）には使用しない
 - HomeのQuick Add成功フィードバックはToastのみに統一し、Bottom Sheet内に成功メッセージを重複表示しない
 - 記録追加導線はHomeのQuick Addに一本化し、`/graphs/[graphId]/add` は採用しない
 - Homeカードでは管理導線（`...` / 統計 / 編集 / 削除）を表示せず、管理操作はGraph詳細画面へ集約する

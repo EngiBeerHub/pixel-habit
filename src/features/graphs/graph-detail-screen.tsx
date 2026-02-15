@@ -29,6 +29,11 @@ interface GraphDetailSummary {
 }
 
 /**
+ * 記録一覧で表示するメモ要約の最大文字数。
+ */
+const RECORD_MEMO_PREVIEW_MAX_LENGTH = 24;
+
+/**
  * Graph詳細画面。Month/Yearで記録を確認する。
  */
 export const GraphDetailScreen = () => {
@@ -179,6 +184,7 @@ export const GraphDetailScreen = () => {
         date: pixel.date,
         graphId,
         graphName,
+        optionalData: pixel.optionalData,
         quantity: pixel.quantity,
       },
       pathname: "/graphs/[graphId]/pixels/[date]",
@@ -319,41 +325,59 @@ export const GraphDetailScreen = () => {
               </Text>
             ) : (
               <View className="gap-2">
-                {pixels.map((pixel) => (
-                  <Pressable
-                    className={mergeClassNames(
-                      "rounded-xl border bg-neutral-50 px-3 py-3 active:opacity-80",
-                      borderTokens.defaultClass
-                    )}
-                    key={pixel.date}
-                    onPress={() => {
-                      onPressOpenPixelDetail(pixel);
-                    }}
-                    testID={`graph-detail-record-${pixel.date}`}
-                  >
-                    <View className="flex-row items-center justify-between">
-                      <View className="gap-1">
+                {pixels.map((pixel) => {
+                  const memoPreview = toRecordMemoPreview(pixel.optionalData);
+                  return (
+                    <Pressable
+                      className={mergeClassNames(
+                        "rounded-xl border bg-neutral-50 px-3 py-3 active:opacity-80",
+                        borderTokens.defaultClass
+                      )}
+                      key={pixel.date}
+                      onPress={() => {
+                        onPressOpenPixelDetail(pixel);
+                      }}
+                      testID={`graph-detail-record-${pixel.date}`}
+                    >
+                      {/**
+                       * optionalData は一覧過密化を避けるため、要約が存在する行のみ表示する。
+                       */}
+                      {memoPreview ? (
                         <Text
                           className={mergeClassNames(
-                            "font-medium text-sm",
-                            textTokens.primaryClass
+                            "mb-2 text-xs",
+                            textTokens.mutedClass
                           )}
+                          numberOfLines={1}
+                          testID={`graph-detail-record-memo-${pixel.date}`}
                         >
-                          {pixel.date}
+                          {memoPreview}
                         </Text>
-                        <Text
-                          className={mergeClassNames(
-                            "text-sm",
-                            textTokens.secondaryClass
-                          )}
-                        >
-                          数量: {pixel.quantity || "-"}
-                        </Text>
+                      ) : null}
+                      <View className="flex-row items-center justify-between">
+                        <View className="gap-1">
+                          <Text
+                            className={mergeClassNames(
+                              "font-medium text-sm",
+                              textTokens.primaryClass
+                            )}
+                          >
+                            {pixel.date}
+                          </Text>
+                          <Text
+                            className={mergeClassNames(
+                              "text-sm",
+                              textTokens.secondaryClass
+                            )}
+                          >
+                            数量: {pixel.quantity || "-"}
+                          </Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={14} />
                       </View>
-                      <Ionicons name="chevron-forward" size={14} />
-                    </View>
-                  </Pressable>
-                ))}
+                    </Pressable>
+                  );
+                })}
               </View>
             )}
           </SectionCard>
@@ -387,4 +411,21 @@ const buildGraphDetailSummary = (pixels: Pixel[]): GraphDetailSummary => {
     positiveRecordCount: positiveValues.length,
     totalQuantityText: String(total),
   };
+};
+
+/**
+ * optionalData を一覧向けに要約テキストへ変換する。
+ */
+const toRecordMemoPreview = (memo: string | undefined): string | null => {
+  if (!memo) {
+    return null;
+  }
+  const trimmed = memo.trim();
+  if (!trimmed) {
+    return null;
+  }
+  if (trimmed.length <= RECORD_MEMO_PREVIEW_MAX_LENGTH) {
+    return trimmed;
+  }
+  return `${trimmed.slice(0, RECORD_MEMO_PREVIEW_MAX_LENGTH)}…`;
 };
