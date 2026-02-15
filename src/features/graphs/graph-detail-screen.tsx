@@ -32,6 +32,7 @@ interface GraphDetailSummary {
  * 記録一覧で表示するメモ要約の最大文字数。
  */
 const RECORD_MEMO_PREVIEW_MAX_LENGTH = 24;
+const RECORD_MEMO_WHITESPACE_PATTERN = /\s+/g;
 
 /**
  * Graph詳細画面。Month/Yearで記録を確認する。
@@ -420,7 +421,7 @@ const toRecordMemoPreview = (memo: string | undefined): string | null => {
   if (!memo) {
     return null;
   }
-  const trimmed = memo.trim();
+  const trimmed = memo.replaceAll(RECORD_MEMO_WHITESPACE_PATTERN, " ").trim();
   if (!trimmed) {
     return null;
   }

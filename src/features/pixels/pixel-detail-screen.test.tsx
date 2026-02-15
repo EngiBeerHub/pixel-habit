@@ -7,6 +7,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react-native";
+import type { ReactNode } from "react";
 import { PixelDetailScreen } from "./pixel-detail-screen";
 
 const mockBack = jest.fn();
@@ -47,6 +48,67 @@ jest.mock("../../shared/api/authed-pixela-api", () => ({
 jest.mock("../../shared/platform/app-alert", () => ({
   showAlert: (...args: unknown[]) => mockShowAlert(...args),
 }));
+
+jest.mock("heroui-native", () => {
+  const { Pressable, Text, TextInput } = require("react-native");
+
+  return {
+    Button: ({
+      children,
+      onPress,
+    }: {
+      children?: ReactNode;
+      onPress?: () => void;
+    }) => (
+      <Pressable onPress={onPress}>
+        <Text>{children}</Text>
+      </Pressable>
+    ),
+    Input: ({
+      onBlur,
+      onChangeText,
+      placeholder,
+      testID,
+      value,
+    }: {
+      onBlur?: () => void;
+      onChangeText?: (text: string) => void;
+      placeholder?: string;
+      testID?: string;
+      value?: string;
+    }) => (
+      <TextInput
+        onBlur={onBlur}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        testID={testID}
+        value={value}
+      />
+    ),
+    TextArea: ({
+      onBlur,
+      onChangeText,
+      placeholder,
+      testID,
+      value,
+    }: {
+      onBlur?: () => void;
+      onChangeText?: (text: string) => void;
+      placeholder?: string;
+      testID?: string;
+      value?: string;
+    }) => (
+      <TextInput
+        multiline
+        onBlur={onBlur}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        testID={testID}
+        value={value}
+      />
+    ),
+  };
+});
 
 const renderScreen = () => {
   const queryClient = new QueryClient({
@@ -201,6 +263,26 @@ describe("PixelDetailScreen", () => {
     renderScreen();
 
     expect(screen.getByDisplayValue("就寝前にストレッチ")).toBeTruthy();
+  });
+
+  test("updates pixel with multiline optionalData", async () => {
+    renderScreen();
+
+    fireEvent.changeText(screen.getByPlaceholderText("10"), "6");
+    fireEvent.changeText(
+      screen.getByTestId("pixel-detail-optional-data-input"),
+      "朝ラン\n夜ストレッチ"
+    );
+    fireEvent.press(screen.getByText("更新"));
+
+    await waitFor(() => {
+      expect(mockUpdatePixel).toHaveBeenCalledWith({
+        date: "20260108",
+        graphId: "sleep",
+        optionalData: "朝ラン\n夜ストレッチ",
+        quantity: "6",
+      });
+    });
   });
 
   test("shows graph/date error when route params are invalid", async () => {

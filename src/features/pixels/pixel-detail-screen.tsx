@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button, Input } from "heroui-native";
+import { Button, Input, TextArea } from "heroui-native";
 import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
@@ -177,7 +177,7 @@ export const PixelDetailScreen = () => {
         control={control}
         name="optionalData"
         render={({ field: { onBlur, onChange, value } }) => (
-          <Input
+          <TextArea
             onBlur={onBlur}
             onChangeText={onChange}
             placeholder="補足メモ"

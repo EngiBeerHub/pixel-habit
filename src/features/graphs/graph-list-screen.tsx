@@ -7,7 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { BottomSheet, Button, Input, useToast } from "heroui-native";
+import { BottomSheet, Button, Input, TextArea, useToast } from "heroui-native";
 import { useEffect, useMemo, useState } from "react";
 import {
   type Control,
@@ -48,7 +48,7 @@ import { GraphCard } from "./components/graph-card";
 
 /**
  * Quick Addシート内の入力フォーム。
- * HeroUI InputをBottom Sheet内で安定動作させるため、キーボード状態を同期する。
+ * HeroUI Input/TextAreaをBottom Sheet内で安定動作させるため、キーボード状態を同期する。
  */
 interface QuickAddSheetFormProps {
   control: Control<PixelAddFormValues>;
@@ -97,7 +97,7 @@ const QuickAddSheetForm = ({
         {selectedGraph ? `${selectedGraph.name} に記録追加` : "記録追加"}
       </BottomSheet.Title>
       <BottomSheet.Description className="text-neutral-500 text-sm">
-        日付と数量を入力して保存してください。
+        日付・数量・任意メモを入力して保存してください。
       </BottomSheet.Description>
 
       {/* 日付入力: yyyyMMdd形式。入力時に正規化してフォーム値へ反映 */}
@@ -162,7 +162,7 @@ const QuickAddSheetForm = ({
         control={control}
         name="optionalData"
         render={({ field: { onBlur, onChange, value } }) => (
-          <Input
+          <TextArea
             onBlur={(event) => {
               onBlurInput(event);
               onBlur();

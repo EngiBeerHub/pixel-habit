@@ -17,7 +17,8 @@ const mockPush = jest.fn();
 const mockReplace = jest.fn();
 const mockShowAlert = jest.fn();
 const MONTH_RANGE_LABEL_PATTERN = /2026年2月: 20260201 - 20260228/;
-const OPTIONAL_DATA_PREVIEW_PATTERN = /^これはとても長い補足メモ.*…$/;
+const OPTIONAL_DATA_PREVIEW_PATTERN =
+  /^これは とても 長い 補足メモで 一覧では 省略…$/;
 let mockRouteParams: {
   color?: string;
   graphId?: string;
@@ -114,7 +115,7 @@ describe("GraphDetailScreen", () => {
       {
         date: "20260213",
         optionalData:
-          "これはとても長い補足メモで一覧では省略表示される想定です",
+          "これは\nとても\n長い\n補足メモで\n一覧では\n省略表示される想定です",
         quantity: "2",
       },
       { date: "20260211", quantity: "4" },
@@ -183,7 +184,7 @@ describe("GraphDetailScreen", () => {
         graphId: "sleep",
         graphName: "Sleep",
         optionalData:
-          "これはとても長い補足メモで一覧では省略表示される想定です",
+          "これは\nとても\n長い\n補足メモで\n一覧では\n省略表示される想定です",
         quantity: "2",
       },
       pathname: "/graphs/[graphId]/pixels/[date]",

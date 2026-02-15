@@ -145,6 +145,28 @@ jest.mock("heroui-native", () => {
         value={value}
       />
     ),
+    TextArea: ({
+      onBlur,
+      onChangeText,
+      placeholder,
+      testID,
+      value,
+    }: {
+      onBlur?: () => void;
+      onChangeText?: (text: string) => void;
+      placeholder?: string;
+      testID?: string;
+      value?: string;
+    }) => (
+      <TextInput
+        multiline
+        onBlur={onBlur}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        testID={testID}
+        value={value}
+      />
+    ),
     useToast: () => ({
       toast: {
         show: (...args: unknown[]) => mockToastShow(...args),
@@ -434,6 +456,31 @@ describe("GraphListScreen", () => {
         date: getTodayAsYyyyMmDd(),
         graphId: "sleep",
         optionalData: "夕方にランニング",
+        quantity: "3",
+      });
+    });
+  });
+
+  test("passes multiline optionalData when quick add memo includes line breaks", async () => {
+    await renderScreen();
+    expect(await screen.findByText("graph:Sleep")).toBeTruthy();
+
+    fireEvent.press(screen.getByText("open-add-today"));
+    fireEvent.changeText(
+      screen.getByTestId("graph-quick-add-quantity-input"),
+      "3"
+    );
+    fireEvent.changeText(
+      screen.getByTestId("graph-quick-add-optional-data-input"),
+      "朝ラン\n夜ストレッチ"
+    );
+    fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
+
+    await waitFor(() => {
+      expect(mockAddPixel).toHaveBeenCalledWith({
+        date: getTodayAsYyyyMmDd(),
+        graphId: "sleep",
+        optionalData: "朝ラン\n夜ストレッチ",
         quantity: "3",
       });
     });
