@@ -125,6 +125,7 @@
 ### Allowed
 
 - UIコンポーネントは `heroui-native` を第一選択で使用する
+- UI実装は `heroui-native` → Expo/React Native標準 → 独自View の優先順で検討する
 - 見た目は `uniwind` の `className` で構成する
 - 色・余白・角丸・サイズは `src/shared/config/ui-tokens.ts` を単一ソースとして参照する
 - 共通化可能な見た目は `src/shared/ui/` へ切り出す
@@ -139,6 +140,7 @@
 ### Forbidden
 
 - `heroui-native` で代替可能な要素を理由なく素のRNコンポーネントで新規実装する
+- `heroui-native` で代替可能な要素（Toast/Dialog/Chip/Cardなど）を独自Viewで固定化する
 - 計算不要なプロパティをインライン `style` で上書きする
 - テーマ値を `src/shared/config/ui-tokens.ts` を経由せず直接重複定義する
 

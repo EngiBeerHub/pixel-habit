@@ -61,7 +61,7 @@ export const GraphCard = ({
   };
 
   return (
-    <SectionCard className="mb-3">
+    <SectionCard className="mb-4">
       <View className="relative">
         <View className="absolute top-0 right-0 z-10">
           <Button
@@ -72,7 +72,7 @@ export const GraphCard = ({
             }}
             size="sm"
             testID={`graph-card-add-today-${graph.id}`}
-            variant="ghost"
+            variant="tertiary"
           >
             <Ionicons name="add" size={16} />
           </Button>
@@ -84,7 +84,7 @@ export const GraphCard = ({
           testID={`graph-card-open-detail-${graph.id}`}
         >
           {/* グラフ基本情報 */}
-          <View className="mb-2 min-h-8 flex-row items-center gap-2 pr-10">
+          <View className="mb-1 min-h-10 flex-row items-center gap-2 pr-12">
             <View
               className="h-2 w-2 rounded-full"
               style={{
@@ -95,10 +95,6 @@ export const GraphCard = ({
               {graph.name}
             </Text>
           </View>
-          <Text className="mt-1 text-neutral-600">ID: {graph.id}</Text>
-          <Text className="text-neutral-600">
-            単位: {graph.unit} / タイムゾーン: {graph.timezone}
-          </Text>
           <View>
             {/* カード内ヒートマップ取得中のプレースホルダー */}
             {pixelQuery.isLoading ? (

@@ -18,6 +18,7 @@ const mockGetGraphs = jest.fn();
 const mockAddPixel = jest.fn();
 const mockGetPixels = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
+const mockToastShow = jest.fn();
 let consoleErrorSpy: jest.SpyInstance;
 
 /**
@@ -62,6 +63,44 @@ jest.mock("../../shared/api/pixel", () => ({
   addPixel: (...args: unknown[]) => mockAddPixel(...args),
   getPixels: (...args: unknown[]) => mockGetPixels(...args),
 }));
+
+jest.mock("heroui-native", () => {
+  const { Pressable, Text, View } = require("react-native");
+  const Card = ({ children }: { children?: ReactNode }) => (
+    <View>{children}</View>
+  );
+  Card.Header = ({ children }: { children?: ReactNode }) => (
+    <View>{children}</View>
+  );
+  Card.Title = ({ children }: { children?: ReactNode }) => (
+    <Text>{children}</Text>
+  );
+  Card.Body = ({ children }: { children?: ReactNode }) => (
+    <View>{children}</View>
+  );
+
+  return {
+    Button: ({
+      children,
+      onPress,
+      testID,
+    }: {
+      children?: ReactNode;
+      onPress?: () => void;
+      testID?: string;
+    }) => (
+      <Pressable onPress={onPress} testID={testID}>
+        <Text>{children}</Text>
+      </Pressable>
+    ),
+    Card,
+    useToast: () => ({
+      toast: {
+        show: (...args: unknown[]) => mockToastShow(...args),
+      },
+    }),
+  };
+});
 
 jest.mock("@gorhom/bottom-sheet", () => {
   const React = require("react");
@@ -216,6 +255,7 @@ describe("GraphListScreen", () => {
       message: "追加成功",
     });
     mockGetPixels.mockResolvedValue([]);
+    mockToastShow.mockReset();
   });
 
   test("shows loading state while graph list is pending", async () => {
@@ -333,10 +373,10 @@ describe("GraphListScreen", () => {
     fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
 
     expect(await screen.findByText("追加失敗")).toBeTruthy();
-    expect(screen.queryByTestId("graph-quick-add-toast")).toBeNull();
+    expect(mockToastShow).not.toHaveBeenCalled();
   });
 
-  test("shows toast message when quick add succeeds", async () => {
+  test("shows HeroUI toast when quick add succeeds", async () => {
     await renderScreen();
     expect(await screen.findByText("graph:Sleep")).toBeTruthy();
 
@@ -344,11 +384,16 @@ describe("GraphListScreen", () => {
     fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
     fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
 
-    expect(await screen.findByTestId("graph-quick-add-toast")).toBeTruthy();
-    expect(await screen.findByText("追加成功")).toBeTruthy();
+    await waitFor(() => {
+      expect(mockToastShow).toHaveBeenCalledWith({
+        description: "追加成功",
+        label: "記録を追加しました",
+        variant: "success",
+      });
+    });
   });
 
-  test("shows latest toast message on consecutive quick add success", async () => {
+  test("uses latest message for consecutive toast success calls", async () => {
     mockAddPixel
       .mockResolvedValueOnce({
         isSuccess: true,
@@ -365,14 +410,25 @@ describe("GraphListScreen", () => {
     fireEvent.press(screen.getByText("open-add-today"));
     fireEvent.changeText(screen.getByPlaceholderText("10"), "3");
     fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
-    expect(await screen.findByText("1回目成功")).toBeTruthy();
+    await waitFor(() => {
+      expect(mockToastShow).toHaveBeenCalledWith({
+        description: "1回目成功",
+        label: "記録を追加しました",
+        variant: "success",
+      });
+    });
 
     fireEvent.press(screen.getByText("open-add-today"));
     fireEvent.changeText(screen.getByPlaceholderText("10"), "4");
     fireEvent.press(screen.getByTestId("graph-quick-add-save-button"));
 
-    expect(await screen.findByText("2回目成功")).toBeTruthy();
-    expect(screen.queryByText("1回目成功")).toBeNull();
+    await waitFor(() => {
+      expect(mockToastShow).toHaveBeenLastCalledWith({
+        description: "2回目成功",
+        label: "記録を追加しました",
+        variant: "success",
+      });
+    });
   });
 
   test("opens quick add with tapped date from heatmap cell", async () => {

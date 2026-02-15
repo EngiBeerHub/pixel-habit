@@ -195,9 +195,9 @@ export const GraphDetailScreen = () => {
         <Button
           isDisabled={deleteMutation.isPending || !graphId}
           onPress={onPressOpenGraphActions}
-          size="sm"
+          size="md"
           testID="graph-detail-menu-button"
-          variant="ghost"
+          variant="tertiary"
         >
           ...
         </Button>
@@ -214,7 +214,7 @@ export const GraphDetailScreen = () => {
               }}
               size="sm"
               testID="graph-detail-mode-month"
-              variant="secondary"
+              variant={mode === "month" ? "primary" : "secondary"}
             >
               Month
             </Button>
@@ -225,7 +225,7 @@ export const GraphDetailScreen = () => {
               }}
               size="sm"
               testID="graph-detail-mode-year"
-              variant="secondary"
+              variant={mode === "year" ? "primary" : "secondary"}
             >
               Year
             </Button>
@@ -299,7 +299,7 @@ export const GraphDetailScreen = () => {
               <View className="gap-2">
                 {pixels.map((pixel) => (
                   <Pressable
-                    className="rounded-lg border border-neutral-200 px-3 py-2"
+                    className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3"
                     key={pixel.date}
                     onPress={() => {
                       onPressOpenPixelDetail(pixel);

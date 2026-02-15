@@ -12,7 +12,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Button } from "heroui-native";
+import { Button, useToast } from "heroui-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -29,6 +29,7 @@ import {
   getTodayAsYyyyMmDd,
   normalizeYyyyMmDdInput,
 } from "../../shared/lib/date";
+import { SectionCard } from "../../shared/ui/section-card";
 import {
   type PixelAddFormValues,
   pixelAddSchema,
@@ -43,13 +44,12 @@ export const GraphListScreen = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [selectedGraph, setSelectedGraph] = useState<GraphDefinition | null>(
     null
   );
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const todayYyyyMmDd = getTodayAsYyyyMmDd();
   const compactHeatmapRange = getCompactHeatmapDateRange(14);
+  const { toast } = useToast();
   const snapPoints = useMemo(() => ["50%"], []);
   const {
     control,
@@ -65,14 +65,6 @@ export const GraphListScreen = () => {
     },
     resolver: zodResolver(pixelAddSchema),
   });
-
-  useEffect(() => {
-    return () => {
-      if (toastTimerRef.current) {
-        clearTimeout(toastTimerRef.current);
-      }
-    };
-  }, []);
 
   const { credentials, hasLoadError, status } = useAuthSession();
   const api = useAuthedPixelaApi();
@@ -124,20 +116,6 @@ export const GraphListScreen = () => {
     });
   }, [credentials, hasLoadError, query.error, status]);
 
-  /**
-   * 一定時間だけ表示する成功トーストを表示する。
-   */
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    if (toastTimerRef.current) {
-      clearTimeout(toastTimerRef.current);
-    }
-    toastTimerRef.current = setTimeout(() => {
-      setToastMessage(null);
-      toastTimerRef.current = null;
-    }, 2500);
-  };
-
   const addPixelMutation = useMutation({
     mutationFn: (values: PixelAddFormValues) => {
       if (!selectedGraph) {
@@ -164,7 +142,11 @@ export const GraphListScreen = () => {
         });
       }
       bottomSheetRef.current?.close();
-      showToast(response.message);
+      toast.show({
+        description: response.message,
+        label: "記録を追加しました",
+        variant: "success",
+      });
     },
   });
 
@@ -277,48 +259,38 @@ export const GraphListScreen = () => {
         <Text className="text-neutral-500 text-sm">
           {formatPeriodLabel(compactHeatmapRange.from, compactHeatmapRange.to)}
         </Text>
-        {/* 記録追加成功後に一定時間表示するトースト */}
-        {toastMessage ? (
-          <View
-            className="rounded-lg border border-green-200 bg-green-50 p-3"
-            testID="graph-quick-add-toast"
-          >
-            <Text className="text-green-700 text-sm">{toastMessage}</Text>
-          </View>
-        ) : null}
         {/* Todayエリア: 未入力グラフは上位1件のみ表示し、一覧と同じスクロール文脈で扱う */}
         {topMissingGraph ? (
-          <View
-            className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2"
-            testID="today-focus-card"
-          >
-            <Text className="font-medium text-amber-900 text-xs">
-              Today 未入力
-            </Text>
-            <Text className="mt-1 text-amber-800 text-sm">
-              {topMissingGraph.name} が未入力です
-            </Text>
-            {remainingMissingCount > 0 ? (
-              <Text
-                className="mt-1 text-amber-700 text-xs"
-                testID="today-focus-remaining"
-              >
-                他{remainingMissingCount}件未入力
+          <SectionCard className="border border-amber-200 bg-amber-50">
+            <View testID="today-focus-card">
+              <Text className="font-medium text-amber-900 text-xs">
+                Today 未入力
               </Text>
-            ) : null}
-            <View className="mt-2">
-              <Button
-                onPress={() => {
-                  onPressAddToday(topMissingGraph);
-                }}
-                size="sm"
-                testID="today-quick-add-button"
-                variant="ghost"
-              >
-                今日を入力
-              </Button>
+              <Text className="mt-1 text-amber-800 text-sm">
+                {topMissingGraph.name} が未入力です
+              </Text>
+              {remainingMissingCount > 0 ? (
+                <Text
+                  className="mt-1 text-amber-700 text-xs"
+                  testID="today-focus-remaining"
+                >
+                  他{remainingMissingCount}件未入力
+                </Text>
+              ) : null}
+              <View className="mt-2">
+                <Button
+                  onPress={() => {
+                    onPressAddToday(topMissingGraph);
+                  }}
+                  size="sm"
+                  testID="today-quick-add-button"
+                  variant="secondary"
+                >
+                  今日を入力
+                </Button>
+              </View>
             </View>
-          </View>
+          </SectionCard>
         ) : null}
       </View>
     );
@@ -336,20 +308,22 @@ export const GraphListScreen = () => {
 
       {/* 一覧取得失敗時の全画面エラー。再試行で一覧を再取得 */}
       {!query.isLoading && errorMessage ? (
-        <View className="rounded-xl border border-red-200 bg-red-50 p-4">
-          <Text className="mb-3 text-red-700">{errorMessage}</Text>
-          <Button onPress={onRetry} testID="graph-list-retry-button">
-            再試行
-          </Button>
-        </View>
+        <SectionCard className="border border-red-200" tone="danger">
+          <View className="gap-3">
+            <Text className="text-red-700">{errorMessage}</Text>
+            <Button onPress={onRetry} testID="graph-list-retry-button">
+              再試行
+            </Button>
+          </View>
+        </SectionCard>
       ) : null}
       {/* 正常取得かつ0件時の空状態 */}
       {!(query.isLoading || errorMessage) && query.data?.length === 0 ? (
-        <View className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+        <SectionCard className="bg-neutral-50">
           <Text className="text-neutral-700">
             グラフがまだ登録されていません。
           </Text>
-        </View>
+        </SectionCard>
       ) : null}
 
       {/* 正常取得時のグラフ一覧。カードごとの状態管理はGraphCardへ委譲 */}
@@ -464,11 +438,11 @@ export const GraphListScreen = () => {
               onPress={onSubmitQuickAdd}
               size="sm"
               testID="graph-quick-add-save-button"
-              variant="secondary"
+              variant="primary"
             >
               保存
             </Button>
-            <Button onPress={onPressDetailedInput} size="sm" variant="ghost">
+            <Button onPress={onPressDetailedInput} size="sm" variant="tertiary">
               詳細入力へ
             </Button>
           </View>
