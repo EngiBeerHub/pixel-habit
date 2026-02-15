@@ -14,7 +14,7 @@
 - [x] (2026-02-14 13:19Z) Graph配下に `src/app/graphs/_layout.tsx` を追加し、Stackヘッダーを導入。
 - [x] (2026-02-14 13:19Z) Graph/Pixel詳細系画面の上余白をStackヘッダー前提へ調整。
 - [x] (2026-02-14 13:20Z) 画面内戻るボタン削減後の導線テストを回帰確認（既存Integration通過）。
-- [ ] Tabs配下（Home/Settings）のヘッダー戦略を共通化（次マイルストーン）。
+- [x] (2026-02-15 00:35Z) Tabs配下（Home/Settings）のヘッダー戦略をExpo標準ヘッダーへ統一。
 - [x] (2026-02-14 13:20Z) docs（screen-flow / architecture）にナビ方針を反映。
 
 ## Surprises & Discoveries
@@ -35,9 +35,17 @@
   Rationale: 既存画面の大規模改修を避けつつ、ヘッダー重複余白を解消するため。
   Date/Author: 2026-02-14 / Codex
 
+- Decision: Tabs配下は画面内独自ヘッダーを増やさず、Expo標準ヘッダーを使ってHome/Settingsの見出しを統一する。
+  Rationale: モバイル標準の導線を優先しつつ、Graph Stackとの役割分離を明確にするため。
+  Date/Author: 2026-02-15 / Codex
+
+- Decision: HomeのTodayエリアは固定表示をやめ、FlatListのListHeaderComponentとして一覧と同一スクロール領域に配置する。
+  Rationale: スクロール可能領域が狭く感じる体験を解消し、情報の読み順を自然にするため。
+  Date/Author: 2026-02-15 / Codex
+
 ## Outcomes & Retrospective
 
-Phase 2の初期目標（Graph配下のStack化と上余白調整）は完了した。画面内戻るボタンを削減しても、全Integrationを含む 21 suites / 92 tests が通過している。残る作業は Tabs配下（Home/Settings）のヘッダー統一であり、次マイルストーンで共通ヘッダー戦略を実装する。
+Phase 2は完了した。Graph配下のStack化に加えて、Tabs配下はExpo標準ヘッダーに統一し、HomeのTodayエリアは一覧と同じスクロール文脈へ移動した。これにより、戻る導線・上余白・スクロール体験の一貫性が向上した。回帰は `test/check/tsc` の通過で確認する。
 
 ## Context and Orientation
 
@@ -94,3 +102,4 @@ Phase 2の初期目標（Graph配下のStack化と上余白調整）は完了し
 
 Revision Note (2026-02-14 13:19Z): 初版作成。Graph配下Stack化と余白調整の進捗を反映。
 Revision Note (2026-02-14 13:20Z): Graph/PixelのStack移行実装後、Progress/Discoveries/Outcomesを更新。
+Revision Note (2026-02-15 00:35Z): Tabs標準ヘッダー統一とTodayスクロール配置変更を反映し、Phase 2完了状態へ更新。

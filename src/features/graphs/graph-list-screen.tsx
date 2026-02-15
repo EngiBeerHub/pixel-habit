@@ -40,7 +40,6 @@ import { GraphCard } from "./components/graph-card";
 /**
  * 認証情報を使って Pixela のグラフ一覧を表示する画面。
  */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Home画面は複数API状態とシート操作を1箇所で統合するため。
 export const GraphListScreen = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -271,13 +270,6 @@ export const GraphListScreen = () => {
   };
 
   /**
-   * グラフ作成画面へ遷移する。
-   */
-  const onPressCreateGraph = () => {
-    router.push("/graphs/create");
-  };
-
-  /**
    * ピクセル一覧画面へ遷移する。
    */
   const onPressOpenPixels = (graph: GraphDefinition) => {
@@ -410,24 +402,64 @@ export const GraphListScreen = () => {
     bottomSheetRef.current?.close();
   };
 
-  return (
-    <View className="flex-1 bg-white px-6 pt-16 pb-6">
-      {/* 画面ヘッダー: タイトル、14週表示の期間ラベル、グラフ追加 */}
-      <View className="mb-4 gap-3">
-        <View className="flex-row items-center justify-between">
-          <View className="gap-1">
-            <Text className="font-bold text-2xl text-neutral-900">Home</Text>
-            <Text className="text-neutral-500 text-sm">
-              {formatPeriodLabel(
-                compactHeatmapRange.from,
-                compactHeatmapRange.to
-              )}
-            </Text>
+  /**
+   * 一覧の先頭に表示するHome補助情報（期間、成功トースト、Today）。
+   */
+  const renderListHeader = () => {
+    return (
+      <View className="gap-3 pb-3">
+        <Text className="text-neutral-500 text-sm">
+          {formatPeriodLabel(compactHeatmapRange.from, compactHeatmapRange.to)}
+        </Text>
+        {/* 記録追加成功後に一定時間表示するトースト */}
+        {toastMessage ? (
+          <View
+            className="rounded-lg border border-green-200 bg-green-50 p-3"
+            testID="graph-quick-add-toast"
+          >
+            <Text className="text-green-700 text-sm">{toastMessage}</Text>
           </View>
-          <Button onPress={onPressCreateGraph}>グラフ追加</Button>
-        </View>
+        ) : null}
+        {/* Todayエリア: 未入力グラフは上位1件のみ表示し、一覧と同じスクロール文脈で扱う */}
+        {topMissingGraph ? (
+          <View
+            className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2"
+            testID="today-focus-card"
+          >
+            <Text className="font-medium text-amber-900 text-xs">
+              Today 未入力
+            </Text>
+            <Text className="mt-1 text-amber-800 text-sm">
+              {topMissingGraph.name} が未入力です
+            </Text>
+            {remainingMissingCount > 0 ? (
+              <Text
+                className="mt-1 text-amber-700 text-xs"
+                testID="today-focus-remaining"
+              >
+                他{remainingMissingCount}件未入力
+              </Text>
+            ) : null}
+            <View className="mt-2">
+              <Button
+                onPress={() => {
+                  onPressAddPixel(topMissingGraph);
+                }}
+                size="sm"
+                testID="today-quick-add-button"
+                variant="ghost"
+              >
+                今日を入力
+              </Button>
+            </View>
+          </View>
+        ) : null}
       </View>
+    );
+  };
 
+  return (
+    <View className="flex-1 bg-white px-6 pt-4 pb-6">
       {/* 初回ロード時の全画面ローディング */}
       {query.isLoading ? (
         <View className="flex-1 items-center justify-center">
@@ -445,54 +477,6 @@ export const GraphListScreen = () => {
           </Button>
         </View>
       ) : null}
-      {/* 記録追加成功後に一定時間表示するトースト */}
-      {toastMessage ? (
-        <View
-          className="mb-3 rounded-lg border border-green-200 bg-green-50 p-3"
-          testID="graph-quick-add-toast"
-        >
-          <Text className="text-green-700 text-sm">{toastMessage}</Text>
-        </View>
-      ) : null}
-
-      {/* Todayエリア: 未入力グラフは上位1件のみ表示し、Homeの情報密度を上げすぎない */}
-      {!(query.isLoading || errorMessage) &&
-      query.data &&
-      query.data.length > 0 &&
-      topMissingGraph ? (
-        <View
-          className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2"
-          testID="today-focus-card"
-        >
-          <Text className="font-medium text-amber-900 text-xs">
-            Today 未入力
-          </Text>
-          <Text className="mt-1 text-amber-800 text-sm">
-            {topMissingGraph.name} が未入力です
-          </Text>
-          {remainingMissingCount > 0 ? (
-            <Text
-              className="mt-1 text-amber-700 text-xs"
-              testID="today-focus-remaining"
-            >
-              他{remainingMissingCount}件未入力
-            </Text>
-          ) : null}
-          <View className="mt-2">
-            <Button
-              onPress={() => {
-                onPressAddPixel(topMissingGraph);
-              }}
-              size="sm"
-              testID="today-quick-add-button"
-              variant="ghost"
-            >
-              今日を入力
-            </Button>
-          </View>
-        </View>
-      ) : null}
-
       {/* 正常取得かつ0件時の空状態 */}
       {!(query.isLoading || errorMessage) && query.data?.length === 0 ? (
         <View className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
@@ -507,11 +491,12 @@ export const GraphListScreen = () => {
       query.data &&
       query.data.length > 0 ? (
         <FlatList<GraphDefinition>
-          className="mt-2"
+          className="mt-1"
           contentContainerClassName="px-1 pb-2"
           data={query.data}
           disableVirtualization
           keyExtractor={(item) => item.id}
+          ListHeaderComponent={renderListHeader}
           refreshControl={
             <RefreshControl
               onRefresh={onRefresh}

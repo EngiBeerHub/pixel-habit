@@ -167,9 +167,8 @@ export const SettingsScreen = () => {
   };
 
   return (
-    <ScreenContainer scrollable>
-      {/* 画面ヘッダー: Settings概要 */}
-      <Text className="mb-2 font-bold text-2xl text-neutral-900">Settings</Text>
+    <ScreenContainer scrollable withTopInset={false}>
+      {/* 画面冒頭説明: ヘッダーはTabs標準を使い、説明文のみ本文に残す */}
       <Text className="mb-6 text-neutral-600">
         アカウントとアプリ情報を管理します。
       </Text>

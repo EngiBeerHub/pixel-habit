@@ -248,6 +248,12 @@ describe("GraphListScreen", () => {
     expect(await screen.findByText("graph:Sleep")).toBeTruthy();
   });
 
+  test("shows period label in list header", async () => {
+    await renderScreen();
+
+    expect(await screen.findByText("2025年11月 - 2026年2月")).toBeTruthy();
+  });
+
   test("shows error state and allows retry", async () => {
     mockGetGraphs.mockRejectedValueOnce(new Error("取得失敗"));
 
