@@ -99,6 +99,7 @@ describe("GraphDetailScreen", () => {
     renderScreen();
 
     expect(await screen.findByText("Sleep")).toBeTruthy();
+    expect(await screen.findByTestId("graph-detail-mode-help")).toBeTruthy();
     expect(await screen.findByText(MONTH_RANGE_LABEL_PATTERN)).toBeTruthy();
 
     await waitFor(() => {
@@ -113,6 +114,7 @@ describe("GraphDetailScreen", () => {
   test("switches to year range", async () => {
     renderScreen();
     await screen.findByText("Sleep");
+    expect(screen.getByText("Month=暦月 / Year=暦年")).toBeTruthy();
 
     fireEvent.press(screen.getByTestId("graph-detail-mode-year"));
 

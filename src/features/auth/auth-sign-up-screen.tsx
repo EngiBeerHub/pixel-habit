@@ -124,7 +124,8 @@ export const AuthSignUpScreen = () => {
         </Button>
         <Button
           onPress={() => {
-            router.replace("/auth/sign-in");
+            // 認証画面間の移動は通常導線としてpushを使い、戻る操作を可能にする。
+            router.push("/auth/sign-in");
           }}
         >
           ログインへ

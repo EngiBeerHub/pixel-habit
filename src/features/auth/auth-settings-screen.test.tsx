@@ -1,5 +1,7 @@
+import { notifyManager } from "@tanstack/query-core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -9,11 +11,13 @@ import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { AuthSettingsScreen } from "./auth-settings-screen";
 
 const mockReplace = jest.fn();
+const mockPush = jest.fn();
 const mockMutateAsync = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
+    push: mockPush,
     replace: mockReplace,
   }),
 }));
@@ -55,9 +59,34 @@ describe("AuthSettingsScreen", () => {
     );
   };
 
+  beforeAll(() => {
+    notifyManager.setNotifyFunction((callback) => {
+      act(() => {
+        callback();
+      });
+    });
+  });
+
+  afterAll(() => {
+    notifyManager.setNotifyFunction((callback) => {
+      callback();
+    });
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockLoadAuthCredentials.mockResolvedValue(null);
+  });
+
+  test("navigates to sign-up with push from auth flow", async () => {
+    renderScreen();
+
+    fireEvent.press(screen.getByText("アカウント作成へ"));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/auth/sign-up");
+    });
+    expect(mockReplace).not.toHaveBeenCalledWith("/auth/sign-up");
   });
 
   test("shows validation errors when required fields are empty", async () => {

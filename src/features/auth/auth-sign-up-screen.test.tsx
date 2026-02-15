@@ -11,11 +11,13 @@ import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { AuthSignUpScreen } from "./auth-sign-up-screen";
 
 const mockReplace = jest.fn();
+const mockPush = jest.fn();
 const mockMutateAsync = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
+    push: mockPush,
     replace: mockReplace,
   }),
 }));
@@ -74,6 +76,17 @@ describe("AuthSignUpScreen", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockLoadAuthCredentials.mockResolvedValue(null);
+  });
+
+  test("navigates to sign-in with push from auth flow", async () => {
+    renderScreen();
+
+    fireEvent.press(screen.getByText("ログインへ"));
+
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/auth/sign-in");
+    });
+    expect(mockReplace).not.toHaveBeenCalledWith("/auth/sign-in");
   });
 
   test("shows validation errors for empty fields", async () => {

@@ -9,6 +9,7 @@ import {
 } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
+import { getTodayAsYyyyMmDd } from "../../shared/lib/date";
 import { GraphListScreen } from "./graph-list-screen";
 
 const mockReplace = jest.fn();
@@ -284,18 +285,43 @@ describe("GraphListScreen", () => {
   });
 
   test("shows top single missing item in today section", async () => {
+    const today = getTodayAsYyyyMmDd();
     mockGetGraphs.mockResolvedValueOnce([
       graph,
       { ...graph, id: "fitness", name: "Fitness" },
     ]);
-    mockGetPixels
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([{ date: "20260214", quantity: "2" }]);
+    mockGetPixels.mockImplementation(({ graphId }: { graphId: string }) => {
+      if (graphId === "fitness") {
+        return Promise.resolve([{ date: today, quantity: "2" }]);
+      }
+      return Promise.resolve([]);
+    });
 
     await renderScreen();
 
-    expect(await screen.findByText("Today")).toBeTruthy();
+    expect(await screen.findByText("Today 未入力")).toBeTruthy();
     expect(await screen.findByText("Sleep が未入力です")).toBeTruthy();
+  });
+
+  test("shows remaining missing count under top item", async () => {
+    const today = getTodayAsYyyyMmDd();
+    mockGetGraphs.mockResolvedValueOnce([
+      graph,
+      { ...graph, id: "fitness", name: "Fitness" },
+      { ...graph, id: "reading", name: "Reading" },
+    ]);
+    mockGetPixels.mockImplementation(({ graphId }: { graphId: string }) => {
+      if (graphId === "reading") {
+        return Promise.resolve([{ date: today, quantity: "1" }]);
+      }
+      return Promise.resolve([]);
+    });
+
+    await renderScreen();
+
+    expect(await screen.findByTestId("today-focus-card")).toBeTruthy();
+    expect(await screen.findByTestId("today-focus-remaining")).toBeTruthy();
+    expect(await screen.findByText("他1件未入力")).toBeTruthy();
   });
 
   test("redirects to auth screen when credentials are missing", async () => {

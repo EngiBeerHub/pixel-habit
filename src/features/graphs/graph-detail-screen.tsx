@@ -127,6 +127,12 @@ export const GraphDetailScreen = () => {
             </Button>
           </View>
           <Text
+            className="text-neutral-500 text-xs"
+            testID="graph-detail-mode-help"
+          >
+            Month=暦月 / Year=暦年
+          </Text>
+          <Text
             className="text-neutral-700 text-sm"
             testID="graph-detail-range"
           >

@@ -35,6 +35,7 @@
 - `src/app/graphs/_layout.tsx` の `Stack` を Graph/Pixel関連画面の標準ナビゲーションとして扱う
 - Graph/Pixel関連画面では、画面内の戻るボタンよりStackヘッダーの戻る導線を優先する
 - Stackヘッダーを使う画面は上余白を二重にしない（`ScreenContainer` の `withTopInset` または同等の調整を行う）
+- 通常導線は `router.push` / `router.back` を使い、セッション境界の遷移（ログイン完了・ログアウト・認証欠落時）は `router.replace` を使う
 
 ## Data Flow
 

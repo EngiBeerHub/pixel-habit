@@ -460,13 +460,21 @@ export const GraphListScreen = () => {
       query.data &&
       query.data.length > 0 &&
       topMissingGraph ? (
-        <View className="mb-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
-          <Text className="font-medium text-amber-900 text-sm">Today</Text>
+        <View
+          className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2"
+          testID="today-focus-card"
+        >
+          <Text className="font-medium text-amber-900 text-xs">
+            Today 未入力
+          </Text>
           <Text className="mt-1 text-amber-800 text-sm">
             {topMissingGraph.name} が未入力です
           </Text>
           {remainingMissingCount > 0 ? (
-            <Text className="mt-1 text-amber-700 text-xs">
+            <Text
+              className="mt-1 text-amber-700 text-xs"
+              testID="today-focus-remaining"
+            >
               他{remainingMissingCount}件未入力
             </Text>
           ) : null}
@@ -477,7 +485,7 @@ export const GraphListScreen = () => {
               }}
               size="sm"
               testID="today-quick-add-button"
-              variant="secondary"
+              variant="ghost"
             >
               今日を入力
             </Button>
