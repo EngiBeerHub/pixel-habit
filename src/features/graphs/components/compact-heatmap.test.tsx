@@ -60,4 +60,22 @@ describe("compact heatmap", () => {
     fireEvent.press(screen.getByTestId("compact-heatmap-cell-20260107"));
     expect(onPressCell).toHaveBeenCalledWith("20260107");
   });
+
+  test("does not call onPressCell when future date cell is tapped", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 0, 8, 10, 0, 0));
+    const onPressCell = jest.fn();
+
+    render(
+      <CompactHeatmap
+        graphColor="sora"
+        onPressCell={onPressCell}
+        pixels={[{ date: "20260107", quantity: "2" }]}
+        weeks={14}
+      />
+    );
+
+    fireEvent.press(screen.getByTestId("compact-heatmap-cell-20260110"));
+    expect(onPressCell).not.toHaveBeenCalled();
+  });
 });

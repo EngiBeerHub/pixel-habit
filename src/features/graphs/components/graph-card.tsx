@@ -1,12 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "heroui-native";
+import { Button, SkeletonGroup } from "heroui-native";
 import { Pressable, Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../../shared/api/authed-pixela-api";
 import type { GraphDefinition } from "../../../shared/api/graph";
 import { surfaceTokens, textTokens } from "../../../shared/config/ui-tokens";
 import { getGraphThemeColor } from "../../../shared/lib/graph-theme";
-import { InlineMessage } from "../../../shared/ui/inline-message";
 import { SectionCard } from "../../../shared/ui/section-card";
 import { CompactHeatmap, getCompactHeatmapDateRange } from "./compact-heatmap";
 
@@ -101,26 +100,28 @@ export const GraphCard = ({
           </View>
           <View>
             {/* カード内ヒートマップ取得中のプレースホルダー */}
-            {pixelQuery.isLoading ? (
-              <InlineMessage
+            {pixelQuery.isPending ? (
+              <View
                 className="mt-3"
-                message="記録を読み込み中..."
-                variant="info"
-              />
+                testID={`graph-card-loading-skeleton-${graph.id}`}
+              >
+                <SkeletonGroup className="gap-2" isSkeletonOnly>
+                  <SkeletonGroup.Item className="h-3 w-24 rounded-full" />
+                  <SkeletonGroup.Item className="h-24 w-full rounded-lg" />
+                </SkeletonGroup>
+              </View>
             ) : null}
             {/* カード単位エラー。再取得だけを局所的に実行する */}
-            {!pixelQuery.isLoading && pixelQuery.error ? (
+            {!pixelQuery.isPending && pixelQuery.error ? (
               <View className="mt-3 rounded-lg p-3">
-                <InlineMessage
-                  className="mb-2"
-                  message="ヒートマップの取得に失敗しました。"
-                  variant="error"
-                />
+                <Text className="mb-2 text-red-600 text-sm">
+                  ヒートマップの取得に失敗しました。
+                </Text>
                 <Button onPress={onRetryPixels}>再取得</Button>
               </View>
             ) : null}
             {/* 取得成功時のみヒートマップを描画 */}
-            {pixelQuery.isLoading || pixelQuery.error ? null : (
+            {pixelQuery.isPending || pixelQuery.error ? null : (
               <CompactHeatmap
                 graphColor={graph.color}
                 onPressCell={(date) => {

@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { router, Stack } from "expo-router";
 import { Button } from "heroui-native";
 
@@ -11,6 +12,8 @@ export default function GraphStackLayout() {
         animation: "slide_from_right",
         headerLeft: ({ canGoBack }) => (
           <Button
+            accessibilityLabel={canGoBack ? "前の画面へ戻る" : "ホームへ戻る"}
+            isIconOnly
             onPress={() => {
               if (canGoBack) {
                 router.back();
@@ -21,7 +24,7 @@ export default function GraphStackLayout() {
             size="sm"
             variant="ghost"
           >
-            戻る
+            <Ionicons name="chevron-back" size={20} />
           </Button>
         ),
         headerShadowVisible: false,

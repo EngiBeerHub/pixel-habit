@@ -36,6 +36,7 @@
 - Graph/Pixel関連画面では、画面内の戻るボタンよりStackヘッダーの戻る導線を優先する
 - Stackヘッダーを使う画面は上余白を二重にしない（`ScreenContainer` の `withTopInset` または同等の調整を行う）
 - `src/app/(tabs)/_layout.tsx` では Expo標準ヘッダーを有効化し、Home/Settingsのタイトル表示を統一する
+- Graph/Pixel関連画面の戻る導線はOS標準バック表示を優先し、独自の文字ラベル戻るボタンは採用しない
 - 通常導線は `router.push` / `router.back` を使い、セッション境界の遷移（ログイン完了・ログアウト・認証欠落時）は `router.replace` を使う
 
 ## Data Flow
@@ -80,6 +81,7 @@
 - 記録追加導線はHomeのQuick Addに一本化し、`/graphs/[graphId]/add` は採用しない
 - Homeカードでは管理導線（`...` / 統計 / 編集 / 削除）を表示せず、管理操作はGraph詳細画面へ集約する
 - Graph詳細の `Month/Year` 期間計算は `src/shared/lib/calendar-range.ts` を使い、画面側で日付計算を再実装しない
+- HomeのToday専用セクションは設けず、入力導線は `セル/+/カード` の3導線に限定する
 
 ## Screen Development Rules
 
@@ -155,6 +157,12 @@
 - `src/shared/ui/` 内でユーティリティ関数が重複定義されていないか
 - PR内に「採用コンポーネント一覧（HeroUI / Expo-RN標準 / 独自）」が明記されているか
 - 独自Viewを追加した場合、`heroui-native` と Expo/RN標準で代替できない理由が1行で記載されているか
+
+## Interaction Feedback Rules
+
+- 触覚フィードバックは `expo-haptics` を使い、主要操作（セルタップ、保存成功、削除確定）に限定して適用する
+- 過剰振動を避けるため、通常の画面遷移や軽量トースト表示には触覚を付与しない
+- セル押下などの視覚フィードバックは `heroui-native` の `PressableFeedback` を優先利用する
 
 ## Docコメントルール
 

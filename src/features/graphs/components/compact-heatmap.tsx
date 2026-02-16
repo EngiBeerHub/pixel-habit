@@ -146,22 +146,32 @@ export const CompactHeatmap = ({
               >
                 {row.cells.map((cell) => (
                   <Pressable
-                    className="rounded-[3px]"
-                    disabled={cell.isFutureDate}
                     key={cell.date}
-                    onPress={() => {
+                    onPress={(event) => {
+                      event?.stopPropagation?.();
+                      if (cell.isFutureDate) {
+                        return;
+                      }
                       onPressCell?.(cell.date);
                     }}
-                    style={{
-                      backgroundColor: resolveCellColor({
-                        baseColor,
-                        level: cell.level,
-                      }),
-                      height: CELL_SIZE,
-                      width: CELL_SIZE,
-                    }}
+                    style={({ pressed }) => ({
+                      borderRadius: 3,
+                      opacity: pressed && !cell.isFutureDate ? 0.72 : 1,
+                    })}
                     testID={`compact-heatmap-cell-${cell.date}`}
-                  />
+                  >
+                    <View
+                      style={{
+                        backgroundColor: resolveCellColor({
+                          baseColor,
+                          level: cell.level,
+                        }),
+                        borderRadius: 3,
+                        height: CELL_SIZE,
+                        width: CELL_SIZE,
+                      }}
+                    />
+                  </Pressable>
                 ))}
               </View>
             ))}

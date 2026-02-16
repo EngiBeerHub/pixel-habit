@@ -124,6 +124,14 @@ jest.mock("heroui-native", () => {
       </Pressable>
     ),
     Card,
+    SkeletonGroup: Object.assign(
+      ({ children }: { children?: ReactNode }) => <View>{children}</View>,
+      {
+        Item: ({ children }: { children?: ReactNode }) => (
+          <View>{children}</View>
+        ),
+      }
+    ),
     Input: ({
       onBlur,
       onChangeText,
@@ -307,16 +315,18 @@ describe("GraphListScreen", () => {
 
     await renderScreen();
 
-    expect(await screen.findByText("読み込み中...")).toBeTruthy();
+    expect(
+      await screen.findByTestId("graph-list-loading-skeleton")
+    ).toBeTruthy();
 
     deferred.resolve([graph]);
     expect(await screen.findByText("graph:Sleep")).toBeTruthy();
   });
 
-  test("shows period label in list header", async () => {
+  test("does not show period label text under header", async () => {
     await renderScreen();
 
-    expect(await screen.findByText("2025年11月 - 2026年2月")).toBeTruthy();
+    expect(screen.queryByText("2025年11月 - 2026年2月")).toBeNull();
   });
 
   test("shows error state and allows retry", async () => {
@@ -355,44 +365,12 @@ describe("GraphListScreen", () => {
     ).toBeTruthy();
   });
 
-  test("shows top single missing item in today section", async () => {
-    const today = getTodayAsYyyyMmDd();
-    mockGetGraphs.mockResolvedValueOnce([
-      graph,
-      { ...graph, id: "fitness", name: "Fitness" },
-    ]);
-    mockGetPixels.mockImplementation(({ graphId }: { graphId: string }) => {
-      if (graphId === "fitness") {
-        return Promise.resolve([{ date: today, quantity: "2" }]);
-      }
-      return Promise.resolve([]);
-    });
-
+  test("does not render today focus area", async () => {
     await renderScreen();
+    expect(await screen.findByText("graph:Sleep")).toBeTruthy();
 
-    expect(await screen.findByText("Today 未入力")).toBeTruthy();
-    expect(await screen.findByText("Sleep が未入力です")).toBeTruthy();
-  });
-
-  test("shows remaining missing count under top item", async () => {
-    const today = getTodayAsYyyyMmDd();
-    mockGetGraphs.mockResolvedValueOnce([
-      graph,
-      { ...graph, id: "fitness", name: "Fitness" },
-      { ...graph, id: "reading", name: "Reading" },
-    ]);
-    mockGetPixels.mockImplementation(({ graphId }: { graphId: string }) => {
-      if (graphId === "reading") {
-        return Promise.resolve([{ date: today, quantity: "1" }]);
-      }
-      return Promise.resolve([]);
-    });
-
-    await renderScreen();
-
-    expect(await screen.findByTestId("today-focus-card")).toBeTruthy();
-    expect(await screen.findByTestId("today-focus-remaining")).toBeTruthy();
-    expect(await screen.findByText("他1件未入力")).toBeTruthy();
+    expect(screen.queryByTestId("today-focus-card")).toBeNull();
+    expect(screen.queryByText("Today 未入力")).toBeNull();
   });
 
   test("redirects to auth screen when credentials are missing", async () => {
@@ -552,14 +530,6 @@ describe("GraphListScreen", () => {
 
     fireEvent.press(screen.getByText("open-add-for-date"));
     expect(await screen.findByDisplayValue("20260209")).toBeTruthy();
-  });
-
-  test("today quick add button keeps current date as initial value", async () => {
-    await renderScreen();
-    expect(await screen.findByText("graph:Sleep")).toBeTruthy();
-
-    fireEvent.press(screen.getByTestId("today-quick-add-button"));
-    expect(await screen.findByDisplayValue(getTodayAsYyyyMmDd())).toBeTruthy();
   });
 
   test("navigates to graph detail from card", async () => {

@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react-native";
+import type { ReactNode } from "react";
 import type { GraphDefinition } from "../../../shared/api/graph";
 import { GraphCard } from "./graph-card";
 
@@ -21,6 +22,47 @@ jest.mock("../../../shared/api/authed-pixela-api", () => ({
 jest.mock("@expo/vector-icons", () => ({
   Ionicons: () => null,
 }));
+
+jest.mock("heroui-native", () => {
+  const { Pressable, Text, View } = require("react-native");
+  const Card = ({ children }: { children?: ReactNode }) => (
+    <View>{children}</View>
+  );
+  Card.Header = ({ children }: { children?: ReactNode }) => (
+    <View>{children}</View>
+  );
+  Card.Title = ({ children }: { children?: ReactNode }) => (
+    <Text>{children}</Text>
+  );
+  Card.Body = ({ children }: { children?: ReactNode }) => (
+    <View>{children}</View>
+  );
+
+  const SkeletonGroup = Object.assign(
+    ({ children }: { children?: ReactNode }) => <View>{children}</View>,
+    {
+      Item: ({ children }: { children?: ReactNode }) => <View>{children}</View>,
+    }
+  );
+
+  return {
+    Button: ({
+      children,
+      onPress,
+      testID,
+    }: {
+      children?: ReactNode;
+      onPress?: () => void;
+      testID?: string;
+    }) => (
+      <Pressable onPress={onPress} testID={testID}>
+        <Text>{children}</Text>
+      </Pressable>
+    ),
+    Card,
+    SkeletonGroup,
+  };
+});
 
 jest.mock("./compact-heatmap", () => ({
   CompactHeatmap: ({
@@ -70,7 +112,7 @@ describe("GraphCard", () => {
     mockUseQuery.mockReturnValue({
       data: [],
       error: null,
-      isLoading: false,
+      isPending: false,
       refetch: mockRefetch,
     });
   });
@@ -79,20 +121,22 @@ describe("GraphCard", () => {
     mockUseQuery.mockReturnValueOnce({
       data: undefined,
       error: null,
-      isLoading: true,
+      isPending: true,
       refetch: mockRefetch,
     });
 
     render(<GraphCard {...buildProps()} />);
 
-    expect(screen.getByText("記録を読み込み中...")).toBeTruthy();
+    expect(
+      screen.getByTestId("graph-card-loading-skeleton-sleep")
+    ).toBeTruthy();
   });
 
   test("renders error state and retries", () => {
     mockUseQuery.mockReturnValueOnce({
       data: undefined,
       error: new Error("failed"),
-      isLoading: false,
+      isPending: false,
       refetch: mockRefetch,
     });
 
@@ -107,7 +151,7 @@ describe("GraphCard", () => {
     mockUseQuery.mockReturnValueOnce({
       data: [{ date: "20260101", quantity: "2" }],
       error: null,
-      isLoading: false,
+      isPending: false,
       refetch: mockRefetch,
     });
 

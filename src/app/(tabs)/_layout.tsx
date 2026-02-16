@@ -1,5 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
-import { Pressable, Text } from "react-native";
+import { Button } from "heroui-native";
 
 /**
  * Home / Settings の2タブレイアウト。
@@ -20,17 +21,21 @@ export default function TabLayout() {
         name="home"
         options={{
           headerRight: () => (
-            <Pressable
-              className="rounded-full px-3 py-1"
+            <Button
+              accessibilityLabel="グラフ追加"
+              isIconOnly
               onPress={() => {
                 router.push("/graphs/create");
               }}
+              size="sm"
               testID="home-header-create-button"
+              variant="ghost"
             >
-              <Text className="font-medium text-blue-500 text-sm">
-                グラフ追加
-              </Text>
-            </Pressable>
+              <Ionicons name="add" size={18} />
+            </Button>
+          ),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons color={color} name="home" size={size} />
           ),
           title: "Home",
         }}
@@ -38,6 +43,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons color={color} name="settings-outline" size={size} />
+          ),
           title: "Settings",
         }}
       />
