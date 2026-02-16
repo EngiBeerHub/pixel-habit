@@ -13,6 +13,7 @@
 - [x] (2026-02-16 00:00Z) Phase 0: ドキュメント方針更新（Today廃止、Home期間表示廃止、Navigation標準化、Haptics方針追記）。
 - [x] (2026-02-16 00:00Z) Phase 1: Home + Navigation の実装着手（タブアイコン、ヘッダー右上アイコン化、Homeスケルトン化、未来日セル押下伝播対策）。
 - [ ] Phase 1: テスト/品質ゲート最終確認。
+- [ ] Phase 1.5: スクロールバー表示ポリシー統一（通常画面は非表示、例外のみ許可）。
 - [ ] Phase 2: Quick Add UX最適化（1stビュー保存可視、必須表示、単位表示、説明文削除、保存成功haptics）。
 - [ ] Phase 3: Graph Detail 情報設計完成（Tabs切替、統計拡張、日付整形、記録行再構成、管理操作再設計）。
 - [ ] Phase 4: PixelDetail削除トーン統一 + Settings再設計（トークン変更別画面化）。
@@ -71,11 +72,15 @@ Settingsは現在 `src/features/settings/settings-screen.tsx` に集約されて
    - `src/features/graphs/graph-list-screen.tsx`
    - `src/features/graphs/components/graph-card.tsx`
    - `src/features/graphs/components/compact-heatmap.tsx`
-3. テスト更新
+3. Phase 1.5: スクロールインジケータ統一
+   - `ScrollView` / `FlatList` / `SectionList` / Bottom Sheet内スクロールで
+     `showsVerticalScrollIndicator={false}` と `showsHorizontalScrollIndicator={false}` を標準化
+   - 例外画面は理由をコメントで明記し、レビューで明示許可
+4. テスト更新
    - `src/features/graphs/graph-list-screen.test.tsx`
    - `src/features/graphs/components/graph-card.test.tsx`
    - `src/features/graphs/components/compact-heatmap.test.tsx`
-4. 品質ゲート
+5. 品質ゲート
    - `npm run test -- --runInBand`
    - `npm exec -- ultracite check src docs app.json`
    - `npx tsc --noEmit`
@@ -88,6 +93,7 @@ Settingsは現在 `src/features/settings/settings-screen.tsx` に集約されて
 - Graph/Pixel配下の戻る導線がOS標準バック表示になる。
 - HomeとGraphCardのロードがスケルトン表示になる。
 - 未来日セルをタップしてもGraph詳細へ遷移しない。
+- 通常画面でスクロールバーが常時表示されない。
 - `test/check/tsc` が通る。
 
 ## Idempotence and Recovery

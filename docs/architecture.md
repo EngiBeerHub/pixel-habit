@@ -158,6 +158,13 @@
 - PR内に「採用コンポーネント一覧（HeroUI / Expo-RN標準 / 独自）」が明記されているか
 - 独自Viewを追加した場合、`heroui-native` と Expo/RN標準で代替できない理由が1行で記載されているか
 
+## Scroll Indicator Rules
+
+- 通常画面の `ScrollView` / `FlatList` / `SectionList` / Bottom Sheet内スクロールは、縦横スクロールインジケータを非表示にする
+- 標準設定は `showsVerticalScrollIndicator={false}` と `showsHorizontalScrollIndicator={false}`
+- 例外（可観測性やデバッグ用途で表示が必要な画面）は、画面内コメントで理由を明記し、PRで明示する
+- iOS/Androidで見え方が異なるため、手動スモークに両OS確認項目を含める
+
 ## Interaction Feedback Rules
 
 - 触覚フィードバックは `expo-haptics` を使い、主要操作（セルタップ、保存成功、削除確定）に限定して適用する
