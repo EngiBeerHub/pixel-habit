@@ -14,7 +14,7 @@ import {
   TextArea,
   useToast,
 } from "heroui-native";
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   type Control,
   Controller,
@@ -366,81 +366,77 @@ export const GraphListScreen = () => {
     addPixelMutation.mutate(values);
   });
 
-  return (
-    <View
-      className={mergeClassNames(
-        "flex-1 px-6 pt-4 pb-6",
-        surfaceTokens.screenClass
-      )}
-    >
-      {/* 初回ロード時の全画面ローディング */}
-      {isGraphListLoading ? (
-        <View className="gap-3 pt-2" testID="graph-list-loading-skeleton">
-          {HOME_LOADING_SKELETON_KEYS.map((key) => (
-            <SectionCard key={key}>
-              <SkeletonGroup className="gap-3" isSkeletonOnly>
-                <SkeletonGroup.Item className="h-7 w-36 rounded-full" />
-                <SkeletonGroup.Item className="h-48 w-full rounded-xl" />
-              </SkeletonGroup>
-            </SectionCard>
-          ))}
+  const hasGraphs = Boolean(query.data && query.data.length > 0);
+  const shouldShowSkeleton = isGraphListLoading;
+  const shouldShowError = !isGraphListLoading && Boolean(errorMessage);
+  const canRenderDataState = !(isGraphListLoading || errorMessage);
+  const shouldShowEmpty = canRenderDataState && !hasGraphs;
+  const shouldShowGraphList = canRenderDataState && hasGraphs;
+  let listEmptyComponent: ReactNode = null;
+  if (shouldShowSkeleton) {
+    listEmptyComponent = (
+      <View className="gap-3" testID="graph-list-loading-skeleton">
+        {HOME_LOADING_SKELETON_KEYS.map((key) => (
+          <SectionCard key={key}>
+            <SkeletonGroup className="gap-3" isSkeletonOnly>
+              <SkeletonGroup.Item className="h-7 w-36 rounded-full" />
+              <SkeletonGroup.Item className="h-48 w-full rounded-xl" />
+            </SkeletonGroup>
+          </SectionCard>
+        ))}
+      </View>
+    );
+  } else if (shouldShowError) {
+    listEmptyComponent = (
+      <SectionCard
+        className={mergeClassNames("border", borderTokens.dangerClass)}
+        tone="danger"
+      >
+        <View className="gap-3">
+          <Text className={textTokens.dangerClass}>{errorMessage}</Text>
+          <Button onPress={onRetry} testID="graph-list-retry-button">
+            再試行
+          </Button>
         </View>
-      ) : null}
+      </SectionCard>
+    );
+  } else if (shouldShowEmpty) {
+    listEmptyComponent = (
+      <SectionCard className="bg-neutral-50">
+        <Text className="text-neutral-700">
+          グラフがまだ登録されていません。
+        </Text>
+      </SectionCard>
+    );
+  }
 
-      {/* 一覧取得失敗時の全画面エラー。再試行で一覧を再取得 */}
-      {!isGraphListLoading && errorMessage ? (
-        <SectionCard
-          className={mergeClassNames("border", borderTokens.dangerClass)}
-          tone="danger"
-        >
-          <View className="gap-3">
-            <Text className={textTokens.dangerClass}>{errorMessage}</Text>
-            <Button onPress={onRetry} testID="graph-list-retry-button">
-              再試行
-            </Button>
-          </View>
-        </SectionCard>
-      ) : null}
-      {/* 正常取得かつ0件時の空状態 */}
-      {!(isGraphListLoading || errorMessage) && query.data?.length === 0 ? (
-        <SectionCard className="bg-neutral-50">
-          <Text className="text-neutral-700">
-            グラフがまだ登録されていません。
-          </Text>
-        </SectionCard>
-      ) : null}
-
-      {/* 正常取得時のグラフ一覧。カードごとの状態管理はGraphCardへ委譲 */}
-      {!(isGraphListLoading || errorMessage) &&
-      query.data &&
-      query.data.length > 0 ? (
-        <FlatList<GraphDefinition>
-          className="mt-1"
-          contentContainerClassName="px-1 pb-2"
-          data={query.data}
-          keyExtractor={(item) => item.id}
-          refreshControl={
-            <RefreshControl
-              onRefresh={onRefresh}
-              refreshing={isPullRefreshing}
+  return (
+    <>
+      <FlatList<GraphDefinition>
+        automaticallyAdjustContentInsets
+        className={mergeClassNames("flex-1", surfaceTokens.screenClass)}
+        contentContainerClassName="px-6 pb-6 pt-2"
+        contentInsetAdjustmentBehavior="automatic"
+        data={shouldShowGraphList ? (query.data ?? []) : []}
+        keyExtractor={(item) => item.id}
+        ListEmptyComponent={listEmptyComponent}
+        refreshControl={
+          <RefreshControl onRefresh={onRefresh} refreshing={isPullRefreshing} />
+        }
+        renderItem={({ item }) =>
+          api.isAuthenticated ? (
+            <GraphCard
+              graph={item}
+              isActionDisabled={addPixelMutation.isPending}
+              onPressAddForDate={onPressAddForDate}
+              onPressAddToday={onPressAddToday}
+              onPressOpenDetail={onPressOpenDetail}
             />
-          }
-          renderItem={({ item }) =>
-            api.isAuthenticated ? (
-              <GraphCard
-                graph={item}
-                isActionDisabled={addPixelMutation.isPending}
-                onPressAddForDate={onPressAddForDate}
-                onPressAddToday={onPressAddToday}
-                onPressOpenDetail={onPressOpenDetail}
-              />
-            ) : null
-          }
-          showsHorizontalScrollIndicator={false}
-          showsVerticalScrollIndicator={false}
-        />
-      ) : null}
-
+          ) : null
+        }
+        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
+      />
       {/* クイック記録追加用Bottom Sheet */}
       <BottomSheet
         isOpen={isQuickAddOpen}
@@ -469,7 +465,7 @@ export const GraphListScreen = () => {
           </BottomSheet.Content>
         </BottomSheet.Portal>
       </BottomSheet>
-    </View>
+    </>
   );
 };
 

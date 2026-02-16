@@ -32,11 +32,14 @@
 
 ## Navigation Rules
 
-- `src/app/graphs/_layout.tsx` の `Stack` を Graph/Pixel関連画面の標準ナビゲーションとして扱う
+- Graph/Pixel関連画面（`/graphs/*`）のヘッダーと戻る導線は `src/app/_layout.tsx` のルート `Stack` で管理する
 - Graph/Pixel関連画面では、画面内の戻るボタンよりStackヘッダーの戻る導線を優先する
 - Stackヘッダーを使う画面は上余白を二重にしない（`ScreenContainer` の `withTopInset` または同等の調整を行う）
-- `src/app/(tabs)/_layout.tsx` では Expo標準ヘッダーを有効化し、Home/Settingsのタイトル表示を統一する
+- `src/app/(tabs)/_layout.tsx` ではTabバーのみを管理し、Habits/Settingsのヘッダーは各タブ配下のStackで管理する
+- `src/app/(tabs)/home/_layout.tsx` と `src/app/(tabs)/settings/_layout.tsx` では Expo標準ヘッダーを使用する
+- iOSでは Habits/Settings の index 画面で `headerLargeTitle` を有効にし、スクロール連動で通常タイトルへ縮退させる
 - `src/app/(tabs)/settings/_layout.tsx` でSettings配下をStack管理し、`/settings/token` などの下位画面へ標準バック導線で遷移する
+- Graph/Pixel関連画面では独自の `headerLeft` 実装を避け、OS標準バック表示を優先する
 - Graph/Pixel関連画面の戻る導線はOS標準バック表示を優先し、独自の文字ラベル戻るボタンは採用しない
 - 通常導線は `router.push` / `router.back` を使い、セッション境界の遷移（ログイン完了・ログアウト・認証欠落時）は `router.replace` を使う
 
