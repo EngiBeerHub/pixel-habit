@@ -23,6 +23,7 @@ import {
 } from "react-hook-form";
 import {
   FlatList,
+  Keyboard,
   type NativeSyntheticEvent,
   RefreshControl,
   type TargetedEvent,
@@ -281,6 +282,7 @@ export const GraphListScreen = () => {
           queryKey: ["graphPixelsCompact", api.username],
         });
       }
+      Keyboard.dismiss();
       setIsQuickAddOpen(false);
       try {
         await notifyHaptics(NotificationFeedbackType.Success);
@@ -445,6 +447,7 @@ export const GraphListScreen = () => {
         onOpenChange={(isOpen) => {
           setIsQuickAddOpen(isOpen);
           if (!isOpen) {
+            Keyboard.dismiss();
             setSelectedGraph(null);
           }
         }}
