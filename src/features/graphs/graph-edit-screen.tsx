@@ -87,7 +87,11 @@ export const GraphEditScreen = () => {
   });
 
   return (
-    <ScrollView className="flex-1 bg-white px-6 pt-6 pb-6">
+    <ScrollView
+      className="flex-1 bg-white px-6 pt-6 pb-6"
+      showsHorizontalScrollIndicator={false}
+      showsVerticalScrollIndicator={false}
+    >
       {/* 画面ヘッダー: 編集対象グラフの文脈情報 */}
       <Text className="mb-2 font-bold text-2xl text-neutral-900">
         グラフ編集

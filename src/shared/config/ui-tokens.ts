@@ -2,40 +2,40 @@
  * サーフェス（面）に関する意味トークン。
  */
 export const surfaceTokens = {
-  accentSubtleClass: "bg-neutral-100",
-  cardClass: "bg-white",
-  dangerSubtleClass: "bg-red-50",
-  mutedClass: "bg-neutral-50",
-  screenClass: "bg-white",
-  successSubtleClass: "bg-green-50",
-  warningSubtleClass: "bg-amber-50",
+  accentSubtleClass: "bg-neutral-100 dark:bg-neutral-800",
+  cardClass: "bg-white dark:bg-neutral-900",
+  dangerSubtleClass: "bg-red-50 dark:bg-red-950/40",
+  mutedClass: "bg-neutral-50 dark:bg-neutral-900",
+  screenClass: "bg-white dark:bg-neutral-950",
+  successSubtleClass: "bg-green-50 dark:bg-green-950/40",
+  warningSubtleClass: "bg-amber-50 dark:bg-amber-950/40",
 } as const;
 
 /**
  * 枠線に関する意味トークン。
  */
 export const borderTokens = {
-  dangerClass: "border-red-200",
-  defaultClass: "border-neutral-200",
-  strongClass: "border-neutral-300",
-  successClass: "border-green-200",
-  warningClass: "border-amber-200",
+  dangerClass: "border-red-200 dark:border-red-800",
+  defaultClass: "border-neutral-200 dark:border-neutral-800",
+  strongClass: "border-neutral-300 dark:border-neutral-700",
+  successClass: "border-green-200 dark:border-green-800",
+  warningClass: "border-amber-200 dark:border-amber-800",
 } as const;
 
 /**
  * テキスト色に関する意味トークン。
  */
 export const textTokens = {
-  dangerClass: "text-red-700",
+  dangerClass: "text-red-700 dark:text-red-300",
   inverseClass: "text-white",
-  mutedClass: "text-neutral-500",
-  primaryClass: "text-neutral-900",
-  secondaryClass: "text-neutral-600",
-  successClass: "text-green-700",
-  tertiaryClass: "text-neutral-800",
-  warningClass: "text-amber-900",
-  warningEmphasisClass: "text-amber-800",
-  warningSubtleClass: "text-amber-700",
+  mutedClass: "text-neutral-500 dark:text-neutral-400",
+  primaryClass: "text-neutral-900 dark:text-neutral-50",
+  secondaryClass: "text-neutral-600 dark:text-neutral-300",
+  successClass: "text-green-700 dark:text-green-300",
+  tertiaryClass: "text-neutral-800 dark:text-neutral-100",
+  warningClass: "text-amber-900 dark:text-amber-200",
+  warningEmphasisClass: "text-amber-800 dark:text-amber-200",
+  warningSubtleClass: "text-amber-700 dark:text-amber-300",
 } as const;
 
 /**
@@ -66,9 +66,10 @@ export const radiusTokens = {
  * タイポグラフィに関する共通トークン。
  */
 export const typographyTokens = {
-  bodyClass: "text-neutral-600",
-  headingClass: "font-bold text-2xl text-neutral-900",
-  sectionTitleClass: "font-semibold text-lg text-neutral-900",
+  bodyClass: "text-neutral-600 dark:text-neutral-300",
+  headingClass: "font-bold text-2xl text-neutral-900 dark:text-neutral-50",
+  sectionTitleClass:
+    "font-semibold text-lg text-neutral-900 dark:text-neutral-50",
 } as const;
 
 /**

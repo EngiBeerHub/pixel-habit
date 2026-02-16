@@ -21,7 +21,12 @@ import { useSignIn } from "./use-sign-in";
 export const AuthSettingsScreen = () => {
   const router = useRouter();
   const signInMutation = useSignIn();
-  const { credentials: authCredentials, hasLoadError } = useAuthSession();
+  const {
+    credentials: authCredentials,
+    hasLoadError,
+    setAuthSession,
+    status,
+  } = useAuthSession();
   const {
     control,
     formState: { errors },
@@ -42,14 +47,20 @@ export const AuthSettingsScreen = () => {
     }
   }, [authCredentials, reset]);
 
+  useEffect(() => {
+    if (status === "authenticated" && authCredentials) {
+      router.replace("/(tabs)/home");
+    }
+  }, [authCredentials, router, status]);
+
   const loadError = hasLoadError
     ? "保存済みの接続情報を読み込めませんでした。"
     : null;
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      await signInMutation.mutateAsync(values);
-      router.replace("/(tabs)/home");
+      const nextCredentials = await signInMutation.mutateAsync(values);
+      await setAuthSession(nextCredentials);
     } catch (error) {
       const message =
         error instanceof Error

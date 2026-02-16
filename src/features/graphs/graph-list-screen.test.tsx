@@ -19,6 +19,7 @@ const mockAddPixel = jest.fn();
 const mockGetPixels = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
 const mockToastShow = jest.fn();
+const mockHapticsNotificationAsync = jest.fn();
 let consoleErrorSpy: jest.SpyInstance;
 
 /**
@@ -71,6 +72,14 @@ jest.mock("@gorhom/bottom-sheet", () => ({
       set: jest.fn(),
     },
   }),
+}));
+
+jest.mock("expo-haptics", () => ({
+  NotificationFeedbackType: {
+    Success: "success",
+  },
+  notificationAsync: (...args: unknown[]) =>
+    mockHapticsNotificationAsync(...args),
 }));
 
 jest.mock("heroui-native", () => {
@@ -307,6 +316,7 @@ describe("GraphListScreen", () => {
     });
     mockGetPixels.mockResolvedValue([]);
     mockToastShow.mockReset();
+    mockHapticsNotificationAsync.mockResolvedValue(undefined);
   });
 
   test("shows loading state while graph list is pending", async () => {
@@ -412,6 +422,7 @@ describe("GraphListScreen", () => {
         variant: "success",
       });
     });
+    expect(mockHapticsNotificationAsync).toHaveBeenCalledWith("success");
   });
 
   test("passes optionalData when quick add memo is filled", async () => {

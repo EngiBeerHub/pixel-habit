@@ -1,9 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { pixelaRequest } from "../../shared/api/client";
-import {
-  type AuthCredentials,
-  saveAuthCredentials,
-} from "../../shared/storage/auth-storage";
+import type { AuthCredentials } from "../../shared/storage/auth-storage";
 
 /**
  * ログイン処理で必要な入力値。
@@ -28,7 +25,6 @@ export const useSignIn = () => {
         path: `/v1/users/${credentials.username}/graphs`,
         token: credentials.token,
       });
-      await saveAuthCredentials(credentials);
       return credentials;
     },
   });

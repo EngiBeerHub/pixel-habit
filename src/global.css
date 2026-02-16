@@ -3,6 +3,16 @@
 
 @import "heroui-native/styles";
 
+@theme {
+  --color-surface: hsl(0 0% 100%);
+  --color-surface-muted: hsl(210 20% 98%);
+  --color-surface-dark: hsl(222 47% 11%);
+  --color-border-soft: hsl(214 32% 91%);
+  --color-border-dark: hsl(217 33% 17%);
+  --color-content: hsl(222 47% 11%);
+  --color-content-muted: hsl(215 16% 47%);
+}
+
 /* Path to the heroui-native lib inside node_modules relative to global.css */
 /* Examples:
  *   - If global.css is at project root: ./node_modules/heroui-native/lib

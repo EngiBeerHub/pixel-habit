@@ -8,24 +8,19 @@ import {
 import { SettingsScreen } from "./settings-screen";
 
 const mockReplace = jest.fn();
-const mockClearAuthCredentials = jest.fn();
-const mockShowAlert = jest.fn();
+const mockPush = jest.fn();
+const mockClearAuthSession = jest.fn();
+const mockOpenDialog = jest.fn();
 const mockCanOpenExternalUrl = jest.fn();
 const mockOpenExternalUrl = jest.fn();
-const mockSetAuthSession = jest.fn();
-const mockAuthedUpdateUserToken = jest.fn();
 const mockAuthedDeleteUser = jest.fn();
 
 const mockUseAuthSession = jest.fn();
 const mockUseAuthedPixelaApi = jest.fn();
 
-interface AlertButton {
-  onPress?: () => void;
-  text?: string;
-}
-
 jest.mock("expo-router", () => ({
   useRouter: () => ({
+    push: mockPush,
     replace: mockReplace,
   }),
 }));
@@ -34,8 +29,10 @@ jest.mock("../../shared/api/authed-pixela-api", () => ({
   useAuthedPixelaApi: (...args: unknown[]) => mockUseAuthedPixelaApi(...args),
 }));
 
-jest.mock("../../shared/platform/app-alert", () => ({
-  showAlert: (...args: unknown[]) => mockShowAlert(...args),
+jest.mock("../../shared/ui/app-dialog-provider", () => ({
+  useAppDialog: () => ({
+    open: (...args: unknown[]) => mockOpenDialog(...args),
+  }),
 }));
 
 jest.mock("../../shared/platform/app-linking", () => ({
@@ -47,38 +44,22 @@ jest.mock("../../shared/auth/use-auth-session", () => ({
   useAuthSession: (...args: unknown[]) => mockUseAuthSession(...args),
 }));
 
-jest.mock("../../shared/storage/auth-storage", () => ({
-  clearAuthCredentials: (...args: unknown[]) =>
-    mockClearAuthCredentials(...args),
-}));
-
 describe("SettingsScreen", () => {
   beforeEach(() => {
     jest.resetAllMocks();
     mockUseAuthSession.mockReturnValue({
-      clearAuthSession: mockClearAuthCredentials,
+      clearAuthSession: mockClearAuthSession,
       credentials: {
         token: "token-1234",
         username: "demo-user",
       },
-      hasLoadError: false,
-      refreshAuthSession: jest.fn(),
-      setAuthSession: mockSetAuthSession,
-      status: "authenticated",
+      setAuthSession: jest.fn(),
     });
-    mockClearAuthCredentials.mockResolvedValue(undefined);
-    mockSetAuthSession.mockResolvedValue(undefined);
-    mockShowAlert.mockImplementation(() => undefined);
+    mockClearAuthSession.mockResolvedValue(undefined);
     mockCanOpenExternalUrl.mockResolvedValue(true);
     mockOpenExternalUrl.mockResolvedValue(undefined);
     mockUseAuthedPixelaApi.mockReturnValue({
       deleteUser: (...args: unknown[]) => mockAuthedDeleteUser(...args),
-      updateUserToken: (...args: unknown[]) =>
-        mockAuthedUpdateUserToken(...args),
-    });
-    mockAuthedUpdateUserToken.mockResolvedValue({
-      isSuccess: true,
-      message: "トークン更新成功",
     });
     mockAuthedDeleteUser.mockResolvedValue({
       isSuccess: true,
@@ -86,37 +67,12 @@ describe("SettingsScreen", () => {
     });
   });
 
-  test("shows validation error for short token", async () => {
+  test("navigates to token update screen", () => {
     render(<SettingsScreen />);
 
-    fireEvent.changeText(screen.getByPlaceholderText("new-token"), "short");
-    fireEvent.press(screen.getByTestId("settings-update-token-button"));
+    fireEvent.press(screen.getByTestId("settings-open-token-screen-button"));
 
-    expect(
-      await screen.findByText("新しいトークンは8文字以上で入力してください。")
-    ).toBeTruthy();
-  });
-
-  test("updates token and stores credentials", async () => {
-    render(<SettingsScreen />);
-
-    fireEvent.changeText(
-      screen.getByPlaceholderText("new-token"),
-      "new-token-9999"
-    );
-    fireEvent.press(screen.getByTestId("settings-update-token-button"));
-
-    await waitFor(() => {
-      expect(mockAuthedUpdateUserToken).toHaveBeenCalledWith({
-        newToken: "new-token-9999",
-      });
-    });
-
-    expect(mockSetAuthSession).toHaveBeenCalledWith({
-      token: "new-token-9999",
-      username: "demo-user",
-    });
-    expect(await screen.findByText("トークン更新成功")).toBeTruthy();
+    expect(mockPush).toHaveBeenCalledWith("/settings/token");
   });
 
   test("logs out after confirmation", async () => {
@@ -124,40 +80,31 @@ describe("SettingsScreen", () => {
 
     fireEvent.press(screen.getByTestId("settings-logout-button"));
 
-    const buttons = mockShowAlert.mock.calls[0]?.[2] as
-      | AlertButton[]
+    const actions = mockOpenDialog.mock.calls[0]?.[0]?.actions as
+      | Array<{ label: string; onPress?: () => Promise<void> }>
       | undefined;
-    const logoutButton = buttons?.find(
-      (button) => button.text === "ログアウト"
+    const logoutAction = actions?.find(
+      (action) => action.label === "ログアウト"
     );
 
     await act(async () => {
-      await logoutButton?.onPress?.();
+      await logoutAction?.onPress?.();
     });
 
-    await waitFor(() => {
-      expect(mockClearAuthCredentials).toHaveBeenCalled();
-      expect(mockReplace).toHaveBeenCalledWith("/auth");
-    });
+    expect(mockClearAuthSession).toHaveBeenCalled();
+    expect(mockReplace).toHaveBeenCalledWith("/auth");
   });
 
-  test("shows auth missing error on token update", async () => {
+  test("shows auth missing error on delete user", async () => {
     mockUseAuthSession.mockReturnValue({
-      clearAuthSession: mockClearAuthCredentials,
+      clearAuthSession: mockClearAuthSession,
       credentials: null,
-      hasLoadError: false,
-      refreshAuthSession: jest.fn(),
-      setAuthSession: mockSetAuthSession,
-      status: "anonymous",
+      setAuthSession: jest.fn(),
     });
 
     render(<SettingsScreen />);
 
-    fireEvent.changeText(
-      screen.getByPlaceholderText("new-token"),
-      "new-token-9999"
-    );
-    fireEvent.press(screen.getByTestId("settings-update-token-button"));
+    fireEvent.press(screen.getByTestId("settings-delete-user-button"));
 
     expect(
       await screen.findByText(
@@ -166,44 +113,26 @@ describe("SettingsScreen", () => {
     ).toBeTruthy();
   });
 
-  test("shows API error when token update fails", async () => {
-    mockAuthedUpdateUserToken.mockRejectedValueOnce(
-      new Error("トークン更新失敗")
-    );
-
-    render(<SettingsScreen />);
-
-    fireEvent.changeText(
-      screen.getByPlaceholderText("new-token"),
-      "new-token-9999"
-    );
-    fireEvent.press(screen.getByTestId("settings-update-token-button"));
-
-    expect(await screen.findByText("トークン更新失敗")).toBeTruthy();
-  });
-
   test("shows API error when delete user fails", async () => {
     mockAuthedDeleteUser.mockRejectedValueOnce(new Error("ユーザー削除失敗"));
 
     render(<SettingsScreen />);
 
-    await waitFor(() => {
-      fireEvent.press(screen.getByTestId("settings-delete-user-button"));
-      expect(mockShowAlert).toHaveBeenCalled();
-    });
+    fireEvent.press(screen.getByTestId("settings-delete-user-button"));
 
-    const buttons = mockShowAlert.mock.calls[0]?.[2] as
-      | AlertButton[]
+    const actions = mockOpenDialog.mock.calls[0]?.[0]?.actions as
+      | Array<{ label: string; onPress?: () => Promise<void> }>
       | undefined;
-    const deleteButton = buttons?.find((button) => button.text === "削除する");
+    const deleteAction = actions?.find((action) => action.label === "削除する");
+
     await act(async () => {
-      await deleteButton?.onPress?.();
+      await deleteAction?.onPress?.();
     });
 
     expect(await screen.findByText("ユーザー削除失敗")).toBeTruthy();
   });
 
-  test("shows alert when external link cannot be opened", async () => {
+  test("shows dialog when external link cannot be opened", async () => {
     mockCanOpenExternalUrl.mockResolvedValueOnce(false);
 
     render(<SettingsScreen />);
@@ -211,9 +140,11 @@ describe("SettingsScreen", () => {
     fireEvent.press(screen.getByText("ウェブサイト"));
 
     await waitFor(() => {
-      expect(mockShowAlert).toHaveBeenCalledWith(
-        "エラー",
-        "リンクを開けませんでした。"
+      expect(mockOpenDialog).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: "リンクを開けませんでした。",
+          title: "エラー",
+        })
       );
     });
   });

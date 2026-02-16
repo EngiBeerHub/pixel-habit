@@ -14,6 +14,8 @@ const mockReplace = jest.fn();
 const mockPush = jest.fn();
 const mockMutateAsync = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
+const mockSaveAuthCredentials = jest.fn();
+let storedCredentials: { token: string; username: string } | null = null;
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
@@ -24,6 +26,7 @@ jest.mock("expo-router", () => ({
 
 jest.mock("../../shared/storage/auth-storage", () => ({
   loadAuthCredentials: (...args: unknown[]) => mockLoadAuthCredentials(...args),
+  saveAuthCredentials: (...args: unknown[]) => mockSaveAuthCredentials(...args),
 }));
 
 jest.mock("./use-sign-up", () => ({
@@ -75,7 +78,13 @@ describe("AuthSignUpScreen", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockLoadAuthCredentials.mockResolvedValue(null);
+    storedCredentials = null;
+    mockLoadAuthCredentials.mockImplementation(async () => storedCredentials);
+    mockSaveAuthCredentials.mockImplementation(
+      (credentials: { token: string; username: string }) => {
+        storedCredentials = credentials;
+      }
+    );
   });
 
   test("navigates to sign-in with push from auth flow", async () => {

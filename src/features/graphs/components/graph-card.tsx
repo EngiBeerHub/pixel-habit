@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import { Button, SkeletonGroup } from "heroui-native";
+import { memo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../../shared/api/authed-pixela-api";
 import type { GraphDefinition } from "../../../shared/api/graph";
@@ -25,7 +26,7 @@ export interface GraphCardProps {
 /**
  * グラフ1件分のカードを描画し、カード単位で14週ヒートマップを取得する。
  */
-export const GraphCard = ({
+const GraphCardBase = ({
   graph,
   isActionDisabled,
   onPressAddForDate,
@@ -137,3 +138,9 @@ export const GraphCard = ({
     </SectionCard>
   );
 };
+
+/**
+ * Home一覧の不要な再描画を抑えるため、GraphCardをメモ化する。
+ */
+export const GraphCard = memo(GraphCardBase);
+GraphCard.displayName = "GraphCard";

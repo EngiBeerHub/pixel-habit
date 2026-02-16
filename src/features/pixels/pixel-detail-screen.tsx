@@ -5,7 +5,7 @@ import { Button, Input, TextArea } from "heroui-native";
 import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
-import { showAlert } from "../../shared/platform/app-alert";
+import { useAppDialog } from "../../shared/ui/app-dialog-provider";
 import { type PixelEditFormValues, pixelEditSchema } from "./pixel-edit-schema";
 
 /**
@@ -30,6 +30,7 @@ export const PixelDetailScreen = () => {
   const initialOptionalData =
     typeof params.optionalData === "string" ? params.optionalData : "";
   const api = useAuthedPixelaApi();
+  const { open: openDialog } = useAppDialog();
 
   const {
     control,
@@ -65,14 +66,18 @@ export const PixelDetailScreen = () => {
     },
     onSuccess: async (response) => {
       await invalidatePixelRelatedQueries(queryClient);
-      showAlert("更新完了", response.message, [
-        {
-          onPress: () => {
-            router.back();
+      openDialog({
+        actions: [
+          {
+            label: "OK",
+            onPress: () => {
+              router.back();
+            },
           },
-          text: "OK",
-        },
-      ]);
+        ],
+        description: response.message,
+        title: "更新完了",
+      });
     },
   });
 
@@ -95,14 +100,18 @@ export const PixelDetailScreen = () => {
     },
     onSuccess: async (response) => {
       await invalidatePixelRelatedQueries(queryClient);
-      showAlert("削除完了", response.message, [
-        {
-          onPress: () => {
-            router.back();
+      openDialog({
+        actions: [
+          {
+            label: "OK",
+            onPress: () => {
+              router.back();
+            },
           },
-          text: "OK",
-        },
-      ]);
+        ],
+        description: response.message,
+        title: "削除完了",
+      });
     },
   });
 
@@ -117,23 +126,24 @@ export const PixelDetailScreen = () => {
    * ピクセル削除確認ダイアログを表示する。
    */
   const onPressDelete = () => {
-    showAlert(
-      "記録削除",
-      `${date} の記録を削除しますか？この操作は取り消せません。`,
-      [
+    openDialog({
+      actions: [
         {
-          style: "cancel",
-          text: "キャンセル",
+          label: "キャンセル",
+          role: "cancel",
         },
         {
+          label: "削除する",
           onPress: () => {
             deleteMutation.mutate();
           },
-          style: "destructive",
-          text: "削除する",
+          role: "destructive",
         },
-      ]
-    );
+      ],
+      description: `${date} の記録を削除しますか？この操作は取り消せません。`,
+      dismissible: false,
+      title: "記録削除",
+    });
   };
 
   return (
@@ -172,7 +182,7 @@ export const PixelDetailScreen = () => {
       )}
 
       {/* 任意メモ入力 */}
-      <Text className="mb-2 text-neutral-800">メモ（任意）</Text>
+      <Text className="mb-2 text-neutral-800">メモ</Text>
       <Controller
         control={control}
         name="optionalData"
@@ -205,6 +215,7 @@ export const PixelDetailScreen = () => {
         <Button
           isDisabled={updateMutation.isPending || deleteMutation.isPending}
           onPress={onPressDelete}
+          variant="danger-soft"
         >
           削除
         </Button>

@@ -34,6 +34,8 @@ export const ScreenContainer = ({
       <ScrollView
         className={mergeClassNames("flex-1", surfaceTokens.screenClass)}
         contentContainerClassName={contentClassNames}
+        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
       >
         {children}
       </ScrollView>

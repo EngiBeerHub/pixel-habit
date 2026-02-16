@@ -108,7 +108,7 @@ Settingsは現在 `src/features/settings/settings-screen.tsx` に集約されて
 
 - Home/Navigationは `expo-router` + `heroui-native` の標準コンポーネントを優先する。
 - セル押下フィードバックは `heroui-native` の `PressableFeedback` を利用する。
-- 削除確認などのDialog統一は次フェーズで `useAppDialog` インターフェースへ移行する。
+- 削除確認などのDialog統一は `useAppDialog` インターフェースへ段階移行済み。
 - Hapticsは `expo-haptics` を導入し、主要操作限定で使用する。
 
 ---

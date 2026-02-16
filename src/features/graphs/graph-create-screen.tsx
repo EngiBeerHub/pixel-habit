@@ -73,7 +73,11 @@ export const GraphCreateScreen = () => {
   });
 
   return (
-    <ScrollView className="flex-1 bg-white px-6 pt-6 pb-6">
+    <ScrollView
+      className="flex-1 bg-white px-6 pt-6 pb-6"
+      showsHorizontalScrollIndicator={false}
+      showsVerticalScrollIndicator={false}
+    >
       {/* 画面ヘッダー: 作成目的の説明 */}
       <Text className="mb-2 font-bold text-2xl text-neutral-900">
         グラフ作成

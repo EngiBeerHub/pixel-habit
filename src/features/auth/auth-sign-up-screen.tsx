@@ -21,7 +21,7 @@ import { useSignUp } from "./use-sign-up";
 export const AuthSignUpScreen = () => {
   const router = useRouter();
   const signUpMutation = useSignUp();
-  const { credentials, status } = useAuthSession();
+  const { credentials, setAuthSession, status } = useAuthSession();
   const {
     control,
     formState: { errors },
@@ -46,8 +46,8 @@ export const AuthSignUpScreen = () => {
    */
   const onSubmit = handleSubmit(async (values) => {
     try {
-      await signUpMutation.mutateAsync(values);
-      router.replace("/(tabs)/home");
+      const nextCredentials = await signUpMutation.mutateAsync(values);
+      await setAuthSession(nextCredentials);
     } catch (error) {
       const message =
         error instanceof Error

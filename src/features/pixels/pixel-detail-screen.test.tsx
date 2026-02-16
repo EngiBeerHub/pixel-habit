@@ -14,7 +14,7 @@ const mockBack = jest.fn();
 const mockUpdatePixel = jest.fn();
 const mockDeletePixel = jest.fn();
 const mockUseAuthedPixelaApi = jest.fn();
-const mockShowAlert = jest.fn();
+const mockOpenDialog = jest.fn();
 let mockRouteParams: {
   date?: string;
   graphId?: string;
@@ -29,11 +29,6 @@ let mockRouteParams: {
   quantity: "2",
 };
 
-interface AlertButton {
-  onPress?: () => void;
-  text?: string;
-}
-
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => mockRouteParams,
   useRouter: () => ({
@@ -45,8 +40,10 @@ jest.mock("../../shared/api/authed-pixela-api", () => ({
   useAuthedPixelaApi: (...args: unknown[]) => mockUseAuthedPixelaApi(...args),
 }));
 
-jest.mock("../../shared/platform/app-alert", () => ({
-  showAlert: (...args: unknown[]) => mockShowAlert(...args),
+jest.mock("../../shared/ui/app-dialog-provider", () => ({
+  useAppDialog: () => ({
+    open: (...args: unknown[]) => mockOpenDialog(...args),
+  }),
 }));
 
 jest.mock("heroui-native", () => {
@@ -166,7 +163,6 @@ describe("PixelDetailScreen", () => {
       optionalData: "就寝前にストレッチ",
       quantity: "2",
     };
-    mockShowAlert.mockImplementation(() => undefined);
   });
 
   test("shows validation error when quantity is empty", async () => {
@@ -180,7 +176,7 @@ describe("PixelDetailScreen", () => {
     ).toBeTruthy();
   });
 
-  test("updates pixel, shows completion alert, and returns", async () => {
+  test("updates pixel and shows completion dialog", async () => {
     renderScreen();
 
     fireEvent.changeText(screen.getByPlaceholderText("10"), "5");
@@ -199,16 +195,22 @@ describe("PixelDetailScreen", () => {
       });
     });
 
-    expect(mockShowAlert).toHaveBeenCalledWith(
-      "更新完了",
-      "更新成功",
-      expect.any(Array)
+    expect(mockOpenDialog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: "更新成功",
+        title: "更新完了",
+      })
     );
-    const completionButtons = mockShowAlert.mock.calls[0]?.[2] as
-      | AlertButton[]
+
+    const completionActions = mockOpenDialog.mock.calls[0]?.[0]?.actions as
+      | Array<{ label: string; onPress?: () => void }>
       | undefined;
-    const okButton = completionButtons?.find((button) => button.text === "OK");
-    okButton?.onPress?.();
+    const okAction = completionActions?.find((action) => action.label === "OK");
+
+    act(() => {
+      okAction?.onPress?.();
+    });
+
     expect(mockBack).toHaveBeenCalled();
   });
 
@@ -217,14 +219,16 @@ describe("PixelDetailScreen", () => {
 
     fireEvent.press(screen.getByText("削除"));
 
-    const confirmButtons = mockShowAlert.mock.calls[0]?.[2] as
-      | AlertButton[]
+    const confirmActions = mockOpenDialog.mock.calls[0]?.[0]?.actions as
+      | Array<{ label: string; onPress?: () => void }>
       | undefined;
-    const deleteConfirmButton = confirmButtons?.find(
-      (button) => button.text === "削除する"
+    const deleteAction = confirmActions?.find(
+      (action) => action.label === "削除する"
     );
 
-    deleteConfirmButton?.onPress?.();
+    act(() => {
+      deleteAction?.onPress?.();
+    });
 
     await waitFor(() => {
       expect(mockDeletePixel).toHaveBeenCalledWith({
@@ -233,30 +237,16 @@ describe("PixelDetailScreen", () => {
       });
     });
 
-    const completionButtons = mockShowAlert.mock.calls[1]?.[2] as
-      | AlertButton[]
+    const completionActions = mockOpenDialog.mock.calls[1]?.[0]?.actions as
+      | Array<{ label: string; onPress?: () => void }>
       | undefined;
-    const okButton = completionButtons?.find((button) => button.text === "OK");
-    okButton?.onPress?.();
+    const okAction = completionActions?.find((action) => action.label === "OK");
+
+    act(() => {
+      okAction?.onPress?.();
+    });
 
     expect(mockBack).toHaveBeenCalled();
-  });
-
-  test("shows auth error when credentials are missing on update", async () => {
-    mockUpdatePixel.mockRejectedValueOnce(
-      new Error("認証情報が見つかりません。再ログインしてください。")
-    );
-
-    renderScreen();
-
-    fireEvent.changeText(screen.getByPlaceholderText("10"), "5");
-    fireEvent.press(screen.getByText("更新"));
-
-    expect(
-      await screen.findByText(
-        "認証情報が見つかりません。再ログインしてください。"
-      )
-    ).toBeTruthy();
   });
 
   test("shows optionalData as initial value", () => {

@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { Button } from "heroui-native";
-import { useMemo, useState } from "react";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { Button, Tabs } from "heroui-native";
+import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import type { Pixel } from "../../shared/api/pixel";
@@ -15,14 +15,17 @@ import {
   getCalendarYearRange,
 } from "../../shared/lib/calendar-range";
 import { mergeClassNames } from "../../shared/lib/class-name";
-import { showAlert } from "../../shared/platform/app-alert";
+import { useAppDialog } from "../../shared/ui/app-dialog-provider";
 import { ScreenContainer } from "../../shared/ui/screen-container";
 import { SectionCard } from "../../shared/ui/section-card";
 
 /**
- * グラフ詳細画面で表示する軽量統計情報。
+ * Graph詳細画面で表示する統計情報。
  */
 interface GraphDetailSummary {
+  averagePerRecordedDayText: string;
+  currentStreakDays: number;
+  longestStreakDays: number;
   maxQuantityText: string;
   positiveRecordCount: number;
   totalQuantityText: string;
@@ -33,12 +36,16 @@ interface GraphDetailSummary {
  */
 const RECORD_MEMO_PREVIEW_MAX_LENGTH = 24;
 const RECORD_MEMO_WHITESPACE_PATTERN = /\s+/g;
+const YYYY_MM_DD_PATTERN = /^\d{8}$/;
+const TRAILING_DECIMAL_ZERO_PATTERN = /\.?0+$/;
 
 /**
  * Graph詳細画面。Month/Yearで記録を確認する。
  */
 export const GraphDetailScreen = () => {
   const router = useRouter();
+  const navigation = useNavigation();
+  const { open: openDialog } = useAppDialog();
   const params = useLocalSearchParams<{
     color?: string;
     graphId?: string;
@@ -56,6 +63,12 @@ export const GraphDetailScreen = () => {
   const [mode, setMode] = useState<CalendarMode>("month");
   const { credentials, hasLoadError, status } = useAuthSession();
   const api = useAuthedPixelaApi();
+
+  useEffect(() => {
+    navigation.setOptions({
+      title: graphName,
+    });
+  }, [graphName, navigation]);
 
   const activeRange = useMemo(() => {
     if (mode === "month") {
@@ -121,59 +134,66 @@ export const GraphDetailScreen = () => {
         error instanceof Error
           ? error.message
           : "グラフ削除に失敗しました。再度お試しください。";
-      showAlert("削除エラー", message);
+      openDialog({
+        actions: [{ label: "OK" }],
+        description: message,
+        title: "削除エラー",
+      });
     },
     onSuccess: (response) => {
-      showAlert("削除完了", response.message);
-      router.replace("/(tabs)/home");
+      openDialog({
+        actions: [
+          {
+            label: "OK",
+            onPress: () => {
+              router.replace("/(tabs)/home");
+            },
+          },
+        ],
+        description: response.message,
+        title: "削除完了",
+      });
     },
   });
 
-  const onPressOpenGraphActions = () => {
-    showAlert(graphName, "操作を選択してください。", [
-      {
-        onPress: () => {
-          router.push({
-            params: {
-              color: graphColor,
-              graphId,
-              graphName,
-              timezone: graphTimezone,
-              unit: graphUnit,
-            },
-            pathname: "/graphs/[graphId]/edit",
-          });
+  /**
+   * グラフ編集画面へ遷移する。
+   */
+  const onPressOpenGraphEdit = () => {
+    router.push({
+      params: {
+        color: graphColor,
+        graphId,
+        graphName,
+        timezone: graphTimezone,
+        unit: graphUnit,
+      },
+      pathname: "/graphs/[graphId]/edit",
+    });
+  };
+
+  /**
+   * グラフ削除確認ダイアログを表示する。
+   */
+  const onPressDeleteGraph = () => {
+    openDialog({
+      actions: [
+        {
+          label: "キャンセル",
+          role: "cancel",
         },
-        text: "編集",
-      },
-      {
-        onPress: () => {
-          showAlert(
-            "グラフ削除",
-            `${graphName} を削除しますか？この操作は取り消せません。`,
-            [
-              {
-                style: "cancel",
-                text: "キャンセル",
-              },
-              {
-                onPress: () => {
-                  deleteMutation.mutate();
-                },
-                style: "destructive",
-                text: "削除する",
-              },
-            ]
-          );
+        {
+          label: "削除する",
+          onPress: () => {
+            deleteMutation.mutate();
+          },
+          role: "destructive",
         },
-        style: "destructive",
-        text: "削除",
-      },
-      {
-        style: "cancel",
-        text: "キャンセル",
-      },
-    ]);
+      ],
+      description: `${graphName} を削除しますか？この操作は取り消せません。`,
+      dismissible: false,
+      title: "グラフ削除",
+    });
   };
 
   /**
@@ -194,7 +214,7 @@ export const GraphDetailScreen = () => {
 
   return (
     <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
-      {/* 画面上部: タイトルと対象グラフ */}
+      {/* 画面上部: タイトルと管理操作 */}
       <View className="mb-1 flex-row items-center justify-between gap-2">
         <View className="flex-1 gap-2">
           <Text
@@ -211,45 +231,66 @@ export const GraphDetailScreen = () => {
             ID: {graphId || "-"}
           </Text>
         </View>
-        <Button
-          isDisabled={deleteMutation.isPending || !graphId}
-          isIconOnly
-          onPress={onPressOpenGraphActions}
-          size="sm"
-          testID="graph-detail-menu-button"
-          variant="tertiary"
-        >
-          <Ionicons name="ellipsis-horizontal" size={16} />
-        </Button>
+        <View className="flex-row items-center gap-2">
+          <Button
+            isDisabled={!graphId}
+            isIconOnly
+            onPress={onPressOpenGraphEdit}
+            size="sm"
+            testID="graph-detail-edit-button"
+            variant="secondary"
+          >
+            <Ionicons name="create-outline" size={16} />
+          </Button>
+          <Button
+            isDisabled={deleteMutation.isPending || !graphId}
+            isIconOnly
+            onPress={onPressDeleteGraph}
+            size="sm"
+            testID="graph-detail-delete-button"
+            variant="danger-soft"
+          >
+            <Ionicons name="trash-outline" size={16} />
+          </Button>
+        </View>
       </View>
 
       {/* 表示モード切替: Month=暦月、Year=暦年 */}
       <SectionCard>
         <View className="gap-3">
-          <View className="flex-row gap-2">
-            <Button
-              isDisabled={mode === "month"}
-              onPress={() => {
-                setMode("month");
-              }}
-              size="sm"
-              testID="graph-detail-mode-month"
-              variant={mode === "month" ? "primary" : "secondary"}
-            >
-              Month
-            </Button>
-            <Button
-              isDisabled={mode === "year"}
-              onPress={() => {
-                setMode("year");
-              }}
-              size="sm"
-              testID="graph-detail-mode-year"
-              variant={mode === "year" ? "primary" : "secondary"}
-            >
-              Year
-            </Button>
-          </View>
+          <Tabs
+            onValueChange={(value) => {
+              if (value === "month" || value === "year") {
+                setMode(value);
+              }
+            }}
+            value={mode}
+            variant="primary"
+          >
+            <Tabs.List>
+              <Tabs.Indicator />
+              <Tabs.Trigger
+                onPress={() => {
+                  setMode("month");
+                }}
+                testID="graph-detail-mode-month"
+                value="month"
+              >
+                <Tabs.Label>Month</Tabs.Label>
+              </Tabs.Trigger>
+              <Tabs.Trigger
+                onPress={() => {
+                  setMode("year");
+                }}
+                testID="graph-detail-mode-year"
+                value="year"
+              >
+                <Tabs.Label>Year</Tabs.Label>
+              </Tabs.Trigger>
+            </Tabs.List>
+            <Tabs.Content value="month" />
+            <Tabs.Content value="year" />
+          </Tabs>
           <Text
             className={mergeClassNames("text-xs", textTokens.mutedClass)}
             testID="graph-detail-mode-help"
@@ -267,7 +308,7 @@ export const GraphDetailScreen = () => {
       </SectionCard>
 
       {/* データ取得中 */}
-      {query.isLoading ? (
+      {query.isPending ? (
         <View className="items-center justify-center py-6">
           <ActivityIndicator />
           <Text className={mergeClassNames("mt-2", textTokens.secondaryClass)}>
@@ -277,7 +318,7 @@ export const GraphDetailScreen = () => {
       ) : null}
 
       {/* 取得失敗時の表示 */}
-      {!query.isLoading && errorMessage ? (
+      {!query.isPending && errorMessage ? (
         <SectionCard
           className={mergeClassNames("border", borderTokens.dangerClass)}
           tone="danger"
@@ -303,9 +344,9 @@ export const GraphDetailScreen = () => {
       ) : null}
 
       {/* 取得成功時の統計と記録一覧 */}
-      {query.isLoading || errorMessage ? null : (
+      {query.isPending || errorMessage ? null : (
         <View className="gap-3">
-          <SectionCard title="Light統計">
+          <SectionCard title="統計">
             <View className="gap-1">
               <Text className="text-neutral-700 text-sm">
                 合計: {summary.totalQuantityText}
@@ -314,7 +355,16 @@ export const GraphDetailScreen = () => {
                 記録日数: {summary.positiveRecordCount}
               </Text>
               <Text className="text-neutral-700 text-sm">
-                最大値: {summary.maxQuantityText}
+                最大: {summary.maxQuantityText}
+              </Text>
+              <Text className="text-neutral-700 text-sm">
+                平均(記録日): {summary.averagePerRecordedDayText}
+              </Text>
+              <Text className="text-neutral-700 text-sm">
+                現在連続日数: {summary.currentStreakDays}
+              </Text>
+              <Text className="text-neutral-700 text-sm">
+                最長連続日数: {summary.longestStreakDays}
               </Text>
             </View>
           </SectionCard>
@@ -340,13 +390,29 @@ export const GraphDetailScreen = () => {
                       }}
                       testID={`graph-detail-record-${pixel.date}`}
                     >
-                      {/**
-                       * optionalData は一覧過密化を避けるため、要約が存在する行のみ表示する。
-                       */}
+                      <View className="flex-row items-start justify-between gap-2">
+                        <Text
+                          className={mergeClassNames(
+                            "font-medium text-sm",
+                            textTokens.primaryClass
+                          )}
+                        >
+                          {formatRecordDate(pixel.date)}
+                        </Text>
+                        <Text
+                          className={mergeClassNames(
+                            "text-sm",
+                            textTokens.secondaryClass
+                          )}
+                        >
+                          {formatQuantityLabel(pixel.quantity, graphUnit)}
+                        </Text>
+                      </View>
+
                       {memoPreview ? (
                         <Text
                           className={mergeClassNames(
-                            "mb-2 text-xs",
+                            "mt-2 text-xs",
                             textTokens.mutedClass
                           )}
                           numberOfLines={1}
@@ -355,27 +421,6 @@ export const GraphDetailScreen = () => {
                           {memoPreview}
                         </Text>
                       ) : null}
-                      <View className="flex-row items-center justify-between">
-                        <View className="gap-1">
-                          <Text
-                            className={mergeClassNames(
-                              "font-medium text-sm",
-                              textTokens.primaryClass
-                            )}
-                          >
-                            {pixel.date}
-                          </Text>
-                          <Text
-                            className={mergeClassNames(
-                              "text-sm",
-                              textTokens.secondaryClass
-                            )}
-                          >
-                            数量: {pixel.quantity || "-"}
-                          </Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={14} />
-                      </View>
                     </Pressable>
                   );
                 })}
@@ -389,28 +434,40 @@ export const GraphDetailScreen = () => {
 };
 
 /**
- * 取得済みピクセル配列からLight統計を算出する。
+ * 取得済みピクセル配列からGraph詳細統計を算出する。
  */
 const buildGraphDetailSummary = (pixels: Pixel[]): GraphDetailSummary => {
-  const positiveValues = pixels
-    .map((pixel) => Number(pixel.quantity))
-    .filter((value) => Number.isFinite(value) && value >= 1);
+  const positiveEntries = pixels
+    .map((pixel) => ({
+      date: pixel.date,
+      quantity: Number(pixel.quantity),
+    }))
+    .filter((entry) => Number.isFinite(entry.quantity) && entry.quantity >= 1);
 
-  if (positiveValues.length === 0) {
+  if (positiveEntries.length === 0) {
     return {
+      averagePerRecordedDayText: "-",
+      currentStreakDays: 0,
+      longestStreakDays: 0,
       maxQuantityText: "-",
       positiveRecordCount: 0,
       totalQuantityText: "0",
     };
   }
 
-  const total = positiveValues.reduce((sum, value) => sum + value, 0);
-  const max = Math.max(...positiveValues);
+  const total = positiveEntries.reduce((sum, entry) => sum + entry.quantity, 0);
+  const max = Math.max(...positiveEntries.map((entry) => entry.quantity));
+  const average = total / positiveEntries.length;
+
+  const positiveDates = new Set(positiveEntries.map((entry) => entry.date));
 
   return {
-    maxQuantityText: String(max),
-    positiveRecordCount: positiveValues.length,
-    totalQuantityText: String(total),
+    averagePerRecordedDayText: formatNumber(average),
+    currentStreakDays: resolveCurrentStreak(positiveDates),
+    longestStreakDays: resolveLongestStreak(positiveDates),
+    maxQuantityText: formatNumber(max),
+    positiveRecordCount: positiveEntries.length,
+    totalQuantityText: formatNumber(total),
   };
 };
 
@@ -429,4 +486,142 @@ const toRecordMemoPreview = (memo: string | undefined): string | null => {
     return trimmed;
   }
   return `${trimmed.slice(0, RECORD_MEMO_PREVIEW_MAX_LENGTH)}…`;
+};
+
+/**
+ * `yyyyMMdd` を `yyyy/MM/dd (EEE)` へ整形する。
+ */
+const formatRecordDate = (value: string): string => {
+  if (!YYYY_MM_DD_PATTERN.test(value)) {
+    return value;
+  }
+
+  const parsedDate = parseYyyyMmDd(value);
+  if (!parsedDate) {
+    return value;
+  }
+
+  const weekday = parsedDate.toLocaleDateString("ja-JP", {
+    weekday: "short",
+  });
+  const yyyy = value.slice(0, 4);
+  const mm = value.slice(4, 6);
+  const dd = value.slice(6, 8);
+  return `${yyyy}/${mm}/${dd} (${weekday})`;
+};
+
+/**
+ * 数量表示に単位を付与して返す。
+ */
+const formatQuantityLabel = (quantity: string, unit: string): string => {
+  if (!quantity) {
+    return "-";
+  }
+  return unit ? `${quantity} ${unit}` : quantity;
+};
+
+/**
+ * 統計表示向けに数値文字列を整形する。
+ */
+const formatNumber = (value: number): string => {
+  if (!Number.isFinite(value)) {
+    return "-";
+  }
+  if (Number.isInteger(value)) {
+    return String(value);
+  }
+  const fixed = value.toFixed(2);
+  return fixed.replace(TRAILING_DECIMAL_ZERO_PATTERN, "");
+};
+
+/**
+ * 現在連続日数を算出する。
+ */
+const resolveCurrentStreak = (positiveDates: Set<string>): number => {
+  let streak = 0;
+  const currentDate = getTodayDate();
+
+  while (positiveDates.has(formatDate(currentDate))) {
+    streak += 1;
+    currentDate.setDate(currentDate.getDate() - 1);
+  }
+
+  return streak;
+};
+
+/**
+ * 最長連続日数を算出する。
+ */
+const resolveLongestStreak = (positiveDates: Set<string>): number => {
+  const sortedDates = [...positiveDates].sort();
+  if (sortedDates.length === 0) {
+    return 0;
+  }
+
+  let longestStreak = 1;
+  let currentStreak = 1;
+
+  for (let index = 1; index < sortedDates.length; index += 1) {
+    const previousDate = parseYyyyMmDd(sortedDates[index - 1]);
+    const currentDate = parseYyyyMmDd(sortedDates[index]);
+
+    if (!(previousDate && currentDate)) {
+      currentStreak = 1;
+      continue;
+    }
+
+    const differenceInDays =
+      (currentDate.getTime() - previousDate.getTime()) / (1000 * 60 * 60 * 24);
+
+    if (differenceInDays === 1) {
+      currentStreak += 1;
+    } else {
+      currentStreak = 1;
+    }
+
+    if (currentStreak > longestStreak) {
+      longestStreak = currentStreak;
+    }
+  }
+
+  return longestStreak;
+};
+
+/**
+ * 端末現在日付を時刻ゼロで返す。
+ */
+const getTodayDate = (): Date => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+};
+
+/**
+ * `yyyyMMdd` 形式へ正規化する。
+ */
+const formatDate = (date: Date): string => {
+  const yyyy = String(date.getFullYear());
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}${mm}${dd}`;
+};
+
+/**
+ * `yyyyMMdd` 文字列をDateへ変換する。
+ */
+const parseYyyyMmDd = (value: string): Date | null => {
+  if (!YYYY_MM_DD_PATTERN.test(value)) {
+    return null;
+  }
+  const year = Number(value.slice(0, 4));
+  const monthIndex = Number(value.slice(4, 6)) - 1;
+  const day = Number(value.slice(6, 8));
+  const parsed = new Date(year, monthIndex, day);
+  if (
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== monthIndex ||
+    parsed.getDate() !== day
+  ) {
+    return null;
+  }
+  return parsed;
 };

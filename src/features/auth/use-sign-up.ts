@@ -1,9 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { createUser } from "../../shared/api/user";
-import {
-  type AuthCredentials,
-  saveAuthCredentials,
-} from "../../shared/storage/auth-storage";
+import type { AuthCredentials } from "../../shared/storage/auth-storage";
 
 /**
  * アカウント作成処理で必要な入力値。
@@ -27,7 +24,6 @@ export const useSignUp = () => {
         token: credentials.token,
         username: credentials.username,
       });
-      await saveAuthCredentials(credentials);
       return credentials;
     },
   });

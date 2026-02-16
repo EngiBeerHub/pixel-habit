@@ -1,16 +1,15 @@
 import { useRouter } from "expo-router";
-import { Button, Input } from "heroui-native";
+import { Button } from "heroui-native";
 import { useMemo, useState } from "react";
 import { Text } from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
-import { showAlert } from "../../shared/platform/app-alert";
 import {
   canOpenExternalUrl,
   openExternalUrl,
 } from "../../shared/platform/app-linking";
 import { ActionStack } from "../../shared/ui/action-stack";
-import { FormField } from "../../shared/ui/form-field";
+import { useAppDialog } from "../../shared/ui/app-dialog-provider";
 import { InlineMessage } from "../../shared/ui/inline-message";
 import { ScreenContainer } from "../../shared/ui/screen-container";
 import { SectionCard } from "../../shared/ui/section-card";
@@ -20,16 +19,13 @@ import { SectionCard } from "../../shared/ui/section-card";
  */
 export const SettingsScreen = () => {
   const router = useRouter();
-  const { clearAuthSession, credentials, setAuthSession } = useAuthSession();
+  const { open: openDialog } = useAppDialog();
+  const { clearAuthSession, credentials } = useAuthSession();
   const api = useAuthedPixelaApi();
-  const [tokenOverride, setTokenOverride] = useState<string | null>(null);
-  const [newToken, setNewToken] = useState<string>("");
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const username = credentials?.username ?? null;
-  const currentToken = tokenOverride ?? credentials?.token ?? null;
   const profileUrl = useMemo(() => {
     if (!username) {
       return "https://pixe.la";
@@ -38,12 +34,16 @@ export const SettingsScreen = () => {
   }, [username]);
 
   /**
-   * 外部リンクを開く。開けない場合はエラーダイアログを表示する。
+   * 外部リンクを開く。開けない場合はダイアログを表示する。
    */
   const onOpenExternalLink = async (url: string) => {
     const canOpen = await canOpenExternalUrl(url);
     if (!canOpen) {
-      showAlert("エラー", "リンクを開けませんでした。");
+      openDialog({
+        actions: [{ label: "OK" }],
+        description: "リンクを開けませんでした。",
+        title: "エラー",
+      });
       return;
     }
     await openExternalUrl(url);
@@ -61,87 +61,53 @@ export const SettingsScreen = () => {
    * ログアウト確認ダイアログを表示する。
    */
   const onPressLogout = () => {
-    showAlert("ログアウト", "ログアウトしますか？", [
-      {
-        style: "cancel",
-        text: "キャンセル",
-      },
-      {
-        onPress: async () => {
-          await onLogout();
+    openDialog({
+      actions: [
+        {
+          label: "キャンセル",
+          role: "cancel",
         },
-        style: "destructive",
-        text: "ログアウト",
-      },
-    ]);
-  };
-
-  /**
-   * トークン更新APIを実行し、成功時はローカル保存済みトークンを同期する。
-   */
-  const onPressUpdateToken = async () => {
-    if (!(username && currentToken)) {
-      setErrorMessage("認証情報が見つかりません。再ログインしてください。");
-      return;
-    }
-
-    const normalizedToken = newToken.trim();
-    if (normalizedToken.length < 8) {
-      setErrorMessage("新しいトークンは8文字以上で入力してください。");
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      setErrorMessage(null);
-      setMessage(null);
-      const response = await api.updateUserToken({
-        newToken: normalizedToken,
-      });
-      await setAuthSession({
-        token: normalizedToken,
-        username,
-      });
-      setTokenOverride(normalizedToken);
-      setNewToken("");
-      setMessage(response.message);
-    } catch (error) {
-      const messageText =
-        error instanceof Error
-          ? error.message
-          : "トークン更新に失敗しました。再度お試しください。";
-      setErrorMessage(messageText);
-    } finally {
-      setIsSubmitting(false);
-    }
+        {
+          label: "ログアウト",
+          onPress: async () => {
+            await onLogout();
+          },
+          role: "destructive",
+        },
+      ],
+      description: "ログアウトしますか？",
+      dismissible: false,
+      title: "ログアウト",
+    });
   };
 
   /**
    * ユーザー削除確認ダイアログを表示する。
    */
   const onPressDeleteUser = () => {
-    if (!(username && currentToken)) {
+    if (!username) {
       setErrorMessage("認証情報が見つかりません。再ログインしてください。");
       return;
     }
 
-    showAlert(
-      "ユーザー削除",
-      "この操作は取り消せません。ユーザーを削除しますか？",
-      [
+    openDialog({
+      actions: [
         {
-          style: "cancel",
-          text: "キャンセル",
+          label: "キャンセル",
+          role: "cancel",
         },
         {
+          label: "削除する",
           onPress: async () => {
             await onConfirmDeleteUser();
           },
-          style: "destructive",
-          text: "削除する",
+          role: "destructive",
         },
-      ]
-    );
+      ],
+      description: "この操作は取り消せません。ユーザーを削除しますか？",
+      dismissible: false,
+      title: "ユーザー削除",
+    });
   };
 
   /**
@@ -151,7 +117,6 @@ export const SettingsScreen = () => {
     try {
       setIsSubmitting(true);
       setErrorMessage(null);
-      setMessage(null);
       await api.deleteUser();
       await clearAuthSession();
       router.replace("/auth");
@@ -168,30 +133,17 @@ export const SettingsScreen = () => {
 
   return (
     <ScreenContainer scrollable withTopInset={false}>
-      {/* 画面冒頭説明: ヘッダーはTabs標準を使い、説明文のみ本文に残す */}
       <Text className="mb-6 text-neutral-600">
-        アカウントとアプリ情報を管理します。
+        アカウント管理と外部リンクです。
       </Text>
 
-      {/* ユーザーセクション: トークン更新とプロフィール導線 */}
-      <SectionCard className="mb-6" title="ユーザー">
-        <FormField label="新しいトークン">
-          <Input
-            autoCapitalize="none"
-            autoCorrect={false}
-            className="text-base"
-            onChangeText={setNewToken}
-            placeholder="new-token"
-            secureTextEntry
-            value={newToken}
-            variant="secondary"
-          />
-        </FormField>
+      <SectionCard className="mb-6" title="アカウント管理">
         <ActionStack>
           <Button
-            isDisabled={isSubmitting}
-            onPress={onPressUpdateToken}
-            testID="settings-update-token-button"
+            onPress={() => {
+              router.push("/settings/token");
+            }}
+            testID="settings-open-token-screen-button"
           >
             トークン変更
           </Button>
@@ -205,15 +157,6 @@ export const SettingsScreen = () => {
         </ActionStack>
       </SectionCard>
 
-      {/* アプリセクション: アプリ関連リンク（現時点は準備中） */}
-      <SectionCard className="mb-6" title="アプリ">
-        <ActionStack>
-          <Button isDisabled>プライバシーポリシー（準備中）</Button>
-          <Button isDisabled>利用規約（準備中）</Button>
-        </ActionStack>
-      </SectionCard>
-
-      {/* Pixelaセクション: 外部サイト/規約リンク */}
       <SectionCard className="mb-6" title="Pixela">
         <ActionStack>
           <Button
@@ -240,13 +183,13 @@ export const SettingsScreen = () => {
         </ActionStack>
       </SectionCard>
 
-      {/* 危険操作セクション: アカウント削除とログアウト */}
       <SectionCard title="危険操作" tone="danger">
         <ActionStack>
           <Button
             isDisabled={isSubmitting}
             onPress={onPressDeleteUser}
             testID="settings-delete-user-button"
+            variant="danger-soft"
           >
             ユーザー削除
           </Button>
@@ -254,17 +197,13 @@ export const SettingsScreen = () => {
             isDisabled={isSubmitting}
             onPress={onPressLogout}
             testID="settings-logout-button"
+            variant="danger-soft"
           >
             ログアウト
           </Button>
         </ActionStack>
       </SectionCard>
 
-      {/* API成功メッセージ */}
-      {message ? (
-        <InlineMessage className="mt-4" message={message} variant="success" />
-      ) : null}
-      {/* API失敗メッセージ */}
       {errorMessage ? (
         <InlineMessage
           className="mt-4"

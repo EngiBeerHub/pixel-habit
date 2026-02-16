@@ -1,20 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
 import { Button } from "heroui-native";
+import { useColorScheme } from "react-native";
 
 /**
  * Home / Settings の2タブレイアウト。
  */
 export default function TabLayout() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const activeTintColor = colorScheme === "dark" ? "#38bdf8" : "#0f766e";
+  const inactiveTintColor = colorScheme === "dark" ? "#9ca3af" : "#737373";
 
   return (
     <Tabs
       screenOptions={{
         headerShadowVisible: false,
         headerShown: true,
-        tabBarActiveTintColor: "#0f766e",
-        tabBarInactiveTintColor: "#737373",
+        tabBarActiveTintColor: activeTintColor,
+        tabBarInactiveTintColor: inactiveTintColor,
       }}
     >
       <Tabs.Screen
@@ -43,6 +47,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons color={color} name="settings-outline" size={size} />
           ),

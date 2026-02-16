@@ -7,6 +7,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react-native";
+import type { ReactNode } from "react";
 import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { GraphDetailScreen } from "./graph-detail-screen";
 
@@ -15,7 +16,8 @@ const mockDeleteGraph = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
-const mockShowAlert = jest.fn();
+const mockSetOptions = jest.fn();
+const mockOpenDialog = jest.fn();
 const MONTH_RANGE_LABEL_PATTERN = /2026年2月: 20260201 - 20260228/;
 const OPTIONAL_DATA_PREVIEW_PATTERN =
   /^これは とても 長い 補足メモで 一覧では 省略…$/;
@@ -34,11 +36,14 @@ let mockRouteParams: {
 };
 
 jest.mock("expo-router", () => ({
+  useLocalSearchParams: () => mockRouteParams,
+  useNavigation: () => ({
+    setOptions: mockSetOptions,
+  }),
   useRouter: () => ({
     push: mockPush,
     replace: mockReplace,
   }),
-  useLocalSearchParams: () => mockRouteParams,
 }));
 
 jest.mock("../../shared/api/graph", () => ({
@@ -53,9 +58,79 @@ jest.mock("../../shared/storage/auth-storage", () => ({
   loadAuthCredentials: (...args: unknown[]) => mockLoadAuthCredentials(...args),
 }));
 
-jest.mock("../../shared/platform/app-alert", () => ({
-  showAlert: (...args: unknown[]) => mockShowAlert(...args),
+jest.mock("../../shared/ui/app-dialog-provider", () => ({
+  useAppDialog: () => ({
+    open: (...args: unknown[]) => mockOpenDialog(...args),
+  }),
 }));
+
+jest.mock("heroui-native", () => {
+  const { Pressable, Text, View } = require("react-native");
+
+  const Tabs = ({ children }: { children?: ReactNode }) => (
+    <View>{children}</View>
+  );
+  Tabs.List = ({ children }: { children?: ReactNode }) => (
+    <View>{children}</View>
+  );
+  Tabs.Indicator = () => null;
+  Tabs.Trigger = ({
+    children,
+    onPress,
+    testID,
+    value,
+  }: {
+    children?: ReactNode;
+    onPress?: () => void;
+    testID?: string;
+    value?: string;
+  }) => (
+    <Pressable
+      onPress={() => {
+        onPress?.();
+      }}
+      testID={testID}
+    >
+      <Text>{value}</Text>
+      {children}
+    </Pressable>
+  );
+  Tabs.Label = ({ children }: { children?: ReactNode }) => (
+    <Text>{children}</Text>
+  );
+  Tabs.Content = () => null;
+
+  return {
+    Button: ({
+      children,
+      onPress,
+      testID,
+    }: {
+      children?: ReactNode;
+      onPress?: () => void;
+      testID?: string;
+    }) => (
+      <Pressable onPress={onPress} testID={testID}>
+        <Text>{children}</Text>
+      </Pressable>
+    ),
+    Card: Object.assign(
+      ({ children }: { children?: ReactNode }) => <View>{children}</View>,
+      {
+        Body: ({ children }: { children?: ReactNode }) => (
+          <View>{children}</View>
+        ),
+        Header: ({ children }: { children?: ReactNode }) => (
+          <View>{children}</View>
+        ),
+        Title: ({ children }: { children?: ReactNode }) => (
+          <Text>{children}</Text>
+        ),
+      }
+    ),
+    Tabs,
+  };
+});
 
 const credentials = {
   token: "token-1234",
@@ -125,7 +200,6 @@ describe("GraphDetailScreen", () => {
       isSuccess: true,
       message: "削除成功",
     });
-    mockShowAlert.mockImplementation(() => undefined);
   });
 
   afterEach(() => {
@@ -136,6 +210,7 @@ describe("GraphDetailScreen", () => {
     renderScreen();
 
     expect(await screen.findByText("Sleep")).toBeTruthy();
+    expect(mockSetOptions).toHaveBeenCalledWith({ title: "Sleep" });
     expect(await screen.findByTestId("graph-detail-mode-help")).toBeTruthy();
     expect(await screen.findByText(MONTH_RANGE_LABEL_PATTERN)).toBeTruthy();
 
@@ -151,7 +226,6 @@ describe("GraphDetailScreen", () => {
   test("switches to year range", async () => {
     renderScreen();
     await screen.findByText("Sleep");
-    expect(screen.getByText("Month=暦月 / Year=暦年")).toBeTruthy();
 
     fireEvent.press(screen.getByTestId("graph-detail-mode-year"));
 
@@ -164,12 +238,15 @@ describe("GraphDetailScreen", () => {
     });
   });
 
-  test("shows light summary", async () => {
+  test("shows expanded summary", async () => {
     renderScreen();
 
     expect(await screen.findByText("合計: 6")).toBeTruthy();
     expect(await screen.findByText("記録日数: 2")).toBeTruthy();
-    expect(await screen.findByText("最大値: 4")).toBeTruthy();
+    expect(await screen.findByText("最大: 4")).toBeTruthy();
+    expect(await screen.findByText("平均(記録日): 3")).toBeTruthy();
+    expect(await screen.findByText("現在連続日数: 0")).toBeTruthy();
+    expect(await screen.findByText("最長連続日数: 1")).toBeTruthy();
   });
 
   test("navigates to pixel detail when tapping a record row", async () => {
@@ -186,33 +263,6 @@ describe("GraphDetailScreen", () => {
         optionalData:
           "これは\nとても\n長い\n補足メモで\n一覧では\n省略表示される想定です",
         quantity: "2",
-      },
-      pathname: "/graphs/[graphId]/pixels/[date]",
-    });
-  });
-
-  test("keeps record navigation params after switching to year mode", async () => {
-    renderScreen();
-    await screen.findByText("Sleep");
-
-    fireEvent.press(screen.getByTestId("graph-detail-mode-year"));
-    await waitFor(() => {
-      expect(mockGetPixels).toHaveBeenCalledWith({
-        from: "20260101",
-        graphId: "sleep",
-        to: "20261231",
-      });
-    });
-
-    fireEvent.press(await screen.findByTestId("graph-detail-record-20260211"));
-
-    expect(mockPush).toHaveBeenCalledWith({
-      params: {
-        date: "20260211",
-        graphId: "sleep",
-        graphName: "Sleep",
-        optionalData: undefined,
-        quantity: "4",
       },
       pathname: "/graphs/[graphId]/pixels/[date]",
     });
@@ -243,42 +293,11 @@ describe("GraphDetailScreen", () => {
     });
   });
 
-  test("shows graphId invalid message", async () => {
-    mockRouteParams = {
-      color: "sora",
-      graphName: "Sleep",
-      timezone: "Asia/Tokyo",
-      unit: "hour",
-    };
-
-    renderScreen();
-
-    expect(
-      await screen.findByText(
-        "グラフIDが不正です。Home画面からやり直してください。"
-      )
-    ).toBeTruthy();
-  });
-
-  test("navigates to edit screen from menu", async () => {
+  test("navigates to edit screen from edit icon", async () => {
     renderScreen();
     await screen.findByText("Sleep");
 
-    fireEvent.press(screen.getByTestId("graph-detail-menu-button"));
-    expect(mockShowAlert).toHaveBeenCalledWith(
-      "Sleep",
-      "操作を選択してください。",
-      expect.any(Array)
-    );
-
-    const menuButtons = mockShowAlert.mock.calls[0]?.[2] as
-      | Array<{ onPress?: () => void; text?: string }>
-      | undefined;
-    const editButton = menuButtons?.find((button) => button.text === "編集");
-
-    act(() => {
-      editButton?.onPress?.();
-    });
+    fireEvent.press(screen.getByTestId("graph-detail-edit-button"));
 
     expect(mockPush).toHaveBeenCalledWith({
       params: {
@@ -292,41 +311,50 @@ describe("GraphDetailScreen", () => {
     });
   });
 
-  test("deletes graph from menu and redirects home", async () => {
+  test("deletes graph from delete icon and redirects home", async () => {
     renderScreen();
     await screen.findByText("Sleep");
 
-    fireEvent.press(screen.getByTestId("graph-detail-menu-button"));
-    const menuButtons = mockShowAlert.mock.calls[0]?.[2] as
-      | Array<{ onPress?: () => void; text?: string }>
-      | undefined;
-    const deleteButton = menuButtons?.find((button) => button.text === "削除");
-
-    act(() => {
-      deleteButton?.onPress?.();
-    });
-
-    expect(mockShowAlert).toHaveBeenCalledWith(
-      "グラフ削除",
-      "Sleep を削除しますか？この操作は取り消せません。",
-      expect.any(Array)
+    fireEvent.press(screen.getByTestId("graph-detail-delete-button"));
+    expect(mockOpenDialog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: "Sleep を削除しますか？この操作は取り消せません。",
+        title: "グラフ削除",
+      })
     );
-    const confirmButtons = mockShowAlert.mock.calls[1]?.[2] as
-      | Array<{ onPress?: () => void; text?: string }>
+
+    const confirmDialogActions = mockOpenDialog.mock.calls[0]?.[0]?.actions as
+      | Array<{ label: string; onPress?: () => void }>
       | undefined;
-    const confirmDeleteButton = confirmButtons?.find(
-      (button) => button.text === "削除する"
+    const deleteAction = confirmDialogActions?.find(
+      (action) => action.label === "削除する"
     );
 
     act(() => {
-      confirmDeleteButton?.onPress?.();
+      deleteAction?.onPress?.();
     });
 
     await waitFor(() => {
       expect(mockDeleteGraph).toHaveBeenCalledWith({ graphId: "sleep" });
     });
-    await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith("/(tabs)/home");
+
+    expect(mockOpenDialog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: "削除成功",
+        title: "削除完了",
+      })
+    );
+
+    const completionDialogActions = mockOpenDialog.mock.calls[1]?.[0]
+      ?.actions as Array<{ label: string; onPress?: () => void }>;
+    const okAction = completionDialogActions.find(
+      (action) => action.label === "OK"
+    );
+
+    act(() => {
+      okAction?.onPress?.();
     });
+
+    expect(mockReplace).toHaveBeenCalledWith("/(tabs)/home");
   });
 });

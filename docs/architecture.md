@@ -36,6 +36,7 @@
 - Graph/Pixel関連画面では、画面内の戻るボタンよりStackヘッダーの戻る導線を優先する
 - Stackヘッダーを使う画面は上余白を二重にしない（`ScreenContainer` の `withTopInset` または同等の調整を行う）
 - `src/app/(tabs)/_layout.tsx` では Expo標準ヘッダーを有効化し、Home/Settingsのタイトル表示を統一する
+- `src/app/(tabs)/settings/_layout.tsx` でSettings配下をStack管理し、`/settings/token` などの下位画面へ標準バック導線で遷移する
 - Graph/Pixel関連画面の戻る導線はOS標準バック表示を優先し、独自の文字ラベル戻るボタンは採用しない
 - 通常導線は `router.push` / `router.back` を使い、セッション境界の遷移（ログイン完了・ログアウト・認証欠落時）は `router.replace` を使う
 
@@ -82,6 +83,7 @@
 - Homeカードでは管理導線（`...` / 統計 / 編集 / 削除）を表示せず、管理操作はGraph詳細画面へ集約する
 - Graph詳細の `Month/Year` 期間計算は `src/shared/lib/calendar-range.ts` を使い、画面側で日付計算を再実装しない
 - HomeのToday専用セクションは設けず、入力導線は `セル/+/カード` の3導線に限定する
+- 確認ダイアログは `useAppDialog`（`src/shared/ui/app-dialog-provider.tsx`）を標準とし、`showAlert` の新規追加は行わない
 
 ## Screen Development Rules
 

@@ -1,6 +1,10 @@
 import { useBottomSheetInternal } from "@gorhom/bottom-sheet";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  NotificationFeedbackType,
+  notificationAsync as notifyHaptics,
+} from "expo-haptics";
 import { useRouter } from "expo-router";
 import {
   BottomSheet,
@@ -210,7 +214,7 @@ export const GraphListScreen = () => {
     null
   );
   const { toast } = useToast();
-  const snapPoints = useMemo(() => ["50%"], []);
+  const snapPoints = useMemo(() => ["70%"], []);
   const {
     control,
     formState: { errors: pixelFormErrors },
@@ -278,6 +282,11 @@ export const GraphListScreen = () => {
         });
       }
       setIsQuickAddOpen(false);
+      try {
+        await notifyHaptics(NotificationFeedbackType.Success);
+      } catch {
+        // 触覚非対応端末では無視する
+      }
       toast.show({
         description: response.message,
         label: "記録を追加しました",
@@ -425,6 +434,8 @@ export const GraphListScreen = () => {
               />
             ) : null
           }
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
         />
       ) : null}
 
@@ -441,7 +452,7 @@ export const GraphListScreen = () => {
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
           <BottomSheet.Content
-            contentContainerClassName="gap-3 px-6 pt-4 pb-6"
+            contentContainerClassName="gap-2 px-6 pt-2 pb-4"
             enablePanDownToClose
             snapPoints={snapPoints}
           >
