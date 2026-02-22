@@ -41,7 +41,7 @@ export default function Layout() {
               >
                 <Stack.Screen name="index" />
                 <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="auth" />
+                <Stack.Screen name="auth/index" />
                 <Stack.Screen
                   name="graphs/create"
                   options={{
