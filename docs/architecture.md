@@ -45,6 +45,7 @@
 - ヘッダー右上のオーバーフロー操作はネイティブメニューを優先する（iOS: `UIMenu` / Android: 標準メニュー）
 - ネイティブメニュー導入には `@react-native-menu/menu` を利用し、見た目を擬似的に再現する独自Viewは採用しない
 - Graph Detailのヘッダー右上アイコン色は iOS では `PlatformColor("label")` を優先し、戻る導線の色調と揃える
+- ヘッダー右上の丸形アイコンボタンは `w-9 h-9` を標準とし、`items-center justify-center` で中央配置する
 - 通常導線は `router.push` / `router.back` を使い、セッション境界の遷移（ログイン完了・ログアウト・認証欠落時）は `router.replace` を使う
 
 ## Data Flow

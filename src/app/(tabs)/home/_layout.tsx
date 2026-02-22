@@ -19,24 +19,18 @@ export default function HabitsStackLayout() {
       <Stack.Screen
         name="index"
         options={{
-          headerRight: ({ tintColor }) => (
+          headerRight: () => (
             <Pressable
               accessibilityLabel="Habitを追加"
               accessibilityRole="button"
+              className="w-9 items-center justify-center"
               hitSlop={8}
               onPress={() => {
                 router.push("/graphs/create");
               }}
-              style={({ pressed }) => ({
-                alignItems: "center",
-                height: 44,
-                justifyContent: "center",
-                opacity: pressed ? 0.55 : 1,
-                width: 44,
-              })}
               testID="home-header-create-button"
             >
-              <Ionicons color={tintColor} name="add-sharp" size={24} />
+              <Ionicons name="add" size={24} />
             </Pressable>
           ),
           title: "Habits",

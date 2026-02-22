@@ -260,7 +260,7 @@ export const GraphDetailScreen = () => {
           onPressAction={onPressGraphMenuAction}
           testID="graph-detail-header-menu-button"
         >
-          <View className="h-10 w-10 items-center justify-center">
+          <View className="w-9 items-center justify-center">
             <Ionicons
               color={
                 Platform.OS === "ios"
@@ -268,7 +268,7 @@ export const GraphDetailScreen = () => {
                   : (tintColor ?? undefined)
               }
               name="ellipsis-horizontal"
-              size={22}
+              size={24}
             />
           </View>
         </MenuView>
