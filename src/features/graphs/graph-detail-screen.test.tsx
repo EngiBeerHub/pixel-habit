@@ -209,8 +209,13 @@ describe("GraphDetailScreen", () => {
   test("loads month range by default", async () => {
     renderScreen();
 
-    expect(await screen.findByText("Sleep")).toBeTruthy();
-    expect(mockSetOptions).toHaveBeenCalledWith({ title: "Sleep" });
+    await waitFor(() => {
+      expect(mockSetOptions).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Sleep",
+        })
+      );
+    });
     expect(await screen.findByTestId("graph-detail-mode-help")).toBeTruthy();
     expect(await screen.findByText(MONTH_RANGE_LABEL_PATTERN)).toBeTruthy();
 
@@ -225,7 +230,9 @@ describe("GraphDetailScreen", () => {
 
   test("switches to year range", async () => {
     renderScreen();
-    await screen.findByText("Sleep");
+    await waitFor(() => {
+      expect(mockSetOptions).toHaveBeenCalled();
+    });
 
     fireEvent.press(screen.getByTestId("graph-detail-mode-year"));
 
@@ -251,7 +258,9 @@ describe("GraphDetailScreen", () => {
 
   test("navigates to pixel detail when tapping a record row", async () => {
     renderScreen();
-    await screen.findByText("Sleep");
+    await waitFor(() => {
+      expect(mockSetOptions).toHaveBeenCalled();
+    });
 
     fireEvent.press(await screen.findByTestId("graph-detail-record-20260213"));
 
@@ -295,7 +304,9 @@ describe("GraphDetailScreen", () => {
 
   test("navigates to edit screen from edit icon", async () => {
     renderScreen();
-    await screen.findByText("Sleep");
+    await waitFor(() => {
+      expect(mockSetOptions).toHaveBeenCalled();
+    });
 
     fireEvent.press(screen.getByTestId("graph-detail-edit-button"));
 
@@ -313,7 +324,9 @@ describe("GraphDetailScreen", () => {
 
   test("deletes graph from delete icon and redirects home", async () => {
     renderScreen();
-    await screen.findByText("Sleep");
+    await waitFor(() => {
+      expect(mockSetOptions).toHaveBeenCalled();
+    });
 
     fireEvent.press(screen.getByTestId("graph-detail-delete-button"));
     expect(mockOpenDialog).toHaveBeenCalledWith(

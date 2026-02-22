@@ -55,6 +55,7 @@ export default function Layout() {
                   name="graphs/[graphId]/index"
                   options={{
                     headerBackButtonDisplayMode: isIos ? "minimal" : undefined,
+                    headerLargeTitle: isIos,
                     headerShadowVisible: false,
                     headerShown: true,
                     title: "グラフ詳細",

@@ -3,7 +3,13 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { Button, Tabs } from "heroui-native";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import type { Pixel } from "../../shared/api/pixel";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
@@ -66,6 +72,7 @@ export const GraphDetailScreen = () => {
 
   useEffect(() => {
     navigation.setOptions({
+      headerLargeTitle: Platform.OS === "ios",
       title: graphName,
     });
   }, [graphName, navigation]);
@@ -214,23 +221,11 @@ export const GraphDetailScreen = () => {
 
   return (
     <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
-      {/* 画面上部: タイトルと管理操作 */}
+      {/* 画面上部: 管理操作と補助情報 */}
       <View className="mb-1 flex-row items-center justify-between gap-2">
-        <View className="flex-1 gap-2">
-          <Text
-            className={mergeClassNames(
-              "font-bold text-2xl",
-              textTokens.primaryClass
-            )}
-          >
-            {graphName}
-          </Text>
-          <Text
-            className={mergeClassNames("text-sm", textTokens.secondaryClass)}
-          >
-            ID: {graphId || "-"}
-          </Text>
-        </View>
+        <Text className={mergeClassNames("text-sm", textTokens.secondaryClass)}>
+          ID: {graphId || "-"}
+        </Text>
         <View className="flex-row items-center gap-2">
           <Button
             isDisabled={!graphId}
