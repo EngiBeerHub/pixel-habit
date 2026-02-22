@@ -215,6 +215,7 @@ export const GraphDetailScreen = () => {
       {
         id: GRAPH_MENU_ACTION_EDIT,
         image: Platform.OS === "ios" ? "square.and.pencil" : undefined,
+        imageColor: "#1C1C1E",
         title: "編集",
       },
       {
@@ -223,6 +224,7 @@ export const GraphDetailScreen = () => {
         },
         id: GRAPH_MENU_ACTION_DELETE,
         image: Platform.OS === "ios" ? "trash" : undefined,
+        imageColor: "#FF3B30",
         title: "削除",
       },
     ],
