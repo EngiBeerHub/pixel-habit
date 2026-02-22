@@ -42,6 +42,9 @@
 - `src/app/(tabs)/settings/_layout.tsx` でSettings配下をStack管理し、`/settings/token` などの下位画面へ標準バック導線で遷移する
 - Graph/Pixel関連画面では独自の `headerLeft` 実装を避け、OS標準バック表示を優先する
 - Graph/Pixel関連画面の戻る導線はOS標準バック表示を優先し、独自の文字ラベル戻るボタンは採用しない
+- ヘッダー右上のオーバーフロー操作はネイティブメニューを優先する（iOS: `UIMenu` / Android: 標準メニュー）
+- ネイティブメニュー導入には `@react-native-menu/menu` を利用し、見た目を擬似的に再現する独自Viewは採用しない
+- Graph Detailのヘッダー右上アイコン色は iOS では `PlatformColor("label")` を優先し、戻る導線の色調と揃える
 - 通常導線は `router.push` / `router.back` を使い、セッション境界の遷移（ログイン完了・ログアウト・認証欠落時）は `router.replace` を使う
 
 ## Data Flow

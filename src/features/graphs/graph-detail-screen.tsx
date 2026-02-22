@@ -1,11 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
+import { MenuView, type NativeActionEvent } from "@react-native-menu/menu";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { Button, Tabs } from "heroui-native";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Platform,
+  PlatformColor,
   Pressable,
   Text,
   View,
@@ -44,6 +46,8 @@ const RECORD_MEMO_PREVIEW_MAX_LENGTH = 24;
 const RECORD_MEMO_WHITESPACE_PATTERN = /\s+/g;
 const YYYY_MM_DD_PATTERN = /^\d{8}$/;
 const TRAILING_DECIMAL_ZERO_PATTERN = /\.?0+$/;
+const GRAPH_MENU_ACTION_EDIT = "edit";
+const GRAPH_MENU_ACTION_DELETE = "delete";
 
 /**
  * Graph詳細画面。Month/Yearで記録を確認する。
@@ -166,7 +170,7 @@ export const GraphDetailScreen = () => {
   /**
    * グラフ編集画面へ遷移する。
    */
-  const onPressOpenGraphEdit = () => {
+  const onPressOpenGraphEdit = useCallback(() => {
     router.push({
       params: {
         color: graphColor,
@@ -177,12 +181,12 @@ export const GraphDetailScreen = () => {
       },
       pathname: "/graphs/[graphId]/edit",
     });
-  };
+  }, [graphColor, graphId, graphName, graphTimezone, graphUnit, router]);
 
   /**
    * グラフ削除確認ダイアログを表示する。
    */
-  const onPressDeleteGraph = () => {
+  const onPressDeleteGraph = useCallback(() => {
     openDialog({
       actions: [
         {
@@ -201,7 +205,70 @@ export const GraphDetailScreen = () => {
       dismissible: false,
       title: "グラフ削除",
     });
-  };
+  }, [deleteMutation, graphName, openDialog]);
+
+  /**
+   * ネイティブメニュー項目を定義する。
+   */
+  const graphMenuActions = useMemo(
+    () => [
+      {
+        id: GRAPH_MENU_ACTION_EDIT,
+        image: Platform.OS === "ios" ? "square.and.pencil" : undefined,
+        title: "編集",
+      },
+      {
+        attributes: {
+          destructive: true,
+        },
+        id: GRAPH_MENU_ACTION_DELETE,
+        image: Platform.OS === "ios" ? "trash" : undefined,
+        title: "削除",
+      },
+    ],
+    []
+  );
+
+  /**
+   * ネイティブメニュー選択イベントを処理する。
+   */
+  const onPressGraphMenuAction = useCallback(
+    ({ nativeEvent }: NativeActionEvent) => {
+      if (nativeEvent.event === GRAPH_MENU_ACTION_EDIT) {
+        onPressOpenGraphEdit();
+        return;
+      }
+      if (nativeEvent.event === GRAPH_MENU_ACTION_DELETE) {
+        onPressDeleteGraph();
+      }
+    },
+    [onPressDeleteGraph, onPressOpenGraphEdit]
+  );
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: ({ tintColor }: { tintColor?: string }) => (
+        <MenuView
+          actions={graphMenuActions}
+          isAnchoredToRight
+          onPressAction={onPressGraphMenuAction}
+          testID="graph-detail-header-menu-button"
+        >
+          <View className="h-10 w-10 items-center justify-center">
+            <Ionicons
+              color={
+                Platform.OS === "ios"
+                  ? PlatformColor("label")
+                  : (tintColor ?? undefined)
+              }
+              name="ellipsis-horizontal"
+              size={22}
+            />
+          </View>
+        </MenuView>
+      ),
+    });
+  }, [graphMenuActions, navigation, onPressGraphMenuAction]);
 
   /**
    * 選択した日付の記録詳細画面へ遷移する。
@@ -221,38 +288,27 @@ export const GraphDetailScreen = () => {
 
   return (
     <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
-      {/* 画面上部: 管理操作と補助情報 */}
-      <View className="mb-1 flex-row items-center justify-between gap-2">
-        <Text className={mergeClassNames("text-sm", textTokens.secondaryClass)}>
-          ID: {graphId || "-"}
-        </Text>
-        <View className="flex-row items-center gap-2">
-          <Button
-            isDisabled={!graphId}
-            isIconOnly
-            onPress={onPressOpenGraphEdit}
-            size="sm"
-            testID="graph-detail-edit-button"
-            variant="secondary"
-          >
-            <Ionicons name="create-outline" size={16} />
-          </Button>
-          <Button
-            isDisabled={deleteMutation.isPending || !graphId}
-            isIconOnly
-            onPress={onPressDeleteGraph}
-            size="sm"
-            testID="graph-detail-delete-button"
-            variant="danger-soft"
-          >
-            <Ionicons name="trash-outline" size={16} />
-          </Button>
-        </View>
-      </View>
-
-      {/* 表示モード切替: Month=暦月、Year=暦年 */}
       <SectionCard>
-        <View className="gap-3">
+        <View className="gap-4">
+          <View className="flex-row items-center justify-between gap-3">
+            <View className="flex-1 gap-1">
+              <Text
+                className={mergeClassNames(
+                  "font-semibold text-sm",
+                  textTokens.primaryClass
+                )}
+              >
+                表示範囲
+              </Text>
+              <Text
+                className={mergeClassNames("text-xs", textTokens.mutedClass)}
+                testID="graph-detail-mode-help"
+              >
+                Month=暦月 / Year=暦年
+              </Text>
+            </View>
+          </View>
+
           <Tabs
             onValueChange={(value) => {
               if (value === "month" || value === "year") {
@@ -287,18 +343,39 @@ export const GraphDetailScreen = () => {
             <Tabs.Content value="year" />
           </Tabs>
           <Text
-            className={mergeClassNames("text-xs", textTokens.mutedClass)}
-            testID="graph-detail-mode-help"
-          >
-            Month=暦月 / Year=暦年
-          </Text>
-          <Text
             className="text-neutral-700 text-sm"
             testID="graph-detail-range"
           >
             {formatCalendarModeLabel(mode)}: {activeRange.from} -{" "}
             {activeRange.to}
           </Text>
+
+          <View
+            className={mergeClassNames(
+              "gap-1 rounded-xl border bg-neutral-50 px-3 py-3",
+              borderTokens.defaultClass
+            )}
+            testID="graph-detail-info"
+          >
+            <Text className={mergeClassNames("text-xs", textTokens.mutedClass)}>
+              グラフ情報
+            </Text>
+            <Text
+              className={mergeClassNames("text-sm", textTokens.secondaryClass)}
+            >
+              ID: {graphId || "-"}
+            </Text>
+            <Text
+              className={mergeClassNames("text-sm", textTokens.secondaryClass)}
+            >
+              単位: {graphUnit || "-"}
+            </Text>
+            <Text
+              className={mergeClassNames("text-sm", textTokens.secondaryClass)}
+            >
+              タイムゾーン: {graphTimezone || "-"}
+            </Text>
+          </View>
         </View>
       </SectionCard>
 
@@ -340,9 +417,17 @@ export const GraphDetailScreen = () => {
 
       {/* 取得成功時の統計と記録一覧 */}
       {query.isPending || errorMessage ? null : (
-        <View className="gap-3">
-          <SectionCard title="統計">
+        <SectionCard>
+          <View className="gap-4">
             <View className="gap-1">
+              <Text
+                className={mergeClassNames(
+                  "font-semibold",
+                  textTokens.primaryClass
+                )}
+              >
+                統計
+              </Text>
               <Text className="text-neutral-700 text-sm">
                 合計: {summary.totalQuantityText}
               </Text>
@@ -362,9 +447,21 @@ export const GraphDetailScreen = () => {
                 最長連続日数: {summary.longestStreakDays}
               </Text>
             </View>
-          </SectionCard>
-
-          <SectionCard title="記録一覧">
+            <View
+              className={mergeClassNames(
+                "border-t pt-2",
+                borderTokens.defaultClass
+              )}
+            >
+              <Text
+                className={mergeClassNames(
+                  "font-semibold",
+                  textTokens.primaryClass
+                )}
+              >
+                記録一覧
+              </Text>
+            </View>
             {pixels.length === 0 ? (
               <Text className="text-neutral-600 text-sm">
                 この期間の記録はまだありません。
@@ -421,8 +518,8 @@ export const GraphDetailScreen = () => {
                 })}
               </View>
             )}
-          </SectionCard>
-        </View>
+          </View>
+        </SectionCard>
       )}
     </ScreenContainer>
   );

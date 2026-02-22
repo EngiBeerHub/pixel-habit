@@ -7,7 +7,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react-native";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { GraphDetailScreen } from "./graph-detail-screen";
 
@@ -62,6 +62,10 @@ jest.mock("../../shared/ui/app-dialog-provider", () => ({
   useAppDialog: () => ({
     open: (...args: unknown[]) => mockOpenDialog(...args),
   }),
+}));
+
+jest.mock("@react-native-menu/menu", () => ({
+  MenuView: ({ children }: { children?: ReactNode }) => <>{children}</>,
 }));
 
 jest.mock("heroui-native", () => {
@@ -157,6 +161,39 @@ const renderScreen = () => {
       </AuthSessionProvider>
     </QueryClientProvider>
   );
+};
+
+const getHeaderRightElement = () => {
+  const optionsWithHeaderRight = [...mockSetOptions.mock.calls]
+    .map((call) => call[0] as { headerRight?: unknown })
+    .reverse()
+    .find((options) => typeof options.headerRight === "function") as
+    | {
+        headerRight?: (props: { tintColor?: string }) => ReactNode;
+      }
+    | undefined;
+
+  if (!optionsWithHeaderRight?.headerRight) {
+    throw new Error("headerRight is not configured");
+  }
+
+  return optionsWithHeaderRight.headerRight({
+    tintColor: "#111827",
+  }) as ReactElement<{
+    actions?: Array<{ id?: string; title: string }>;
+    onPressAction?: (event: { nativeEvent: { event: string } }) => void;
+  }>;
+};
+
+const pressHeaderMenuAction = (actionId: string) => {
+  const headerRightElement = getHeaderRightElement();
+  act(() => {
+    headerRightElement.props.onPressAction?.({
+      nativeEvent: {
+        event: actionId,
+      },
+    });
+  });
 };
 
 describe("GraphDetailScreen", () => {
@@ -302,13 +339,35 @@ describe("GraphDetailScreen", () => {
     });
   });
 
-  test("navigates to edit screen from edit icon", async () => {
+  test("opens graph management menu from ellipsis button", async () => {
     renderScreen();
     await waitFor(() => {
       expect(mockSetOptions).toHaveBeenCalled();
     });
 
-    fireEvent.press(screen.getByTestId("graph-detail-edit-button"));
+    const headerRightElement = getHeaderRightElement();
+
+    expect(headerRightElement.props.actions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "edit",
+          title: "編集",
+        }),
+        expect.objectContaining({
+          id: "delete",
+          title: "削除",
+        }),
+      ])
+    );
+  });
+
+  test("navigates to edit screen from graph management menu", async () => {
+    renderScreen();
+    await waitFor(() => {
+      expect(mockSetOptions).toHaveBeenCalled();
+    });
+
+    pressHeaderMenuAction("edit");
 
     expect(mockPush).toHaveBeenCalledWith({
       params: {
@@ -322,13 +381,14 @@ describe("GraphDetailScreen", () => {
     });
   });
 
-  test("deletes graph from delete icon and redirects home", async () => {
+  test("deletes graph from menu and redirects home", async () => {
     renderScreen();
     await waitFor(() => {
       expect(mockSetOptions).toHaveBeenCalled();
     });
 
-    fireEvent.press(screen.getByTestId("graph-detail-delete-button"));
+    pressHeaderMenuAction("delete");
+
     expect(mockOpenDialog).toHaveBeenCalledWith(
       expect.objectContaining({
         description: "Sleep を削除しますか？この操作は取り消せません。",
