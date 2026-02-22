@@ -73,6 +73,14 @@ export const typographyTokens = {
 } as const;
 
 /**
+ * ネイティブメニュー用アイコン色トークン。
+ */
+export const menuIconTokens = {
+  destructiveColor: "#FF3B30",
+  primaryColor: "#1C1C1E",
+} as const;
+
+/**
  * 後方互換のために残す旧色トークン。
  */
 export const colorTokens = {
@@ -109,6 +117,7 @@ export interface UiTokens {
   borderTokens: typeof borderTokens;
   colorTokens: typeof colorTokens;
   heatmapTokens: typeof heatmapTokens;
+  menuIconTokens: typeof menuIconTokens;
   radiusTokens: typeof radiusTokens;
   surfaceTokens: typeof surfaceTokens;
   spacingTokens: typeof spacingTokens;

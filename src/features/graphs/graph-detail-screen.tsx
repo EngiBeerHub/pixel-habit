@@ -15,7 +15,11 @@ import {
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import type { Pixel } from "../../shared/api/pixel";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
-import { borderTokens, textTokens } from "../../shared/config/ui-tokens";
+import {
+  borderTokens,
+  menuIconTokens,
+  textTokens,
+} from "../../shared/config/ui-tokens";
 import {
   type CalendarMode,
   formatCalendarModeLabel,
@@ -215,7 +219,7 @@ export const GraphDetailScreen = () => {
       {
         id: GRAPH_MENU_ACTION_EDIT,
         image: Platform.OS === "ios" ? "square.and.pencil" : undefined,
-        imageColor: "#1C1C1E",
+        imageColor: menuIconTokens.primaryColor,
         title: "編集",
       },
       {
@@ -224,7 +228,7 @@ export const GraphDetailScreen = () => {
         },
         id: GRAPH_MENU_ACTION_DELETE,
         image: Platform.OS === "ios" ? "trash" : undefined,
-        imageColor: "#FF3B30",
+        imageColor: menuIconTokens.destructiveColor,
         title: "削除",
       },
     ],
