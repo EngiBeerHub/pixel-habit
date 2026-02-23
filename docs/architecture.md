@@ -41,6 +41,7 @@
 - iOSでは `graphs/[graphId]/index` も `headerLargeTitle` を有効化し、タイトルはヘッダーで一元表示する
 - `src/app/(tabs)/settings/_layout.tsx` でSettings配下をStack管理し、`/settings/token` などの下位画面へ標準バック導線で遷移する
 - Graph/Pixel関連画面では独自の `headerLeft` 実装を避け、OS標準バック表示を優先する
+- 動的ヘッダー（`navigation.setOptions`）を使う画面は `useLayoutEffect` を利用し、初回描画時のヘッダーちらつきを防ぐ
 - Graph/Pixel関連画面の戻る導線はOS標準バック表示を優先し、独自の文字ラベル戻るボタンは採用しない
 - ヘッダー右上のオーバーフロー操作はネイティブメニューを優先する（iOS: `UIMenu` / Android: 標準メニュー）
 - ネイティブメニュー導入には `@react-native-menu/menu` を利用し、見た目を擬似的に再現する独自Viewは採用しない

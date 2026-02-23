@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { MenuView, type NativeActionEvent } from "@react-native-menu/menu";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { Platform, PlatformColor, View } from "react-native";
 import { useAuthedPixelaApi } from "../../../shared/api/authed-pixela-api";
 import type { Pixel } from "../../../shared/api/pixel";
@@ -69,7 +69,7 @@ export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
   const { credentials, hasLoadError, status } = useAuthSession();
   const api = useAuthedPixelaApi();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     navigation.setOptions({
       headerLargeTitle: Platform.OS === "ios",
       title: graphName,
@@ -239,7 +239,7 @@ export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
     [onPressDeleteGraph, onPressOpenGraphEdit]
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: ({ tintColor }: { tintColor?: string }) => (
         <MenuView
