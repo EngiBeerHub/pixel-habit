@@ -1,10 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { MenuView, type NativeActionEvent } from "@react-native-menu/menu";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { Platform, PlatformColor, View } from "react-native";
 import { useAuthedPixelaApi } from "../../../shared/api/authed-pixela-api";
+import {
+  invalidateGraphRelatedQueries,
+  refetchGraphListQueries,
+} from "../../../shared/api/invalidation";
 import type { Pixel } from "../../../shared/api/pixel";
 import { queryKeys } from "../../../shared/api/query-keys";
 import { useAuthSession } from "../../../shared/auth/use-auth-session";
@@ -49,6 +53,7 @@ export interface UseGraphDetailScreenResult {
  */
 export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const navigation = useNavigation();
   const { open: openDialog } = useAppDialog();
   const params = useLocalSearchParams<{
@@ -147,12 +152,22 @@ export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
       });
     },
     onSuccess: (response) => {
+      invalidateGraphRelatedQueries(queryClient, api.username).catch(() => {
+        // 一覧同期失敗時も削除成功体験は維持する
+      });
       openDialog({
         actions: [
           {
             label: "OK",
             onPress: () => {
-              router.replace(appRoutes.homeTab);
+              if (navigation.canGoBack()) {
+                router.back();
+              } else {
+                router.replace(appRoutes.homeTab);
+              }
+              refetchGraphListQueries(queryClient).catch(() => {
+                // 一覧再取得失敗時は次回表示時の自動同期に任せる
+              });
             },
           },
         ],

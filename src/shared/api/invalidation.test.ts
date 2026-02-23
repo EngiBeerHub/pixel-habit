@@ -3,6 +3,7 @@ import {
   invalidateGraphRelatedQueries,
   invalidatePixelRelatedQueries,
   refetchCompactHeatmapQueries,
+  refetchGraphListQueries,
 } from "./invalidation";
 import { queryKeys } from "./query-keys";
 
@@ -16,7 +17,7 @@ describe("invalidation helpers", () => {
     await invalidateGraphRelatedQueries(queryClient, "demo-user");
 
     expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: queryKeys.graphs("demo-user"),
+      queryKey: queryKeys.graphsAll(),
     });
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: queryKeys.graphDetailPixelsAll(),
@@ -39,6 +40,20 @@ describe("invalidation helpers", () => {
 
     expect(refetchQueries).toHaveBeenCalledWith({
       queryKey: queryKeys.graphPixelsCompactByUser("demo-user"),
+      type: "active",
+    });
+  });
+
+  test("refetches graph list queries", async () => {
+    const refetchQueries = jest.fn().mockResolvedValue(undefined);
+    const queryClient = {
+      refetchQueries,
+    } as unknown as QueryClient;
+
+    await refetchGraphListQueries(queryClient);
+
+    expect(refetchQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.graphsAll(),
       type: "active",
     });
   });

@@ -7,7 +7,10 @@ import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import { graphColorOptions, graphTypeOptions } from "../../shared/api/graph";
-import { queryKeys } from "../../shared/api/query-keys";
+import {
+  invalidateGraphRelatedQueries,
+  refetchGraphListQueries,
+} from "../../shared/api/invalidation";
 import { ActionStack } from "../../shared/ui/action-stack";
 import { FormField } from "../../shared/ui/form-field";
 import { InlineMessage } from "../../shared/ui/inline-message";
@@ -64,9 +67,8 @@ export const GraphCreateScreen = () => {
     },
     onSuccess: async (response) => {
       setSuccessMessage(response.message);
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.graphs(api.username),
-      });
+      await invalidateGraphRelatedQueries(queryClient, api.username);
+      await refetchGraphListQueries(queryClient);
       router.back();
     },
   });

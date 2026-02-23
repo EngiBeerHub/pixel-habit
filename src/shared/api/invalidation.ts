@@ -10,7 +10,7 @@ export const invalidateGraphRelatedQueries = async (
 ) => {
   await Promise.all([
     queryClient.invalidateQueries({
-      queryKey: queryKeys.graphs(username),
+      queryKey: queryKeys.graphsAll(),
     }),
     queryClient.invalidateQueries({
       queryKey: queryKeys.graphDetailPixelsAll(),
@@ -22,6 +22,16 @@ export const invalidateGraphRelatedQueries = async (
       queryKey: queryKeys.graphPixelsToday(username),
     }),
   ]);
+};
+
+/**
+ * グラフ一覧queryを即時再取得する。
+ */
+export const refetchGraphListQueries = async (queryClient: QueryClient) => {
+  await queryClient.refetchQueries({
+    queryKey: queryKeys.graphsAll(),
+    type: "active",
+  });
 };
 
 /**

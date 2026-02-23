@@ -9,7 +9,9 @@ const mockDeleteGraph = jest.fn();
 const mockLoadAuthCredentials = jest.fn();
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
+const mockBack = jest.fn();
 const mockSetOptions = jest.fn();
+const mockCanGoBack = jest.fn();
 const mockOpenDialog = jest.fn();
 const MONTH_RANGE_LABEL_PATTERN = /2026年2月: 20260201 - 20260228/;
 const OPTIONAL_DATA_PREVIEW_PATTERN =
@@ -31,9 +33,11 @@ let mockRouteParams: {
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => mockRouteParams,
   useNavigation: () => ({
+    canGoBack: mockCanGoBack,
     setOptions: mockSetOptions,
   }),
   useRouter: () => ({
+    back: mockBack,
     push: mockPush,
     replace: mockReplace,
   }),
@@ -192,6 +196,7 @@ describe("GraphDetailScreen", () => {
     jest.clearAllMocks();
     jest.useFakeTimers();
     jest.setSystemTime(new Date(2026, 1, 14, 12, 0, 0));
+    mockCanGoBack.mockReturnValue(true);
     mockRouteParams = {
       color: "sora",
       graphId: "sleep",
@@ -358,7 +363,7 @@ describe("GraphDetailScreen", () => {
     });
   });
 
-  test("deletes graph from menu and redirects home", async () => {
+  test("deletes graph from menu and navigates back when possible", async () => {
     renderScreen();
     await waitFor(() => {
       expect(mockSetOptions).toHaveBeenCalled();
@@ -405,6 +410,7 @@ describe("GraphDetailScreen", () => {
       okAction?.onPress?.();
     });
 
-    expect(mockReplace).toHaveBeenCalledWith("/(tabs)/home");
+    expect(mockBack).toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });

@@ -15,6 +15,11 @@ export const queryKeys = {
   graphs: (username: string | null) => ["graphs", username] as const,
 
   /**
+   * グラフ一覧のプレフィックスquery key。
+   */
+  graphsAll: () => ["graphs"] as const,
+
+  /**
    * Graph詳細画面の期間内ピクセル一覧query key。
    */
   graphDetailPixels: (
