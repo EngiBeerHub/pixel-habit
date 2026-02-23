@@ -49,5 +49,9 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.biome": "explicit",
     "source.organizeImports.biome": "explicit"
+  },
+  "sonarlint.connectedMode.project": {
+    "connectionId": "engibeerhub",
+    "projectKey": "EngiBeerHub_pixel-habit"
   }
 }
