@@ -92,7 +92,7 @@ describe("SettingsScreen", () => {
     });
 
     expect(mockClearAuthSession).toHaveBeenCalled();
-    expect(mockReplace).toHaveBeenCalledWith("/auth");
+    expect(mockReplace).toHaveBeenCalledWith("/auth/index");
   });
 
   test("shows auth missing error on delete user", async () => {

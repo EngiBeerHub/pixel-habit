@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { Platform, Pressable } from "react-native";
+import { headerActionTokens } from "../../../shared/config/ui-tokens";
 
 /**
  * Habitsタブ配下の画面遷移を管理するStack。
@@ -23,14 +24,14 @@ export default function HabitsStackLayout() {
             <Pressable
               accessibilityLabel="Habitを追加"
               accessibilityRole="button"
-              className="w-9 items-center justify-center"
-              hitSlop={8}
+              className={headerActionTokens.iconButtonClass}
+              hitSlop={headerActionTokens.pressableHitSlop}
               onPress={() => {
                 router.push("/graphs/create");
               }}
               testID="home-header-create-button"
             >
-              <Ionicons name="add" size={24} />
+              <Ionicons name="add" size={headerActionTokens.iconSize} />
             </Pressable>
           ),
           title: "Habits",

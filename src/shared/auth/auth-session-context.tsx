@@ -5,6 +5,7 @@ import {
   clearApiAuthCredentials,
   setApiAuthCredentials,
 } from "../api/client-auth-context";
+import { queryKeys } from "../api/query-keys";
 import {
   type AuthCredentials,
   clearAuthCredentials,
@@ -38,10 +39,10 @@ export const AuthSessionProvider = ({ children }: PropsWithChildren) => {
    */
   const refreshAuthSession = useCallback(async () => {
     await queryClient.invalidateQueries({
-      queryKey: ["authCredentials"],
+      queryKey: queryKeys.authCredentials(),
     });
     await queryClient.refetchQueries({
-      queryKey: ["authCredentials"],
+      queryKey: queryKeys.authCredentials(),
       type: "active",
     });
   }, [queryClient]);

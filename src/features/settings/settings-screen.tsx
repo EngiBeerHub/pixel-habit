@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Text } from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
+import { appRoutes } from "../../shared/config/routes";
 import {
   canOpenExternalUrl,
   openExternalUrl,
@@ -54,7 +55,7 @@ export const SettingsScreen = () => {
    */
   const onLogout = async () => {
     await clearAuthSession();
-    router.replace("/auth");
+    router.replace(appRoutes.authHub);
   };
 
   /**
@@ -119,7 +120,7 @@ export const SettingsScreen = () => {
       setErrorMessage(null);
       await api.deleteUser();
       await clearAuthSession();
-      router.replace("/auth");
+      router.replace(appRoutes.authHub);
     } catch (error) {
       const messageText =
         error instanceof Error
@@ -141,7 +142,7 @@ export const SettingsScreen = () => {
         <ActionStack>
           <Button
             onPress={() => {
-              router.push("/settings/token");
+              router.push(appRoutes.settingsToken);
             }}
             testID="settings-open-token-screen-button"
           >

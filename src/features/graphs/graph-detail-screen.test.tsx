@@ -1,14 +1,7 @@
 import { notifyManager } from "@tanstack/query-core";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import type { ReactElement, ReactNode } from "react";
-import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
+import { renderWithProviders } from "../../test-utils/render-with-providers";
 import { GraphDetailScreen } from "./graph-detail-screen";
 
 const mockGetPixels = jest.fn();
@@ -142,25 +135,9 @@ const credentials = {
 };
 
 const renderScreen = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      mutations: {
-        gcTime: Number.POSITIVE_INFINITY,
-      },
-      queries: {
-        gcTime: Number.POSITIVE_INFINITY,
-        retry: false,
-      },
-    },
+  return renderWithProviders(<GraphDetailScreen />, {
+    withAuthSession: true,
   });
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <AuthSessionProvider>
-        <GraphDetailScreen />
-      </AuthSessionProvider>
-    </QueryClientProvider>
-  );
 };
 
 const getHeaderRightElement = () => {

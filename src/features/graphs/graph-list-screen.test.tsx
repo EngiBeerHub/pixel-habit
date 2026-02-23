@@ -1,15 +1,8 @@
 import { notifyManager } from "@tanstack/query-core";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import type { ReactNode } from "react";
-import { AuthSessionProvider } from "../../shared/auth/auth-session-context";
 import { getTodayAsYyyyMmDd } from "../../shared/lib/date";
+import { renderWithProviders } from "../../test-utils/render-with-providers";
 import { GraphListScreen } from "./graph-list-screen";
 
 const mockReplace = jest.fn();
@@ -238,25 +231,9 @@ jest.mock("./components/graph-card", () => {
 });
 
 const renderScreen = async () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      mutations: {
-        gcTime: Number.POSITIVE_INFINITY,
-      },
-      queries: {
-        gcTime: Number.POSITIVE_INFINITY,
-        retry: false,
-      },
-    },
+  const screenInstance = renderWithProviders(<GraphListScreen />, {
+    withAuthSession: true,
   });
-
-  const screenInstance = render(
-    <QueryClientProvider client={queryClient}>
-      <AuthSessionProvider>
-        <GraphListScreen />
-      </AuthSessionProvider>
-    </QueryClientProvider>
-  );
   await waitFor(() => {
     expect(mockLoadAuthCredentials).toHaveBeenCalled();
   });
@@ -389,7 +366,7 @@ describe("GraphListScreen", () => {
     await renderScreen();
 
     await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith("/auth");
+      expect(mockReplace).toHaveBeenCalledWith("/auth/index");
     });
   });
 

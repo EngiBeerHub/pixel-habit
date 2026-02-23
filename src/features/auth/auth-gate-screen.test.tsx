@@ -73,7 +73,7 @@ describe("AuthGateScreen", () => {
     renderScreen();
 
     await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith("/auth");
+      expect(mockReplace).toHaveBeenCalledWith("/auth/index");
     });
   });
 
@@ -83,7 +83,7 @@ describe("AuthGateScreen", () => {
     renderScreen();
 
     await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith("/auth");
+      expect(mockReplace).toHaveBeenCalledWith("/auth/index");
     });
   });
 });

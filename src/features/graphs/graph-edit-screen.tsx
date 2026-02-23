@@ -1,12 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
-import { Button } from "heroui-native";
+import { Button, Input } from "heroui-native";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { View } from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import { type GraphColor, graphColorOptions } from "../../shared/api/graph";
+import { ActionStack } from "../../shared/ui/action-stack";
+import { FormField } from "../../shared/ui/form-field";
+import { InlineMessage } from "../../shared/ui/inline-message";
+import { ScreenContainer } from "../../shared/ui/screen-container";
+import { SectionCard } from "../../shared/ui/section-card";
 import { type GraphEditFormValues, graphEditSchema } from "./graph-edit-schema";
 
 /**
@@ -87,130 +92,115 @@ export const GraphEditScreen = () => {
   });
 
   return (
-    <ScrollView
-      className="flex-1 bg-white px-6 pt-6 pb-6"
-      showsHorizontalScrollIndicator={false}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* 画面ヘッダー: 編集対象グラフの文脈情報 */}
-      <Text className="mb-2 font-bold text-2xl text-neutral-900">
-        グラフ編集
-      </Text>
-      <Text className="mb-6 text-neutral-600">ID: {graphId || "-"}</Text>
+    <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
+      <SectionCard title="グラフ編集">
+        <View className="gap-3">
+          <FormField errorMessage={errors.name?.message} label="グラフ名">
+            <Controller
+              control={control}
+              name="name"
+              render={({ field: { onBlur, onChange, value } }) => (
+                <Input
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  placeholder="グラフ名"
+                  value={value}
+                  variant="secondary"
+                />
+              )}
+            />
+          </FormField>
 
-      {/* グラフ名入力 */}
-      <Text className="mb-2 text-neutral-800">グラフ名</Text>
-      <Controller
-        control={control}
-        name="name"
-        render={({ field: { onBlur, onChange, value } }) => (
-          <TextInput
-            className="mb-2 rounded-xl border border-neutral-300 px-4 py-3 text-base"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            placeholder="グラフ名"
-            value={value}
+          <FormField errorMessage={errors.unit?.message} label="単位">
+            <Controller
+              control={control}
+              name="unit"
+              render={({ field: { onBlur, onChange, value } }) => (
+                <Input
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  placeholder="回, km, page など"
+                  value={value}
+                  variant="secondary"
+                />
+              )}
+            />
+          </FormField>
+
+          <FormField
+            errorMessage={errors.timezone?.message}
+            label="タイムゾーン"
+          >
+            <Controller
+              control={control}
+              name="timezone"
+              render={({ field: { onBlur, onChange, value } }) => (
+                <Input
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  placeholder="Asia/Tokyo"
+                  value={value}
+                  variant="secondary"
+                />
+              )}
+            />
+          </FormField>
+
+          <FormField label="テーマ色">
+            <Controller
+              control={control}
+              name="color"
+              render={({ field: { onChange, value } }) => (
+                <View className="flex-row flex-wrap gap-2">
+                  {graphColorOptions.map((color) => (
+                    <Button
+                      isDisabled={value === color}
+                      key={color}
+                      onPress={() => {
+                        onChange(color);
+                      }}
+                    >
+                      {color}
+                    </Button>
+                  ))}
+                </View>
+              )}
+            />
+          </FormField>
+        </View>
+
+        {graphIdError ? (
+          <InlineMessage
+            className="mt-4"
+            message={graphIdError}
+            variant="error"
           />
-        )}
-      />
-      {/* グラフ名バリデーションエラー */}
-      {errors.name?.message ? (
-        <Text className="mb-4 text-red-600 text-sm">{errors.name.message}</Text>
-      ) : (
-        <View className="mb-4" />
-      )}
-
-      {/* 単位入力 */}
-      <Text className="mb-2 text-neutral-800">単位</Text>
-      <Controller
-        control={control}
-        name="unit"
-        render={({ field: { onBlur, onChange, value } }) => (
-          <TextInput
-            className="mb-2 rounded-xl border border-neutral-300 px-4 py-3 text-base"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            placeholder="回, km, page など"
-            value={value}
+        ) : null}
+        {errors.root?.message ? (
+          <InlineMessage
+            className="mt-4"
+            message={errors.root.message}
+            variant="error"
           />
-        )}
-      />
-      {/* 単位バリデーションエラー */}
-      {errors.unit?.message ? (
-        <Text className="mb-4 text-red-600 text-sm">{errors.unit.message}</Text>
-      ) : (
-        <View className="mb-4" />
-      )}
-
-      {/* タイムゾーン入力 */}
-      <Text className="mb-2 text-neutral-800">タイムゾーン</Text>
-      <Controller
-        control={control}
-        name="timezone"
-        render={({ field: { onBlur, onChange, value } }) => (
-          <TextInput
-            className="mb-2 rounded-xl border border-neutral-300 px-4 py-3 text-base"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            placeholder="Asia/Tokyo"
-            value={value}
+        ) : null}
+        {successMessage ? (
+          <InlineMessage
+            className="mt-4"
+            message={successMessage}
+            variant="success"
           />
-        )}
-      />
-      {/* タイムゾーンバリデーションエラー */}
-      {errors.timezone?.message ? (
-        <Text className="mb-4 text-red-600 text-sm">
-          {errors.timezone.message}
-        </Text>
-      ) : (
-        <View className="mb-4" />
-      )}
+        ) : null}
 
-      {/* テーマ色選択 */}
-      <Text className="mb-2 text-neutral-800">テーマ色</Text>
-      <Controller
-        control={control}
-        name="color"
-        render={({ field: { onChange, value } }) => (
-          <View className="mb-4 flex-row flex-wrap gap-2">
-            {graphColorOptions.map((color) => (
-              <Button
-                isDisabled={value === color}
-                key={color}
-                onPress={() => {
-                  onChange(color);
-                }}
-              >
-                {color}
-              </Button>
-            ))}
-          </View>
-        )}
-      />
-
-      {/* 事前チェックエラー（不正なgraphId等） */}
-      {graphIdError ? (
-        <Text className="mb-4 text-red-600 text-sm">{graphIdError}</Text>
-      ) : null}
-      {/* API失敗時のフォーム共通エラー */}
-      {errors.root?.message ? (
-        <Text className="mb-4 text-red-600 text-sm">{errors.root.message}</Text>
-      ) : null}
-      {/* API成功メッセージ */}
-      {successMessage ? (
-        <Text className="mb-4 text-green-700 text-sm">{successMessage}</Text>
-      ) : null}
-
-      {/* 画面アクション: 保存実行 */}
-      <View className="gap-3">
-        <Button
-          isDisabled={mutation.isPending || Boolean(graphIdError)}
-          onPress={onSubmit}
-        >
-          保存
-        </Button>
-      </View>
-    </ScrollView>
+        <ActionStack className="mt-4">
+          <Button
+            isDisabled={mutation.isPending || Boolean(graphIdError)}
+            onPress={onSubmit}
+          >
+            保存
+          </Button>
+        </ActionStack>
+      </SectionCard>
+    </ScreenContainer>
   );
 };
 

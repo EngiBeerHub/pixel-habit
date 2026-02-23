@@ -47,6 +47,7 @@
 - Graph Detailのヘッダー右上アイコン色は iOS では `PlatformColor("label")` を優先し、戻る導線の色調と揃える
 - ヘッダー右上の丸形アイコンボタンは `w-9` を標準とし、`items-center justify-center` で中央配置する
 - 通常導線は `router.push` / `router.back` を使い、セッション境界の遷移（ログイン完了・ログアウト・認証欠落時）は `router.replace` を使う
+- 認証ハブへの内部遷移は `"/auth/index"` を正とし、`No route named "auth"` 警告を避けるため曖昧な `"/auth"` 参照を増やさない
 
 ## Data Flow
 
@@ -62,6 +63,9 @@
 - `fetch` は `src/shared/api/client.ts` に集約する
 - 全レスポンスで最低限のエラーマッピングを行う
 - バリデーションが必要な入出力は `zod` で定義する
+- React Query の key は `src/shared/api/query-keys.ts` を単一ソースとして利用する
+- invalidate/refetch は `src/shared/api/invalidation.ts` を優先利用し、画面での個別実装を増やさない
+- `optionalData` の serialize/deserialize は `src/shared/lib/optional-data.ts` へ集約する
 
 ## State Management Rules
 
@@ -194,6 +198,7 @@
 - Integration: 画面の入力検証・分岐描画・エラー表示を RNTL で検証する
 - E2E: Maestro は導入済みだが、MVP期間は保留運用とする
 - Snapshot テストは原則採用しない（Expoガイド方針に合わせる）
+- Provider付き描画は `src/test-utils/render-with-providers.tsx` を優先利用し、各テストでの `QueryClientProvider` 重複を避ける
 
 ### テスト運用ルール
 

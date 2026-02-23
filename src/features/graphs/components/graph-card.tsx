@@ -5,6 +5,7 @@ import { memo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../../shared/api/authed-pixela-api";
 import type { GraphDefinition } from "../../../shared/api/graph";
+import { queryKeys } from "../../../shared/api/query-keys";
 import { surfaceTokens, textTokens } from "../../../shared/config/ui-tokens";
 import { getGraphThemeColor } from "../../../shared/lib/graph-theme";
 import { SectionCard } from "../../../shared/ui/section-card";
@@ -45,13 +46,12 @@ const GraphCardBase = ({
         to: compactHeatmapRange.to,
       });
     },
-    queryKey: [
-      "graphPixelsCompact",
+    queryKey: queryKeys.graphPixelsCompact(
       api.username,
       graph.id,
       compactHeatmapRange.from,
-      compactHeatmapRange.to,
-    ],
+      compactHeatmapRange.to
+    ),
   });
 
   /**

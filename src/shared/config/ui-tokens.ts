@@ -81,6 +81,15 @@ export const menuIconTokens = {
 } as const;
 
 /**
+ * ヘッダーアクション（右上ボタン等）の共通トークン。
+ */
+export const headerActionTokens = {
+  iconButtonClass: "w-9 items-center justify-center",
+  iconSize: 24,
+  pressableHitSlop: 8,
+} as const;
+
+/**
  * 後方互換のために残す旧色トークン。
  */
 export const colorTokens = {
@@ -114,6 +123,7 @@ export const heatmapTokens = {
  * 共通UIトークンの型。
  */
 export interface UiTokens {
+  headerActionTokens: typeof headerActionTokens;
   borderTokens: typeof borderTokens;
   colorTokens: typeof colorTokens;
   heatmapTokens: typeof heatmapTokens;

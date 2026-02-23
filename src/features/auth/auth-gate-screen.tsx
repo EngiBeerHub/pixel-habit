@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
+import { appRoutes } from "../../shared/config/routes";
 
 /**
  * 保存済み認証情報の有無で初期遷移先を決定するゲート画面。
@@ -15,10 +16,10 @@ export const AuthGateScreen = () => {
       return;
     }
     if (credentials) {
-      router.replace("/(tabs)/home");
+      router.replace(appRoutes.homeTab);
       return;
     }
-    router.replace("/auth");
+    router.replace(appRoutes.authHub);
   }, [credentials, router, status]);
 
   return (

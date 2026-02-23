@@ -1,3 +1,7 @@
+import {
+  deserializeOptionalData,
+  serializeOptionalData,
+} from "../lib/optional-data";
 import { AuthRequiredError, pixelaRequest } from "./client";
 import { getApiAuthCredentials } from "./client-auth-context";
 
@@ -171,55 +175,6 @@ const normalizePixels = (pixels: Array<Pixel | string>): Pixel[] => {
     });
   }
   return normalized;
-};
-
-/**
- * optionalData入力をAPI送信向けJSON文字列へ変換する。
- */
-const serializeOptionalData = (
-  optionalData: string | undefined
-): string | undefined => {
-  if (!optionalData) {
-    return undefined;
-  }
-  const trimmed = optionalData.trim();
-  if (trimmed.length === 0) {
-    return undefined;
-  }
-  return JSON.stringify({ memo: trimmed });
-};
-
-/**
- * APIのoptionalData文字列を画面表示用メモ文字列へ復元する。
- */
-const deserializeOptionalData = (
-  optionalData: string | undefined
-): string | undefined => {
-  if (!optionalData) {
-    return undefined;
-  }
-
-  const trimmed = optionalData.trim();
-  if (!trimmed) {
-    return undefined;
-  }
-
-  try {
-    const parsed = JSON.parse(trimmed) as unknown;
-    if (
-      typeof parsed === "object" &&
-      parsed !== null &&
-      "memo" in parsed &&
-      typeof parsed.memo === "string"
-    ) {
-      const normalizedMemo = parsed.memo.trim();
-      return normalizedMemo || undefined;
-    }
-  } catch {
-    // 既存データ互換: 非JSONで保存された値はそのままメモとして扱う
-  }
-
-  return trimmed;
 };
 
 /**

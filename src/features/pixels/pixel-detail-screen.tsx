@@ -5,7 +5,13 @@ import { Button, Input, TextArea } from "heroui-native";
 import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
+import { invalidatePixelRelatedQueries } from "../../shared/api/invalidation";
+import { ActionStack } from "../../shared/ui/action-stack";
 import { useAppDialog } from "../../shared/ui/app-dialog-provider";
+import { FormField } from "../../shared/ui/form-field";
+import { InlineMessage } from "../../shared/ui/inline-message";
+import { ScreenContainer } from "../../shared/ui/screen-container";
+import { SectionCard } from "../../shared/ui/section-card";
 import { type PixelEditFormValues, pixelEditSchema } from "./pixel-edit-schema";
 
 /**
@@ -65,7 +71,7 @@ export const PixelDetailScreen = () => {
       setError("root", { message: errorMessage });
     },
     onSuccess: async (response) => {
-      await invalidatePixelRelatedQueries(queryClient);
+      await invalidatePixelRelatedQueries(queryClient, api.username);
       openDialog({
         actions: [
           {
@@ -99,7 +105,7 @@ export const PixelDetailScreen = () => {
       setError("root", { message: errorMessage });
     },
     onSuccess: async (response) => {
-      await invalidatePixelRelatedQueries(queryClient);
+      await invalidatePixelRelatedQueries(queryClient, api.username);
       openDialog({
         actions: [
           {
@@ -147,98 +153,73 @@ export const PixelDetailScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-white px-6 pt-6 pb-6">
-      {/* 画面ヘッダー: 編集対象ピクセルの文脈情報 */}
-      <Text className="font-bold text-2xl text-neutral-900">
-        {graphName || "記録編集"}
-      </Text>
-      <Text className="mt-2 text-neutral-600">グラフID: {graphId || "-"}</Text>
-      <Text className="mb-6 text-neutral-600">日付: {date || "-"}</Text>
-
-      {/* 数量入力 */}
-      <Text className="mb-2 text-neutral-800">数量</Text>
-      <Controller
-        control={control}
-        name="quantity"
-        render={({ field: { onBlur, onChange, value } }) => (
-          <Input
-            keyboardType="decimal-pad"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            placeholder="10"
-            testID="pixel-detail-quantity-input"
-            value={value}
-            variant="secondary"
-          />
-        )}
-      />
-      {/* 数量バリデーションエラー */}
-      {errors.quantity?.message ? (
-        <Text className="mb-4 text-red-600 text-sm">
-          {errors.quantity.message}
+    <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
+      <SectionCard title={graphName || "記録編集"}>
+        <Text className="mb-4 text-neutral-600">
+          グラフID: {graphId || "-"} / 日付: {date || "-"}
         </Text>
-      ) : (
-        <View className="mb-4" />
-      )}
 
-      {/* 任意メモ入力 */}
-      <Text className="mb-2 text-neutral-800">メモ</Text>
-      <Controller
-        control={control}
-        name="optionalData"
-        render={({ field: { onBlur, onChange, value } }) => (
-          <TextArea
-            onBlur={onBlur}
-            onChangeText={onChange}
-            placeholder="補足メモ"
-            testID="pixel-detail-optional-data-input"
-            value={value}
-            variant="secondary"
+        <View className="gap-3">
+          <FormField errorMessage={errors.quantity?.message} label="数量 *">
+            <Controller
+              control={control}
+              name="quantity"
+              render={({ field: { onBlur, onChange, value } }) => (
+                <Input
+                  keyboardType="decimal-pad"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  placeholder="10"
+                  testID="pixel-detail-quantity-input"
+                  value={value}
+                  variant="secondary"
+                />
+              )}
+            />
+          </FormField>
+
+          <FormField label="メモ">
+            <Controller
+              control={control}
+              name="optionalData"
+              render={({ field: { onBlur, onChange, value } }) => (
+                <TextArea
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  placeholder="補足メモ"
+                  testID="pixel-detail-optional-data-input"
+                  value={value}
+                  variant="secondary"
+                />
+              )}
+            />
+          </FormField>
+        </View>
+
+        {errors.root?.message ? (
+          <InlineMessage
+            className="mt-4"
+            message={errors.root.message}
+            variant="error"
           />
-        )}
-      />
-      <View className="mb-4" />
+        ) : null}
 
-      {/* API失敗時のフォーム共通エラー */}
-      {errors.root?.message ? (
-        <Text className="mb-4 text-red-600 text-sm">{errors.root.message}</Text>
-      ) : null}
-
-      {/* 画面アクション: 更新 / 削除 */}
-      <View className="gap-3">
-        <Button
-          isDisabled={updateMutation.isPending || deleteMutation.isPending}
-          onPress={onSubmitUpdate}
-        >
-          更新
-        </Button>
-        <Button
-          isDisabled={updateMutation.isPending || deleteMutation.isPending}
-          onPress={onPressDelete}
-          variant="danger-soft"
-        >
-          削除
-        </Button>
-      </View>
-    </View>
+        <ActionStack className="mt-4">
+          <Button
+            isDisabled={updateMutation.isPending || deleteMutation.isPending}
+            onPress={onSubmitUpdate}
+          >
+            更新
+          </Button>
+          <Button
+            isDisabled={updateMutation.isPending || deleteMutation.isPending}
+            onPress={onPressDelete}
+            variant="danger-soft"
+          >
+            削除
+          </Button>
+        </ActionStack>
+      </SectionCard>
+    </ScreenContainer>
   );
-};
-
-/**
- * 記録更新/削除後に関連クエリを再取得し、各画面の表示を同期する。
- */
-const invalidatePixelRelatedQueries = async (
-  queryClient: ReturnType<typeof useQueryClient>
-) => {
-  await Promise.all([
-    queryClient.invalidateQueries({
-      queryKey: ["graphDetailPixels"],
-    }),
-    queryClient.invalidateQueries({
-      queryKey: ["graphPixelsCompact"],
-    }),
-    queryClient.invalidateQueries({
-      queryKey: ["graphPixelsToday"],
-    }),
-  ]);
 };

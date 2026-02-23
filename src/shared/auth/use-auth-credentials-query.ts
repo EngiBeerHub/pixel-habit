@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../api/query-keys";
 import { loadAuthCredentials } from "../storage/auth-storage";
 
 /**
@@ -7,7 +8,7 @@ import { loadAuthCredentials } from "../storage/auth-storage";
 export const useAuthCredentialsQuery = () => {
   return useQuery({
     queryFn: loadAuthCredentials,
-    queryKey: ["authCredentials"],
+    queryKey: queryKeys.authCredentials(),
     retry: false,
     staleTime: Number.POSITIVE_INFINITY,
   });

@@ -1,13 +1,7 @@
 import { notifyManager } from "@tanstack/query-core";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react-native";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import type { ReactNode } from "react";
+import { renderWithProviders } from "../../test-utils/render-with-providers";
 import { PixelDetailScreen } from "./pixel-detail-screen";
 
 const mockBack = jest.fn();
@@ -48,6 +42,12 @@ jest.mock("../../shared/ui/app-dialog-provider", () => ({
 
 jest.mock("heroui-native", () => {
   const { Pressable, Text, TextInput } = require("react-native");
+  const Card = ({ children }: { children?: ReactNode }) => <>{children}</>;
+  Card.Header = ({ children }: { children?: ReactNode }) => <>{children}</>;
+  Card.Title = ({ children }: { children?: ReactNode }) => (
+    <Text>{children}</Text>
+  );
+  Card.Body = ({ children }: { children?: ReactNode }) => <>{children}</>;
 
   return {
     Button: ({
@@ -104,27 +104,12 @@ jest.mock("heroui-native", () => {
         value={value}
       />
     ),
+    Card,
   };
 });
 
 const renderScreen = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      mutations: {
-        gcTime: Number.POSITIVE_INFINITY,
-      },
-      queries: {
-        gcTime: Number.POSITIVE_INFINITY,
-        retry: false,
-      },
-    },
-  });
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <PixelDetailScreen />
-    </QueryClientProvider>
-  );
+  return renderWithProviders(<PixelDetailScreen />);
 };
 
 describe("PixelDetailScreen", () => {

@@ -1,4 +1,3 @@
-import { useRouter } from "expo-router";
 import { Button, Input } from "heroui-native";
 import { useState } from "react";
 import { Text } from "react-native";
@@ -14,7 +13,6 @@ import { SectionCard } from "../../shared/ui/section-card";
  * トークン更新専用画面。
  */
 export const TokenUpdateScreen = () => {
-  const router = useRouter();
   const { credentials, setAuthSession } = useAuthSession();
   const api = useAuthedPixelaApi();
   const [newToken, setNewToken] = useState<string>("");
@@ -64,12 +62,12 @@ export const TokenUpdateScreen = () => {
   };
 
   return (
-    <ScreenContainer scrollable withTopInset={false}>
+    <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
       <SectionCard title="トークン変更">
         <Text className="mb-4 text-neutral-600 text-sm">
           新しいトークンを保存すると、以後のAPI通信に即時適用されます。
         </Text>
-        <FormField label="新しいトークン">
+        <FormField label="新しいトークン *">
           <Input
             autoCapitalize="none"
             autoCorrect={false}
@@ -81,22 +79,13 @@ export const TokenUpdateScreen = () => {
             variant="secondary"
           />
         </FormField>
-        <ActionStack>
+        <ActionStack className="mt-2">
           <Button
             isDisabled={isSubmitting}
             onPress={onPressUpdateToken}
             testID="settings-update-token-button"
           >
             トークン変更
-          </Button>
-          <Button
-            isDisabled={isSubmitting}
-            onPress={() => {
-              router.back();
-            }}
-            variant="ghost"
-          >
-            戻る
           </Button>
         </ActionStack>
       </SectionCard>

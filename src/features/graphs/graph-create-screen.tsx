@@ -1,12 +1,18 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Button } from "heroui-native";
+import { Button, Input } from "heroui-native";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView, Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import { useAuthedPixelaApi } from "../../shared/api/authed-pixela-api";
 import { graphColorOptions, graphTypeOptions } from "../../shared/api/graph";
+import { queryKeys } from "../../shared/api/query-keys";
+import { ActionStack } from "../../shared/ui/action-stack";
+import { FormField } from "../../shared/ui/form-field";
+import { InlineMessage } from "../../shared/ui/inline-message";
+import { ScreenContainer } from "../../shared/ui/screen-container";
+import { SectionCard } from "../../shared/ui/section-card";
 import {
   type GraphCreateFormValues,
   graphCreateSchema,
@@ -59,7 +65,7 @@ export const GraphCreateScreen = () => {
     onSuccess: async (response) => {
       setSuccessMessage(response.message);
       await queryClient.invalidateQueries({
-        queryKey: ["graphs"],
+        queryKey: queryKeys.graphs(api.username),
       });
       router.back();
     },
@@ -73,170 +79,148 @@ export const GraphCreateScreen = () => {
   });
 
   return (
-    <ScrollView
-      className="flex-1 bg-white px-6 pt-6 pb-6"
-      showsHorizontalScrollIndicator={false}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* 画面ヘッダー: 作成目的の説明 */}
-      <Text className="mb-2 font-bold text-2xl text-neutral-900">
-        グラフ作成
-      </Text>
-      <Text className="mb-6 text-neutral-600">
-        必須項目を入力して新しいグラフを作成します。
-      </Text>
-
-      {/* ID入力 */}
-      <Text className="mb-2 text-neutral-800">ID</Text>
-      <Controller
-        control={control}
-        name="id"
-        render={({ field: { onBlur, onChange, value } }) => (
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            className="mb-2 rounded-xl border border-neutral-300 px-4 py-3 text-base"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            placeholder="habit-graph"
-            value={value}
-          />
-        )}
-      />
-      {/* IDバリデーションエラー */}
-      {errors.id?.message ? (
-        <Text className="mb-4 text-red-600 text-sm">{errors.id.message}</Text>
-      ) : (
-        <View className="mb-4" />
-      )}
-
-      {/* グラフ名入力 */}
-      <Text className="mb-2 text-neutral-800">グラフ名</Text>
-      <Controller
-        control={control}
-        name="name"
-        render={({ field: { onBlur, onChange, value } }) => (
-          <TextInput
-            className="mb-2 rounded-xl border border-neutral-300 px-4 py-3 text-base"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            placeholder="読書"
-            value={value}
-          />
-        )}
-      />
-      {/* グラフ名バリデーションエラー */}
-      {errors.name?.message ? (
-        <Text className="mb-4 text-red-600 text-sm">{errors.name.message}</Text>
-      ) : (
-        <View className="mb-4" />
-      )}
-
-      {/* 単位入力 */}
-      <Text className="mb-2 text-neutral-800">単位</Text>
-      <Controller
-        control={control}
-        name="unit"
-        render={({ field: { onBlur, onChange, value } }) => (
-          <TextInput
-            className="mb-2 rounded-xl border border-neutral-300 px-4 py-3 text-base"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            placeholder="page"
-            value={value}
-          />
-        )}
-      />
-      {/* 単位バリデーションエラー */}
-      {errors.unit?.message ? (
-        <Text className="mb-4 text-red-600 text-sm">{errors.unit.message}</Text>
-      ) : (
-        <View className="mb-4" />
-      )}
-
-      {/* タイムゾーン入力 */}
-      <Text className="mb-2 text-neutral-800">タイムゾーン</Text>
-      <Controller
-        control={control}
-        name="timezone"
-        render={({ field: { onBlur, onChange, value } }) => (
-          <TextInput
-            className="mb-2 rounded-xl border border-neutral-300 px-4 py-3 text-base"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            placeholder="Asia/Tokyo"
-            value={value}
-          />
-        )}
-      />
-      {/* タイムゾーンバリデーションエラー */}
-      {errors.timezone?.message ? (
-        <Text className="mb-4 text-red-600 text-sm">
-          {errors.timezone.message}
+    <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
+      <SectionCard title="グラフ作成">
+        <Text className="mb-4 text-neutral-600">
+          必須項目を入力して新しいグラフを作成します。
         </Text>
-      ) : (
-        <View className="mb-4" />
-      )}
 
-      {/* 種別選択 */}
-      <Text className="mb-2 text-neutral-800">種別</Text>
-      <Controller
-        control={control}
-        name="type"
-        render={({ field: { onChange, value } }) => (
-          <View className="mb-4 flex-row gap-2">
-            {graphTypeOptions.map((type) => (
-              <Button
-                isDisabled={value === type}
-                key={type}
-                onPress={() => {
-                  onChange(type);
-                }}
-              >
-                {type}
-              </Button>
-            ))}
-          </View>
-        )}
-      />
+        <View className="gap-3">
+          <FormField errorMessage={errors.id?.message} label="ID">
+            <Controller
+              control={control}
+              name="id"
+              render={({ field: { onBlur, onChange, value } }) => (
+                <Input
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  placeholder="habit-graph"
+                  value={value}
+                  variant="secondary"
+                />
+              )}
+            />
+          </FormField>
 
-      {/* テーマ色選択 */}
-      <Text className="mb-2 text-neutral-800">テーマ色</Text>
-      <Controller
-        control={control}
-        name="color"
-        render={({ field: { onChange, value } }) => (
-          <View className="mb-4 flex-row flex-wrap gap-2">
-            {graphColorOptions.map((color) => (
-              <Button
-                isDisabled={value === color}
-                key={color}
-                onPress={() => {
-                  onChange(color);
-                }}
-              >
-                {color}
-              </Button>
-            ))}
-          </View>
-        )}
-      />
+          <FormField errorMessage={errors.name?.message} label="グラフ名">
+            <Controller
+              control={control}
+              name="name"
+              render={({ field: { onBlur, onChange, value } }) => (
+                <Input
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  placeholder="読書"
+                  value={value}
+                  variant="secondary"
+                />
+              )}
+            />
+          </FormField>
 
-      {/* API失敗時のフォーム共通エラー */}
-      {errors.root?.message ? (
-        <Text className="mb-4 text-red-600 text-sm">{errors.root.message}</Text>
-      ) : null}
-      {/* API成功メッセージ */}
-      {successMessage ? (
-        <Text className="mb-4 text-green-700 text-sm">{successMessage}</Text>
-      ) : null}
+          <FormField errorMessage={errors.unit?.message} label="単位">
+            <Controller
+              control={control}
+              name="unit"
+              render={({ field: { onBlur, onChange, value } }) => (
+                <Input
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  placeholder="page"
+                  value={value}
+                  variant="secondary"
+                />
+              )}
+            />
+          </FormField>
 
-      {/* 画面アクション: 作成実行 */}
-      <View className="gap-3">
-        <Button isDisabled={mutation.isPending} onPress={onSubmit}>
-          作成
-        </Button>
-      </View>
-    </ScrollView>
+          <FormField
+            errorMessage={errors.timezone?.message}
+            label="タイムゾーン"
+          >
+            <Controller
+              control={control}
+              name="timezone"
+              render={({ field: { onBlur, onChange, value } }) => (
+                <Input
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  placeholder="Asia/Tokyo"
+                  value={value}
+                  variant="secondary"
+                />
+              )}
+            />
+          </FormField>
+
+          <FormField label="種別">
+            <Controller
+              control={control}
+              name="type"
+              render={({ field: { onChange, value } }) => (
+                <View className="flex-row gap-2">
+                  {graphTypeOptions.map((type) => (
+                    <Button
+                      isDisabled={value === type}
+                      key={type}
+                      onPress={() => {
+                        onChange(type);
+                      }}
+                    >
+                      {type}
+                    </Button>
+                  ))}
+                </View>
+              )}
+            />
+          </FormField>
+
+          <FormField label="テーマ色">
+            <Controller
+              control={control}
+              name="color"
+              render={({ field: { onChange, value } }) => (
+                <View className="flex-row flex-wrap gap-2">
+                  {graphColorOptions.map((color) => (
+                    <Button
+                      isDisabled={value === color}
+                      key={color}
+                      onPress={() => {
+                        onChange(color);
+                      }}
+                    >
+                      {color}
+                    </Button>
+                  ))}
+                </View>
+              )}
+            />
+          </FormField>
+        </View>
+
+        {errors.root?.message ? (
+          <InlineMessage
+            className="mt-4"
+            message={errors.root.message}
+            variant="error"
+          />
+        ) : null}
+        {successMessage ? (
+          <InlineMessage
+            className="mt-4"
+            message={successMessage}
+            variant="success"
+          />
+        ) : null}
+
+        <ActionStack className="mt-4">
+          <Button isDisabled={mutation.isPending} onPress={onSubmit}>
+            作成
+          </Button>
+        </ActionStack>
+      </SectionCard>
+    </ScreenContainer>
   );
 };
