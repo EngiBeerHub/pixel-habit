@@ -1,41 +1,37 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
-import { useColorScheme } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import {
+  Icon,
+  Label,
+  NativeTabs,
+  VectorIcon,
+} from "expo-router/unstable-native-tabs";
 
 /**
  * Home / Settings の2タブレイアウト。
  */
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const activeTintColor = colorScheme === "dark" ? "#38bdf8" : "#0f766e";
-  const inactiveTintColor = colorScheme === "dark" ? "#9ca3af" : "#737373";
-
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: activeTintColor,
-        tabBarInactiveTintColor: inactiveTintColor,
-      }}
-    >
-      <Tabs.Screen
-        name="home"
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons color={color} name="grid-outline" size={size} />
-          ),
-          title: "Habits",
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons color={color} name="settings-outline" size={size} />
-          ),
-          title: "Settings",
-        }}
-      />
-    </Tabs>
+    <NativeTabs>
+      <NativeTabs.Trigger name="home">
+        <Icon
+          androidSrc={{
+            default: <VectorIcon family={Ionicons} name="grid-outline" />,
+            selected: <VectorIcon family={Ionicons} name="grid" />,
+          }}
+          sf={{ default: "square.grid.2x2", selected: "square.grid.2x2.fill" }}
+        />
+        <Label>Habits</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="settings">
+        <Icon
+          androidSrc={{
+            default: <VectorIcon family={Ionicons} name="settings-outline" />,
+            selected: <VectorIcon family={Ionicons} name="settings" />,
+          }}
+          sf={{ default: "gearshape", selected: "gearshape.fill" }}
+        />
+        <Label>Settings</Label>
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

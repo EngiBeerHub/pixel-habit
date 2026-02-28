@@ -1,7 +1,7 @@
 # Implementation Plan
 
 - [ ] 1. Native Tabs基盤を確定し、タブ遷移の標準挙動を固定する
-- [ ] 1.1 Habits/Settings の主導線を Native Tabs 前提で統一し、タブ表示要素の一貫性を確保する
+- [x] 1.1 Habits/Settings の主導線を Native Tabs 前提で統一し、タブ表示要素の一貫性を確保する
   - タブ基盤を Native Tabs として固定し、タブ名・アイコン・選択状態の表示差をなくす。
   - タブ切替後に直前の文脈へ戻れる操作感を維持し、ユーザーが現在地を見失わないことを確認する。
   - _Requirements: 1.1, 1.3, 1.5_
