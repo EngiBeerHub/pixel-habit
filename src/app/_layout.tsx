@@ -7,6 +7,7 @@ import { type HeroUINativeConfig, HeroUINativeProvider } from "heroui-native";
 import { Platform, useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthSessionProvider } from "../shared/auth/auth-session-context";
+import { resolveHeaderLargeTitle } from "../shared/navigation/header-title-policy";
 import { AppDialogProvider } from "../shared/ui/app-dialog-provider";
 
 /**
@@ -46,6 +47,10 @@ export default function Layout() {
                   name="graphs/create"
                   options={{
                     headerBackButtonDisplayMode: isIos ? "minimal" : undefined,
+                    headerLargeTitle: resolveHeaderLargeTitle({
+                      isIos,
+                      screenType: "form",
+                    }),
                     headerShadowVisible: false,
                     headerShown: true,
                     title: "グラフ作成",
@@ -55,7 +60,10 @@ export default function Layout() {
                   name="graphs/[graphId]/index"
                   options={{
                     headerBackButtonDisplayMode: isIos ? "minimal" : undefined,
-                    headerLargeTitle: isIos,
+                    headerLargeTitle: resolveHeaderLargeTitle({
+                      isIos,
+                      screenType: "detail",
+                    }),
                     headerShadowVisible: false,
                     headerShown: true,
                     title: "グラフ詳細",
@@ -65,6 +73,10 @@ export default function Layout() {
                   name="graphs/[graphId]/edit"
                   options={{
                     headerBackButtonDisplayMode: isIos ? "minimal" : undefined,
+                    headerLargeTitle: resolveHeaderLargeTitle({
+                      isIos,
+                      screenType: "form",
+                    }),
                     headerShadowVisible: false,
                     headerShown: true,
                     title: "グラフ編集",
@@ -74,6 +86,10 @@ export default function Layout() {
                   name="graphs/[graphId]/pixels/[date]"
                   options={{
                     headerBackButtonDisplayMode: isIos ? "minimal" : undefined,
+                    headerLargeTitle: resolveHeaderLargeTitle({
+                      isIos,
+                      screenType: "form",
+                    }),
                     headerShadowVisible: false,
                     headerShown: true,
                     title: "記録編集",

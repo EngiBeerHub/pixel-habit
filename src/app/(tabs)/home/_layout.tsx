@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter } from "expo-router";
 import { Platform, Pressable } from "react-native";
 import { headerActionTokens } from "../../../shared/config/ui-tokens";
+import { resolveHeaderLargeTitle } from "../../../shared/navigation/header-title-policy";
 
 /**
  * Habitsタブ配下の画面遷移を管理するStack。
@@ -13,13 +14,16 @@ export default function HabitsStackLayout() {
   return (
     <Stack
       screenOptions={{
-        headerLargeTitle: isIos,
         headerShadowVisible: false,
       }}
     >
       <Stack.Screen
         name="index"
         options={{
+          headerLargeTitle: resolveHeaderLargeTitle({
+            isIos,
+            screenType: "overview",
+          }),
           headerRight: () => (
             <Pressable
               accessibilityLabel="Habitを追加"
