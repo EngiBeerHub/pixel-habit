@@ -2,15 +2,21 @@ import { render, screen } from "@testing-library/react-native";
 import type { ReactNode } from "react";
 import TabLayout from "../../app/(tabs)/_layout";
 
-const mockNativeTabs = jest.fn();
+const mockNativeTabsProps = jest.fn();
 const mockNativeTabTrigger = jest.fn();
 const mockIcon = jest.fn();
 
 jest.mock("expo-router/unstable-native-tabs", () => {
   const { Text, View } = require("react-native");
 
-  const NativeTabs = ({ children }: { children?: ReactNode }) => {
-    mockNativeTabs();
+  const NativeTabs = ({
+    children,
+    ...props
+  }: {
+    children?: ReactNode;
+    backBehavior?: string;
+  }) => {
+    mockNativeTabsProps(props);
     return <View testID="native-tabs">{children}</View>;
   };
 
@@ -53,6 +59,16 @@ describe("TabLayout", () => {
     expect(screen.getByText("Settings")).toBeTruthy();
     expect(mockNativeTabTrigger).toHaveBeenNthCalledWith(1, "home");
     expect(mockNativeTabTrigger).toHaveBeenNthCalledWith(2, "settings");
+  });
+
+  test("keeps tab navigation context with history back behavior", () => {
+    render(<TabLayout />);
+
+    expect(mockNativeTabsProps).toHaveBeenCalledWith(
+      expect.objectContaining({
+        backBehavior: "history",
+      })
+    );
   });
 
   test("defines selected/unselected icon states for both tabs", () => {

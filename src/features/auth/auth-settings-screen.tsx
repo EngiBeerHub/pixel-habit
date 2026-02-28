@@ -5,7 +5,10 @@ import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text } from "react-native";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
+import { appRoutes } from "../../shared/config/routes";
+import { navigateToTabWithRecovery } from "../../shared/navigation/tab-navigation-fallback";
 import { ActionStack } from "../../shared/ui/action-stack";
+import { useAppDialog } from "../../shared/ui/app-dialog-provider";
 import { FormField } from "../../shared/ui/form-field";
 import { InlineMessage } from "../../shared/ui/inline-message";
 import { ScreenContainer } from "../../shared/ui/screen-container";
@@ -20,6 +23,7 @@ import { useSignIn } from "./use-sign-in";
  */
 export const AuthSettingsScreen = () => {
   const router = useRouter();
+  const { open } = useAppDialog();
   const signInMutation = useSignIn();
   const {
     credentials: authCredentials,
@@ -49,9 +53,13 @@ export const AuthSettingsScreen = () => {
 
   useEffect(() => {
     if (status === "authenticated" && authCredentials) {
-      router.replace("/(tabs)/home");
+      navigateToTabWithRecovery({
+        openDialog: open,
+        replace: router.replace,
+        targetRoute: appRoutes.homeTab,
+      });
     }
-  }, [authCredentials, router, status]);
+  }, [authCredentials, open, router, status]);
 
   const loadError = hasLoadError
     ? "保存済みの接続情報を読み込めませんでした。"

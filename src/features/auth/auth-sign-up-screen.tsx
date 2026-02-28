@@ -5,7 +5,10 @@ import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text } from "react-native";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
+import { appRoutes } from "../../shared/config/routes";
+import { navigateToTabWithRecovery } from "../../shared/navigation/tab-navigation-fallback";
 import { ActionStack } from "../../shared/ui/action-stack";
+import { useAppDialog } from "../../shared/ui/app-dialog-provider";
 import { FormField } from "../../shared/ui/form-field";
 import { InlineMessage } from "../../shared/ui/inline-message";
 import { ScreenContainer } from "../../shared/ui/screen-container";
@@ -20,6 +23,7 @@ import { useSignUp } from "./use-sign-up";
  */
 export const AuthSignUpScreen = () => {
   const router = useRouter();
+  const { open } = useAppDialog();
   const signUpMutation = useSignUp();
   const { credentials, setAuthSession, status } = useAuthSession();
   const {
@@ -37,9 +41,13 @@ export const AuthSignUpScreen = () => {
 
   useEffect(() => {
     if (status === "authenticated" && credentials) {
-      router.replace("/(tabs)/home");
+      navigateToTabWithRecovery({
+        openDialog: open,
+        replace: router.replace,
+        targetRoute: appRoutes.homeTab,
+      });
     }
-  }, [credentials, router, status]);
+  }, [credentials, open, router, status]);
 
   /**
    * アカウント作成処理を実行する。

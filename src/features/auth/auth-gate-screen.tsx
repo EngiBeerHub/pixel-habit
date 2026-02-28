@@ -3,12 +3,15 @@ import { useEffect } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useAuthSession } from "../../shared/auth/use-auth-session";
 import { appRoutes } from "../../shared/config/routes";
+import { navigateToTabWithRecovery } from "../../shared/navigation/tab-navigation-fallback";
+import { useAppDialog } from "../../shared/ui/app-dialog-provider";
 
 /**
  * 保存済み認証情報の有無で初期遷移先を決定するゲート画面。
  */
 export const AuthGateScreen = () => {
   const router = useRouter();
+  const { open } = useAppDialog();
   const { credentials, status } = useAuthSession();
 
   useEffect(() => {
@@ -16,11 +19,15 @@ export const AuthGateScreen = () => {
       return;
     }
     if (credentials) {
-      router.replace(appRoutes.homeTab);
+      navigateToTabWithRecovery({
+        openDialog: open,
+        replace: router.replace,
+        targetRoute: appRoutes.homeTab,
+      });
       return;
     }
     router.replace(appRoutes.authHub);
-  }, [credentials, router, status]);
+  }, [credentials, open, router, status]);
 
   return (
     <View className="flex-1 items-center justify-center bg-white px-6">

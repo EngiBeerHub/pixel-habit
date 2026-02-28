@@ -11,7 +11,7 @@ import {
  */
 export default function TabLayout() {
   return (
-    <NativeTabs>
+    <NativeTabs backBehavior="history">
       <NativeTabs.Trigger name="home">
         <Icon
           androidSrc={{
