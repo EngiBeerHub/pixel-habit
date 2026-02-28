@@ -146,6 +146,8 @@ export const CompactHeatmap = ({
               >
                 {row.cells.map((cell) => (
                   <Pressable
+                    accessibilityState={{ disabled: cell.isFutureDate }}
+                    disabled={cell.isFutureDate}
                     key={cell.date}
                     onPress={(event) => {
                       event?.stopPropagation?.();

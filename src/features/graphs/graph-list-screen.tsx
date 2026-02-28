@@ -37,11 +37,12 @@ export const GraphListScreen = () => {
   } = useGraphListScreen();
 
   const hasGraphs = Boolean(query.data && query.data.length > 0);
-  const shouldShowSkeleton = isGraphListLoading;
-  const shouldShowError = !isGraphListLoading && Boolean(errorMessage);
-  const canRenderDataState = !(isGraphListLoading || errorMessage);
-  const shouldShowEmpty = canRenderDataState && !hasGraphs;
-  const shouldShowGraphList = canRenderDataState && hasGraphs;
+  const hasBlockingState = isGraphListLoading || Boolean(errorMessage);
+  const shouldShowGraphList = hasGraphs;
+  const shouldShowSkeleton = isGraphListLoading && !hasGraphs;
+  const shouldShowError =
+    !isGraphListLoading && Boolean(errorMessage) && !hasGraphs;
+  const shouldShowEmpty = !(hasBlockingState || hasGraphs);
 
   const listEmptyComponent: ReactNode = useMemo(() => {
     if (shouldShowSkeleton) {

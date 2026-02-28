@@ -78,4 +78,23 @@ describe("compact heatmap", () => {
     fireEvent.press(screen.getByTestId("compact-heatmap-cell-20260110"));
     expect(onPressCell).not.toHaveBeenCalled();
   });
+
+  test("marks future date cell as disabled for accessibility", () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2026, 0, 8, 10, 0, 0));
+
+    render(
+      <CompactHeatmap
+        graphColor="sora"
+        onPressCell={jest.fn()}
+        pixels={[{ date: "20260107", quantity: "2" }]}
+        weeks={14}
+      />
+    );
+
+    expect(screen.getByTestId("compact-heatmap-cell-20260110")).toHaveProp(
+      "accessibilityState",
+      { disabled: true }
+    );
+  });
 });
