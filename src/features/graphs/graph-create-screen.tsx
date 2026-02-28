@@ -82,7 +82,7 @@ export const GraphCreateScreen = () => {
 
   return (
     <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
-      <SectionCard title="グラフ作成">
+      <SectionCard>
         <Text className="mb-4 text-neutral-600">
           必須項目を入力して新しいグラフを作成します。
         </Text>

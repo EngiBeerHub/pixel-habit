@@ -78,4 +78,10 @@ describe("TokenUpdateScreen", () => {
     });
     expect(await screen.findByText("トークン更新成功")).toBeTruthy();
   });
+
+  test("does not duplicate token title in content when header title is used", () => {
+    render(<TokenUpdateScreen />);
+
+    expect(screen.getAllByText("トークン変更")).toHaveLength(1);
+  });
 });

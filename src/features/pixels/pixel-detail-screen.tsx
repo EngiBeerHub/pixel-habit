@@ -154,7 +154,7 @@ export const PixelDetailScreen = () => {
 
   return (
     <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
-      <SectionCard title={graphName || "記録編集"}>
+      <SectionCard title={graphName || undefined}>
         <Text className="mb-4 text-neutral-600">
           グラフID: {graphId || "-"} / 日付: {date || "-"}
         </Text>

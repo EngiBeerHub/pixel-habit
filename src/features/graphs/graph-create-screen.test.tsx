@@ -156,4 +156,10 @@ describe("GraphCreateScreen", () => {
 
     expect(mockBack).toHaveBeenCalled();
   });
+
+  test("does not render duplicated content title for graph create", () => {
+    renderScreen();
+
+    expect(screen.queryByText("グラフ作成")).toBeNull();
+  });
 });

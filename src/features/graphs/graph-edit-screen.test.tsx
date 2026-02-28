@@ -159,4 +159,10 @@ describe("GraphEditScreen", () => {
       )
     ).toBeTruthy();
   });
+
+  test("does not render duplicated content title for graph edit", () => {
+    renderScreen();
+
+    expect(screen.queryByText("グラフ編集")).toBeNull();
+  });
 });

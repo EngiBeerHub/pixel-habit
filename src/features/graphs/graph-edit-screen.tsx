@@ -93,7 +93,7 @@ export const GraphEditScreen = () => {
 
   return (
     <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
-      <SectionCard title="グラフ編集">
+      <SectionCard>
         <View className="gap-3">
           <FormField errorMessage={errors.name?.message} label="グラフ名">
             <Controller

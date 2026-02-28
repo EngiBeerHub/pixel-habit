@@ -275,4 +275,16 @@ describe("PixelDetailScreen", () => {
       await screen.findByText("graphIdまたはdateが不正です。")
     ).toBeTruthy();
   });
+
+  test("does not render fallback content title matching header title", () => {
+    mockRouteParams = {
+      date: "20260108",
+      graphId: "sleep",
+      quantity: "2",
+    };
+
+    renderScreen();
+
+    expect(screen.queryByText("記録編集")).toBeNull();
+  });
 });

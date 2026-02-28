@@ -63,7 +63,7 @@ export const TokenUpdateScreen = () => {
 
   return (
     <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
-      <SectionCard title="トークン変更">
+      <SectionCard>
         <Text className="mb-4 text-neutral-600 text-sm">
           新しいトークンを保存すると、以後のAPI通信に即時適用されます。
         </Text>
