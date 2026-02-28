@@ -17,6 +17,7 @@ const mockBack = jest.fn();
 const mockSetOptions = jest.fn();
 const mockCanGoBack = jest.fn();
 const mockOpenDialog = jest.fn();
+let mockAppOwnership: "expo" | null = null;
 const MONTH_RANGE_LABEL_PATTERN = /2026年2月: 20260201 - 20260228/;
 const OPTIONAL_DATA_PREVIEW_PATTERN =
   /^これは とても 長い 補足メモで 一覧では 省略…$/;
@@ -67,6 +68,15 @@ jest.mock("../../shared/ui/app-dialog-provider", () => ({
 
 jest.mock("@react-native-menu/menu", () => ({
   MenuView: ({ children }: { children?: ReactNode }) => <>{children}</>,
+}));
+
+jest.mock("expo-constants", () => ({
+  __esModule: true,
+  default: {
+    get appOwnership() {
+      return mockAppOwnership;
+    },
+  },
 }));
 
 jest.mock("heroui-native", () => {
@@ -201,6 +211,7 @@ describe("GraphDetailScreen", () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date(2026, 1, 14, 12, 0, 0));
     mockCanGoBack.mockReturnValue(true);
+    mockAppOwnership = null;
     mockRouteParams = {
       color: "sora",
       graphId: "sleep",
@@ -440,5 +451,57 @@ describe("GraphDetailScreen", () => {
 
     expect(mockBack).toHaveBeenCalled();
     expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  test("opens fallback dialog menu when native menu is unavailable", async () => {
+    mockAppOwnership = "expo";
+    renderScreen();
+    await waitFor(() => {
+      expect(mockSetOptions).toHaveBeenCalled();
+    });
+
+    const headerRightElement = getHeaderRightElement();
+    act(() => {
+      headerRightElement.props.onPress?.();
+    });
+
+    expect(mockOpenDialog).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "グラフ操作",
+      })
+    );
+
+    const fallbackActions = mockOpenDialog.mock.calls[0]?.[0]?.actions as
+      | Array<{ label: string; onPress?: () => void }>
+      | undefined;
+    const editAction = fallbackActions?.find(
+      (action) => action.label === "編集"
+    );
+    const deleteAction = fallbackActions?.find(
+      (action) => action.label === "削除"
+    );
+
+    act(() => {
+      editAction?.onPress?.();
+    });
+    expect(mockPush).toHaveBeenCalledWith({
+      params: {
+        color: "sora",
+        graphId: "sleep",
+        graphName: "Sleep",
+        timezone: "Asia/Tokyo",
+        unit: "hour",
+      },
+      pathname: "/graphs/[graphId]/edit",
+    });
+
+    act(() => {
+      deleteAction?.onPress?.();
+    });
+    expect(mockOpenDialog).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        title: "グラフ削除",
+      })
+    );
   });
 });

@@ -95,6 +95,11 @@
 - Header 設定の二重管理再発リスク — 静的/動的境界ルールを design.md と architecture.md に反映する。
 - タブ/バック挙動の回帰リスク — layout レベルのナビテストを追加し、screenテストのみ依存を避ける。
 
+## Operational Notes
+- Graph Detail の `...` は iOS/Android の Dev Client / Standalone では `@react-native-menu/menu` を使用する。
+- Expo Go またはネイティブメニュー非対応ランタイムでは、同じ `...` ボタン押下で Dialog fallback を開き、編集/削除導線を維持する。
+- 既知制約: fallback はネイティブ長押し/アンカー表示ではなくモーダル操作になるが、編集/削除の機能等価性を優先する。
+
 ## References
 - [Expo Router Stack](https://docs.expo.dev/router/advanced/stack/) — Stackヘッダーと戻る導線の公式仕様
 - [Expo Router Native Tabs](https://docs.expo.dev/router/advanced/native-tabs/) — ネイティブタブ方針

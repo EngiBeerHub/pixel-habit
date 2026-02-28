@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { MenuView, type NativeActionEvent } from "@react-native-menu/menu";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Constants from "expo-constants";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
-import { Platform, PlatformColor, View } from "react-native";
+import { Platform, PlatformColor, Pressable, View } from "react-native";
 import { useAuthedPixelaApi } from "../../../shared/api/authed-pixela-api";
 import {
   invalidateGraphRelatedQueries,
@@ -23,6 +24,7 @@ import {
   getCalendarYearRange,
 } from "../../../shared/lib/calendar-range";
 import { buildGraphDetailSummary } from "../../../shared/lib/graph-detail-summary";
+import { resolveNativeMenuAvailability } from "../../../shared/navigation/native-menu-capability";
 import { useAppDialog } from "../../../shared/ui/app-dialog-provider";
 
 const GRAPH_MENU_ACTION_EDIT = "edit";
@@ -73,6 +75,10 @@ export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
   const [mode, setMode] = useState<CalendarMode>("month");
   const { credentials, hasLoadError, status } = useAuthSession();
   const api = useAuthedPixelaApi();
+  const supportsNativeMenu = resolveNativeMenuAvailability({
+    appOwnership: Constants.appOwnership,
+    platform: Platform.OS,
+  });
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -254,20 +260,63 @@ export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
     [onPressDeleteGraph, onPressOpenGraphEdit]
   );
 
+  const onPressOpenGraphFallbackMenu = useCallback(() => {
+    openDialog({
+      actions: [
+        {
+          label: "キャンセル",
+          role: "cancel",
+        },
+        {
+          label: "編集",
+          onPress: onPressOpenGraphEdit,
+        },
+        {
+          label: "削除",
+          onPress: onPressDeleteGraph,
+          role: "destructive",
+        },
+      ],
+      description: "グラフの編集または削除を選択してください。",
+      title: "グラフ操作",
+    });
+  }, [onPressDeleteGraph, onPressOpenGraphEdit, openDialog]);
+
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: ({ tintColor }: { tintColor?: string }) => (
-        <MenuView
-          actions={graphMenuActions}
-          isAnchoredToRight
-          onPressAction={onPressGraphMenuAction}
-          testID="graph-detail-header-menu-button"
-        >
-          <View
+      headerRight: ({ tintColor }: { tintColor?: string }) =>
+        supportsNativeMenu ? (
+          <MenuView
+            actions={graphMenuActions}
+            isAnchoredToRight
+            onPressAction={onPressGraphMenuAction}
+            testID="graph-detail-header-menu-button"
+          >
+            <View
+              accessibilityLabel="グラフ操作メニュー"
+              accessibilityRole="button"
+              accessible
+              className={headerActionTokens.iconButtonClass}
+            >
+              <Ionicons
+                color={
+                  Platform.OS === "ios"
+                    ? PlatformColor("label")
+                    : (tintColor ?? undefined)
+                }
+                name="ellipsis-horizontal"
+                size={headerActionTokens.iconSize}
+              />
+            </View>
+          </MenuView>
+        ) : (
+          <Pressable
             accessibilityLabel="グラフ操作メニュー"
             accessibilityRole="button"
-            accessible
             className={headerActionTokens.iconButtonClass}
+            hitSlop={headerActionTokens.pressableHitSlop}
+            onPress={onPressOpenGraphFallbackMenu}
+            testID="graph-detail-header-menu-button"
           >
             <Ionicons
               color={
@@ -278,11 +327,16 @@ export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
               name="ellipsis-horizontal"
               size={headerActionTokens.iconSize}
             />
-          </View>
-        </MenuView>
-      ),
+          </Pressable>
+        ),
     });
-  }, [graphMenuActions, navigation, onPressGraphMenuAction]);
+  }, [
+    graphMenuActions,
+    navigation,
+    onPressGraphMenuAction,
+    onPressOpenGraphFallbackMenu,
+    supportsNativeMenu,
+  ]);
 
   /**
    * 選択した日付の記録詳細画面へ遷移する。
