@@ -1,6 +1,10 @@
 import { notifyManager } from "@tanstack/query-core";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import type { ReactElement, ReactNode } from "react";
+import {
+  headerActionTokens,
+  menuIconTokens,
+} from "../../shared/config/ui-tokens";
 import { renderWithProviders } from "../../test-utils/render-with-providers";
 import { GraphDetailScreen } from "./graph-detail-screen";
 
@@ -332,15 +336,39 @@ describe("GraphDetailScreen", () => {
     expect(headerRightElement.props.actions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
+          imageColor: menuIconTokens.primaryColor,
           id: "edit",
           title: "編集",
         }),
         expect.objectContaining({
+          imageColor: menuIconTokens.destructiveColor,
           id: "delete",
           title: "削除",
         }),
       ])
     );
+    expect(headerRightElement.props.isAnchoredToRight).toBe(true);
+    expect(headerRightElement.props.testID).toBe(
+      "graph-detail-header-menu-button"
+    );
+
+    const headerTriggerContainer = headerRightElement.props
+      .children as ReactElement<{
+      children?: ReactElement<{ color?: string; name?: string; size?: number }>;
+      className?: string;
+    }>;
+    expect(headerTriggerContainer.props.className).toBe(
+      headerActionTokens.iconButtonClass
+    );
+    expect(headerTriggerContainer.props.accessibilityLabel).toBe(
+      "グラフ操作メニュー"
+    );
+    expect(headerTriggerContainer.props.accessibilityRole).toBe("button");
+    expect(headerTriggerContainer.props.accessible).toBe(true);
+
+    const headerIcon = headerTriggerContainer.props.children;
+    expect(headerIcon.props.name).toBe("ellipsis-horizontal");
+    expect(headerIcon.props.size).toBe(headerActionTokens.iconSize);
   });
 
   test("navigates to edit screen from graph management menu", async () => {

@@ -263,7 +263,12 @@ export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
           onPressAction={onPressGraphMenuAction}
           testID="graph-detail-header-menu-button"
         >
-          <View className={headerActionTokens.iconButtonClass}>
+          <View
+            accessibilityLabel="グラフ操作メニュー"
+            accessibilityRole="button"
+            accessible
+            className={headerActionTokens.iconButtonClass}
+          >
             <Ionicons
               color={
                 Platform.OS === "ios"
