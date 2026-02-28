@@ -537,6 +537,16 @@ describe("GraphListScreen", () => {
     });
   });
 
+  test("prevents duplicate detail navigation on rapid repeated card taps", async () => {
+    await renderScreen();
+    expect(await screen.findByText("graph:Sleep")).toBeTruthy();
+
+    fireEvent.press(screen.getByText("open-graph-detail"));
+    fireEvent.press(screen.getByText("open-graph-detail"));
+
+    expect(mockPush).toHaveBeenCalledTimes(1);
+  });
+
   test("does not show detailed input navigation in quick add", async () => {
     await renderScreen();
     expect(await screen.findByText("graph:Sleep")).toBeTruthy();

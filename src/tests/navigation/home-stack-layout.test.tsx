@@ -83,4 +83,22 @@ describe("HomeStackLayout", () => {
 
     expect(mockPush).toHaveBeenCalledWith("/graphs/create");
   });
+
+  test("prevents duplicate create navigation on rapid repeated taps", () => {
+    render(<HomeStackLayout />);
+
+    const indexScreenInput = mockStackScreenProps.mock.calls[0]?.[0] as {
+      options: {
+        headerRight: () => React.ReactElement;
+      };
+    };
+    const headerRight = indexScreenInput.options.headerRight;
+    const headerRightElement = headerRight();
+
+    headerRightElement.props.onPress();
+    headerRightElement.props.onPress();
+
+    expect(mockPush).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith("/graphs/create");
+  });
 });

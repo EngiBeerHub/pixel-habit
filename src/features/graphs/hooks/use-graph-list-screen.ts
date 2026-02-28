@@ -19,6 +19,7 @@ import { queryKeys } from "../../../shared/api/query-keys";
 import { useAuthSession } from "../../../shared/auth/use-auth-session";
 import { appRoutes } from "../../../shared/config/routes";
 import { getTodayAsYyyyMmDd } from "../../../shared/lib/date";
+import { createNavigationPressGuard } from "../../../shared/navigation/navigation-press-guard";
 import {
   type PixelAddFormValues,
   pixelAddSchema,
@@ -56,6 +57,7 @@ export interface UseGraphListScreenResult {
 export const useGraphListScreen = (): UseGraphListScreenResult => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const guardNavigationPress = useMemo(createNavigationPressGuard, []);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
   const [selectedGraph, setSelectedGraph] = useState<GraphDefinition | null>(
@@ -184,15 +186,17 @@ export const useGraphListScreen = (): UseGraphListScreenResult => {
    * グラフ詳細画面へ遷移する。
    */
   const onPressOpenDetail = (graph: GraphDefinition) => {
-    router.push({
-      params: {
-        color: graph.color,
-        graphId: graph.id,
-        graphName: graph.name,
-        timezone: graph.timezone,
-        unit: graph.unit,
-      },
-      pathname: "/graphs/[graphId]",
+    guardNavigationPress(() => {
+      router.push({
+        params: {
+          color: graph.color,
+          graphId: graph.id,
+          graphName: graph.name,
+          timezone: graph.timezone,
+          unit: graph.unit,
+        },
+        pathname: "/graphs/[graphId]",
+      });
     });
   };
 

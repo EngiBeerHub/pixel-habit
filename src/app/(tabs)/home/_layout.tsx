@@ -3,6 +3,7 @@ import { Stack, useRouter } from "expo-router";
 import { Platform, Pressable } from "react-native";
 import { headerActionTokens } from "../../../shared/config/ui-tokens";
 import { resolveHeaderLargeTitle } from "../../../shared/navigation/header-title-policy";
+import { createNavigationPressGuard } from "../../../shared/navigation/navigation-press-guard";
 import { resolveStandardStackBackOptions } from "../../../shared/navigation/stack-back-policy";
 
 /**
@@ -11,6 +12,7 @@ import { resolveStandardStackBackOptions } from "../../../shared/navigation/stac
 export default function HabitsStackLayout() {
   const router = useRouter();
   const isIos = Platform.OS === "ios";
+  const guardNavigationPress = createNavigationPressGuard();
 
   return (
     <Stack
@@ -36,7 +38,9 @@ export default function HabitsStackLayout() {
               className={headerActionTokens.iconButtonClass}
               hitSlop={headerActionTokens.pressableHitSlop}
               onPress={() => {
-                router.push("/graphs/create");
+                guardNavigationPress(() => {
+                  router.push("/graphs/create");
+                });
               }}
               testID="home-header-create-button"
             >
