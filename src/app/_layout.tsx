@@ -8,6 +8,7 @@ import { Platform, useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthSessionProvider } from "../shared/auth/auth-session-context";
 import { resolveHeaderLargeTitle } from "../shared/navigation/header-title-policy";
+import { resolveStandardStackBackOptions } from "../shared/navigation/stack-back-policy";
 import { AppDialogProvider } from "../shared/ui/app-dialog-provider";
 
 /**
@@ -46,7 +47,10 @@ export default function Layout() {
                 <Stack.Screen
                   name="graphs/create"
                   options={{
-                    headerBackButtonDisplayMode: isIos ? "minimal" : undefined,
+                    ...resolveStandardStackBackOptions({
+                      isIos,
+                      isRootScreen: false,
+                    }),
                     headerLargeTitle: resolveHeaderLargeTitle({
                       isIos,
                       screenType: "form",
@@ -59,7 +63,10 @@ export default function Layout() {
                 <Stack.Screen
                   name="graphs/[graphId]/index"
                   options={{
-                    headerBackButtonDisplayMode: isIos ? "minimal" : undefined,
+                    ...resolveStandardStackBackOptions({
+                      isIos,
+                      isRootScreen: false,
+                    }),
                     headerLargeTitle: resolveHeaderLargeTitle({
                       isIos,
                       screenType: "detail",
@@ -72,7 +79,10 @@ export default function Layout() {
                 <Stack.Screen
                   name="graphs/[graphId]/edit"
                   options={{
-                    headerBackButtonDisplayMode: isIos ? "minimal" : undefined,
+                    ...resolveStandardStackBackOptions({
+                      isIos,
+                      isRootScreen: false,
+                    }),
                     headerLargeTitle: resolveHeaderLargeTitle({
                       isIos,
                       screenType: "form",
@@ -85,7 +95,10 @@ export default function Layout() {
                 <Stack.Screen
                   name="graphs/[graphId]/pixels/[date]"
                   options={{
-                    headerBackButtonDisplayMode: isIos ? "minimal" : undefined,
+                    ...resolveStandardStackBackOptions({
+                      isIos,
+                      isRootScreen: false,
+                    }),
                     headerLargeTitle: resolveHeaderLargeTitle({
                       isIos,
                       screenType: "form",

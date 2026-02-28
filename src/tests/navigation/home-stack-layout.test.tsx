@@ -61,7 +61,9 @@ describe("HomeStackLayout", () => {
     expect(indexScreenInput.name).toBe("index");
     expect(indexScreenInput.options).toEqual(
       expect.objectContaining({
+        headerBackVisible: false,
         headerLargeTitle: true,
+        headerLeft: undefined,
         title: "Habits",
       })
     );

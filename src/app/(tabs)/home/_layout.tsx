@@ -3,6 +3,7 @@ import { Stack, useRouter } from "expo-router";
 import { Platform, Pressable } from "react-native";
 import { headerActionTokens } from "../../../shared/config/ui-tokens";
 import { resolveHeaderLargeTitle } from "../../../shared/navigation/header-title-policy";
+import { resolveStandardStackBackOptions } from "../../../shared/navigation/stack-back-policy";
 
 /**
  * Habitsタブ配下の画面遷移を管理するStack。
@@ -20,6 +21,10 @@ export default function HabitsStackLayout() {
       <Stack.Screen
         name="index"
         options={{
+          ...resolveStandardStackBackOptions({
+            isIos,
+            isRootScreen: true,
+          }),
           headerLargeTitle: resolveHeaderLargeTitle({
             isIos,
             screenType: "overview",

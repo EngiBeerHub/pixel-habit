@@ -56,7 +56,9 @@ describe("SettingsStackLayout", () => {
     expect(indexScreenInput.name).toBe("index");
     expect(indexScreenInput.options).toEqual(
       expect.objectContaining({
+        headerBackVisible: false,
         headerLargeTitle: true,
+        headerLeft: undefined,
         title: "Settings",
       })
     );
@@ -64,7 +66,9 @@ describe("SettingsStackLayout", () => {
     expect(tokenScreenInput.name).toBe("token");
     expect(tokenScreenInput.options).toEqual(
       expect.objectContaining({
+        headerBackVisible: true,
         headerLargeTitle: false,
+        headerLeft: undefined,
         title: "トークン変更",
       })
     );
