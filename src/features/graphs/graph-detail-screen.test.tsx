@@ -453,6 +453,42 @@ describe("GraphDetailScreen", () => {
     expect(mockReplace).not.toHaveBeenCalled();
   });
 
+  test("replaces home tab after delete completion when back is unavailable", async () => {
+    mockCanGoBack.mockReturnValue(false);
+    renderScreen();
+    await waitFor(() => {
+      expect(mockSetOptions).toHaveBeenCalled();
+    });
+
+    pressHeaderMenuAction("delete");
+
+    const confirmDialogActions = mockOpenDialog.mock.calls[0]?.[0]?.actions as
+      | Array<{ label: string; onPress?: () => void }>
+      | undefined;
+    const deleteAction = confirmDialogActions?.find(
+      (action) => action.label === "削除する"
+    );
+    act(() => {
+      deleteAction?.onPress?.();
+    });
+
+    await waitFor(() => {
+      expect(mockDeleteGraph).toHaveBeenCalledWith({ graphId: "sleep" });
+    });
+
+    const completionDialogActions = mockOpenDialog.mock.calls[1]?.[0]
+      ?.actions as Array<{ label: string; onPress?: () => void }>;
+    const okAction = completionDialogActions.find(
+      (action) => action.label === "OK"
+    );
+    act(() => {
+      okAction?.onPress?.();
+    });
+
+    expect(mockBack).not.toHaveBeenCalled();
+    expect(mockReplace).toHaveBeenCalledWith("/(tabs)/home");
+  });
+
   test("opens fallback dialog menu when native menu is unavailable", async () => {
     mockAppOwnership = "expo";
     renderScreen();

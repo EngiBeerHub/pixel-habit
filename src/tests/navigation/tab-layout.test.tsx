@@ -88,4 +88,43 @@ describe("TabLayout", () => {
       })
     );
   });
+
+  test("defines Android icon states for both tabs", () => {
+    render(<TabLayout />);
+
+    expect(mockIcon).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        androidSrc: expect.objectContaining({
+          default: expect.objectContaining({
+            props: expect.objectContaining({
+              name: "grid-outline",
+            }),
+          }),
+          selected: expect.objectContaining({
+            props: expect.objectContaining({
+              name: "grid",
+            }),
+          }),
+        }),
+      })
+    );
+    expect(mockIcon).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        androidSrc: expect.objectContaining({
+          default: expect.objectContaining({
+            props: expect.objectContaining({
+              name: "settings-outline",
+            }),
+          }),
+          selected: expect.objectContaining({
+            props: expect.objectContaining({
+              name: "settings",
+            }),
+          }),
+        }),
+      })
+    );
+  });
 });
