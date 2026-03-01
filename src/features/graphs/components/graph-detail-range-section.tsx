@@ -3,7 +3,7 @@ import { Text, View } from "react-native";
 import { textTokens } from "../../../shared/config/ui-tokens";
 import {
   type CalendarMode,
-  formatCalendarModeLabel,
+  formatGraphDetailModeLabel,
 } from "../../../shared/lib/calendar-range";
 import { mergeClassNames } from "../../../shared/lib/class-name";
 
@@ -43,14 +43,14 @@ export const GraphDetailRangeSection = ({
             className={mergeClassNames("text-xs", textTokens.mutedClass)}
             testID="graph-detail-mode-help"
           >
-            Month=暦月 / Year=暦年
+            Short=14週 / Full=53週
           </Text>
         </View>
       </View>
 
       <Tabs
         onValueChange={(value) => {
-          if (value === "month" || value === "year") {
+          if (value === "short" || value === "full") {
             onChangeMode(value);
           }
         }}
@@ -61,29 +61,29 @@ export const GraphDetailRangeSection = ({
           <Tabs.Indicator />
           <Tabs.Trigger
             onPress={() => {
-              onChangeMode("month");
+              onChangeMode("short");
             }}
-            testID="graph-detail-mode-month"
-            value="month"
+            testID="graph-detail-mode-short"
+            value="short"
           >
-            <Tabs.Label>Month</Tabs.Label>
+            <Tabs.Label>Short</Tabs.Label>
           </Tabs.Trigger>
           <Tabs.Trigger
             onPress={() => {
-              onChangeMode("year");
+              onChangeMode("full");
             }}
-            testID="graph-detail-mode-year"
-            value="year"
+            testID="graph-detail-mode-full"
+            value="full"
           >
-            <Tabs.Label>Year</Tabs.Label>
+            <Tabs.Label>Full</Tabs.Label>
           </Tabs.Trigger>
         </Tabs.List>
-        <Tabs.Content value="month" />
-        <Tabs.Content value="year" />
+        <Tabs.Content value="short" />
+        <Tabs.Content value="full" />
       </Tabs>
 
       <Text className="text-neutral-700 text-sm" testID="graph-detail-range">
-        {formatCalendarModeLabel(mode)}: {range.from} - {range.to}
+        {formatGraphDetailModeLabel(mode)}: {range.from} - {range.to}
       </Text>
     </View>
   );

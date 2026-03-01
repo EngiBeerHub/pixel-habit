@@ -1,32 +1,32 @@
 import {
-  formatCalendarModeLabel,
-  getCalendarMonthRange,
-  getCalendarYearRange,
+  formatGraphDetailModeLabel,
+  getGraphDetailFullRange,
+  getGraphDetailShortRange,
 } from "./calendar-range";
 
 describe("calendar range", () => {
-  test("returns calendar month range", () => {
-    const range = getCalendarMonthRange(new Date(2026, 1, 14, 20, 30, 1));
+  test("returns short range with 14 weeks", () => {
+    const range = getGraphDetailShortRange(new Date(2026, 1, 14, 20, 30, 1));
 
     expect(range).toEqual({
-      from: "20260201",
-      to: "20260228",
+      from: "20251109",
+      to: "20260214",
+      weeks: 14,
     });
   });
 
-  test("returns calendar year range", () => {
-    const range = getCalendarYearRange(new Date(2026, 6, 14, 20, 30, 1));
+  test("returns full range with 53 weeks", () => {
+    const range = getGraphDetailFullRange(new Date(2026, 1, 14, 20, 30, 1));
 
     expect(range).toEqual({
-      from: "20260101",
-      to: "20261231",
+      from: "20250209",
+      to: "20260214",
+      weeks: 53,
     });
   });
 
   test("formats mode label", () => {
-    const date = new Date(2026, 1, 14);
-
-    expect(formatCalendarModeLabel("month", date)).toBe("2026年2月");
-    expect(formatCalendarModeLabel("year", date)).toBe("2026年");
+    expect(formatGraphDetailModeLabel("short")).toBe("Short (14週)");
+    expect(formatGraphDetailModeLabel("full")).toBe("Full (53週)");
   });
 });

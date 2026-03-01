@@ -20,8 +20,8 @@ import {
 } from "../../../shared/config/ui-tokens";
 import {
   type CalendarMode,
-  getCalendarMonthRange,
-  getCalendarYearRange,
+  getGraphDetailFullRange,
+  getGraphDetailShortRange,
 } from "../../../shared/lib/calendar-range";
 import { buildGraphDetailSummary } from "../../../shared/lib/graph-detail-summary";
 import { resolveNativeMenuAvailability } from "../../../shared/navigation/native-menu-capability";
@@ -37,8 +37,10 @@ export interface UseGraphDetailScreenResult {
   activeRange: {
     from: string;
     to: string;
+    weeks: 14 | 53;
   };
   errorMessage: string | null;
+  graphColor: string;
   graphId: string;
   graphTimezone: string;
   graphUnit: string;
@@ -72,7 +74,7 @@ export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
   const graphTimezone =
     typeof params.timezone === "string" ? params.timezone : "Asia/Tokyo";
   const graphUnit = typeof params.unit === "string" ? params.unit : "";
-  const [mode, setMode] = useState<CalendarMode>("month");
+  const [mode, setMode] = useState<CalendarMode>("short");
   const { credentials, hasLoadError, status } = useAuthSession();
   const api = useAuthedPixelaApi();
   const supportsNativeMenu = resolveNativeMenuAvailability({
@@ -88,10 +90,10 @@ export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
   }, [graphName, navigation]);
 
   const activeRange = useMemo(() => {
-    if (mode === "month") {
-      return getCalendarMonthRange();
+    if (mode === "short") {
+      return getGraphDetailShortRange();
     }
-    return getCalendarYearRange();
+    return getGraphDetailFullRange();
   }, [mode]);
 
   const query = useQuery({
@@ -357,6 +359,7 @@ export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
   return {
     activeRange,
     errorMessage,
+    graphColor,
     graphId,
     graphTimezone,
     graphUnit,

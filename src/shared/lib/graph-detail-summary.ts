@@ -16,6 +16,7 @@ export interface GraphDetailSummary {
   longestStreakDays: number;
   maxQuantityText: string;
   positiveRecordCount: number;
+  todayQuantityText: string;
   totalQuantityText: string;
 }
 
@@ -39,6 +40,7 @@ export const buildGraphDetailSummary = (
       longestStreakDays: 0,
       maxQuantityText: "-",
       positiveRecordCount: 0,
+      todayQuantityText: resolveTodayQuantityText(pixels),
       totalQuantityText: "0",
     };
   }
@@ -54,6 +56,7 @@ export const buildGraphDetailSummary = (
     longestStreakDays: resolveLongestStreak(positiveDates),
     maxQuantityText: formatNumber(max),
     positiveRecordCount: positiveEntries.length,
+    todayQuantityText: resolveTodayQuantityText(pixels),
     totalQuantityText: formatNumber(total),
   };
 };
@@ -133,4 +136,21 @@ const resolveLongestStreak = (positiveDates: Set<string>): number => {
   }
 
   return longestStreak;
+};
+
+/**
+ * 当日の数量を表示用テキストへ変換する。
+ */
+const resolveTodayQuantityText = (pixels: Pixel[]): string => {
+  const today = formatPixelaDate(getTodayAtMidnight());
+  const todayPixel = pixels.find((pixel) => pixel.date === today);
+  if (!todayPixel) {
+    return "—";
+  }
+
+  const parsed = Number(todayPixel.quantity);
+  if (!Number.isFinite(parsed)) {
+    return "—";
+  }
+  return formatNumber(parsed);
 };

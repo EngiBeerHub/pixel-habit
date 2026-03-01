@@ -4,51 +4,35 @@
 export interface CalendarRange {
   from: string;
   to: string;
+  weeks: 14 | 53;
 }
 
 /**
  * 表示モードの種別。
  */
-export type CalendarMode = "month" | "year";
+export type CalendarMode = "short" | "full";
 
 /**
- * 指定日の暦月（1日〜末日）を `yyyyMMdd` で返す。
+ * Graph DetailのShort表示期間（14週）を返す。
  */
-export const getCalendarMonthRange = (baseDate = new Date()): CalendarRange => {
-  const date = normalizeDate(baseDate);
-  const startDate = new Date(date.getFullYear(), date.getMonth(), 1);
-  const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-  return {
-    from: formatYyyyMmDd(startDate),
-    to: formatYyyyMmDd(endDate),
-  };
-};
+export const getGraphDetailShortRange = (
+  baseDate = new Date()
+): CalendarRange => buildHeatmapRange(baseDate, 14);
 
 /**
- * 指定日の暦年（1月1日〜12月31日）を `yyyyMMdd` で返す。
+ * Graph DetailのFull表示期間（53週）を返す。
  */
-export const getCalendarYearRange = (baseDate = new Date()): CalendarRange => {
-  const date = normalizeDate(baseDate);
-  const startDate = new Date(date.getFullYear(), 0, 1);
-  const endDate = new Date(date.getFullYear(), 11, 31);
-  return {
-    from: formatYyyyMmDd(startDate),
-    to: formatYyyyMmDd(endDate),
-  };
-};
+export const getGraphDetailFullRange = (baseDate = new Date()): CalendarRange =>
+  buildHeatmapRange(baseDate, 53);
 
 /**
  * 表示モードに応じた期間ラベルを返す。
  */
-export const formatCalendarModeLabel = (
-  mode: CalendarMode,
-  baseDate = new Date()
-): string => {
-  const date = normalizeDate(baseDate);
-  if (mode === "month") {
-    return `${date.getFullYear()}年${date.getMonth() + 1}月`;
+export const formatGraphDetailModeLabel = (mode: CalendarMode): string => {
+  if (mode === "short") {
+    return "Short (14週)";
   }
-  return `${date.getFullYear()}年`;
+  return "Full (53週)";
 };
 
 /**
@@ -66,4 +50,30 @@ const formatYyyyMmDd = (date: Date): string => {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}${month}${day}`;
+};
+
+/**
+ * 指定日を含む週の開始日（日曜）を返す。
+ */
+const getStartOfWeek = (date: Date): Date => {
+  const normalized = normalizeDate(date);
+  normalized.setDate(normalized.getDate() - normalized.getDay());
+  return normalized;
+};
+
+/**
+ * 週数ベースでGraph Detail表示範囲を返す。
+ */
+const buildHeatmapRange = (baseDate: Date, weeks: 14 | 53): CalendarRange => {
+  const today = normalizeDate(baseDate);
+  const endDate = today;
+  const currentWeekStart = getStartOfWeek(today);
+  const startDate = new Date(currentWeekStart);
+  startDate.setDate(currentWeekStart.getDate() - (weeks - 1) * 7);
+
+  return {
+    from: formatYyyyMmDd(startDate),
+    to: formatYyyyMmDd(endDate),
+    weeks,
+  };
 };

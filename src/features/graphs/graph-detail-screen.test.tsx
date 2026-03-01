@@ -18,7 +18,7 @@ const mockSetOptions = jest.fn();
 const mockCanGoBack = jest.fn();
 const mockOpenDialog = jest.fn();
 let mockAppOwnership: "expo" | null = null;
-const MONTH_RANGE_LABEL_PATTERN = /2026年2月: 20260201 - 20260228/;
+const SHORT_RANGE_LABEL_PATTERN = /Short \(14週\): 20251109 - 20260214/;
 const OPTIONAL_DATA_PREVIEW_PATTERN =
   /^これは とても 長い 補足メモで 一覧では 省略…$/;
 let mockRouteParams: {
@@ -250,7 +250,7 @@ describe("GraphDetailScreen", () => {
     jest.useRealTimers();
   });
 
-  test("loads month range by default", async () => {
+  test("loads short range by default", async () => {
     renderScreen();
 
     await waitFor(() => {
@@ -261,43 +261,68 @@ describe("GraphDetailScreen", () => {
       );
     });
     expect(await screen.findByTestId("graph-detail-mode-help")).toBeTruthy();
-    expect(await screen.findByText(MONTH_RANGE_LABEL_PATTERN)).toBeTruthy();
+    expect(await screen.findByText(SHORT_RANGE_LABEL_PATTERN)).toBeTruthy();
 
     await waitFor(() => {
       expect(mockGetPixels).toHaveBeenCalledWith({
-        from: "20260201",
+        from: "20251109",
         graphId: "sleep",
-        to: "20260228",
+        to: "20260214",
       });
     });
   });
 
-  test("switches to year range", async () => {
+  test("switches to full range", async () => {
     renderScreen();
     await waitFor(() => {
       expect(mockSetOptions).toHaveBeenCalled();
     });
 
-    fireEvent.press(screen.getByTestId("graph-detail-mode-year"));
+    fireEvent.press(screen.getByTestId("graph-detail-mode-full"));
 
     await waitFor(() => {
       expect(mockGetPixels).toHaveBeenCalledWith({
-        from: "20260101",
+        from: "20250209",
         graphId: "sleep",
-        to: "20261231",
+        to: "20260214",
       });
     });
   });
 
-  test("shows expanded summary", async () => {
+  test("shows kpi chips", async () => {
     renderScreen();
 
-    expect(await screen.findByText("合計: 6")).toBeTruthy();
-    expect(await screen.findByText("記録日数: 2")).toBeTruthy();
-    expect(await screen.findByText("最大: 4")).toBeTruthy();
-    expect(await screen.findByText("平均(記録日): 3")).toBeTruthy();
-    expect(await screen.findByText("現在連続日数: 0")).toBeTruthy();
-    expect(await screen.findByText("最長連続日数: 1")).toBeTruthy();
+    expect(await screen.findByTestId("graph-detail-kpi-record")).toBeTruthy();
+    expect(await screen.findByTestId("graph-detail-kpi-total")).toBeTruthy();
+    expect(await screen.findByTestId("graph-detail-kpi-average")).toBeTruthy();
+    expect(await screen.findByTestId("graph-detail-kpi-today")).toBeTruthy();
+    expect(
+      await screen.findByTestId("graph-detail-kpi-record-icon")
+    ).toBeTruthy();
+    expect(
+      await screen.findByTestId("graph-detail-kpi-total-icon")
+    ).toBeTruthy();
+    expect(
+      await screen.findByTestId("graph-detail-kpi-average-icon")
+    ).toBeTruthy();
+    expect(
+      await screen.findByTestId("graph-detail-kpi-today-icon")
+    ).toBeTruthy();
+  });
+
+  test("does not open quick add when heatmap cell is tapped", async () => {
+    renderScreen();
+    await waitFor(() => {
+      expect(mockSetOptions).toHaveBeenCalled();
+    });
+
+    fireEvent.press(await screen.findByTestId("compact-heatmap-cell-20260213"));
+
+    expect(mockPush).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: "/graphs/[graphId]/pixels/[date]",
+      })
+    );
   });
 
   test("navigates to pixel detail when tapping a record row", async () => {

@@ -4,19 +4,37 @@ import { borderTokens, textTokens } from "../../shared/config/ui-tokens";
 import { mergeClassNames } from "../../shared/lib/class-name";
 import { ScreenContainer } from "../../shared/ui/screen-container";
 import { SectionCard } from "../../shared/ui/section-card";
+import { CompactHeatmap } from "./components/compact-heatmap";
 import { GraphDetailInfoSection } from "./components/graph-detail-info-section";
+import { GraphDetailKpiSection } from "./components/graph-detail-kpi-section";
 import { GraphDetailRangeSection } from "./components/graph-detail-range-section";
 import { GraphDetailRecordList } from "./components/graph-detail-record-list";
-import { GraphDetailStatsSection } from "./components/graph-detail-stats-section";
 import { useGraphDetailScreen } from "./hooks/use-graph-detail-screen";
 
+const GRAPH_COLORS = [
+  "ajisai",
+  "ichou",
+  "kuro",
+  "momiji",
+  "shibafu",
+  "sora",
+] as const;
+
+const resolveGraphColor = (color: string): (typeof GRAPH_COLORS)[number] => {
+  if (GRAPH_COLORS.includes(color as (typeof GRAPH_COLORS)[number])) {
+    return color as (typeof GRAPH_COLORS)[number];
+  }
+  return "shibafu";
+};
+
 /**
- * Graph詳細画面。Month/Yearで記録を確認する。
+ * Graph詳細画面。Short/Fullで記録を確認する。
  */
 export const GraphDetailScreen = () => {
   const {
     activeRange,
     errorMessage,
+    graphColor,
     graphId,
     graphTimezone,
     graphUnit,
@@ -27,6 +45,7 @@ export const GraphDetailScreen = () => {
     query,
     summary,
   } = useGraphDetailScreen();
+  const resolvedColor = resolveGraphColor(graphColor);
 
   return (
     <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
@@ -85,7 +104,13 @@ export const GraphDetailScreen = () => {
       {query.isPending || errorMessage ? null : (
         <SectionCard>
           <View className="gap-4">
-            <GraphDetailStatsSection summary={summary} />
+            <CompactHeatmap
+              graphColor={resolvedColor}
+              pixels={pixels}
+              weeks={activeRange.weeks}
+            />
+
+            <GraphDetailKpiSection summary={summary} />
 
             <View
               className={mergeClassNames(

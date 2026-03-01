@@ -28,6 +28,7 @@ describe("graph detail summary", () => {
       longestStreakDays: 2,
       maxQuantityText: "5",
       positiveRecordCount: 3,
+      todayQuantityText: "3",
       totalQuantityText: "10",
     });
   });
@@ -44,6 +45,7 @@ describe("graph detail summary", () => {
       longestStreakDays: 0,
       maxQuantityText: "-",
       positiveRecordCount: 0,
+      todayQuantityText: "0",
       totalQuantityText: "0",
     });
   });

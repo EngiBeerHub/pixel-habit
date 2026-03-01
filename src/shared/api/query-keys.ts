@@ -25,7 +25,7 @@ export const queryKeys = {
   graphDetailPixels: (
     username: string | null,
     graphId: string,
-    mode: "month" | "year"
+    mode: "short" | "full"
   ) => ["graphDetailPixels", username, graphId, mode] as const,
 
   /**
