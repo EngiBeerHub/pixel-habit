@@ -13,7 +13,7 @@ describe("resolveNativeMenuAvailability", () => {
   test("returns false on Expo Go runtime", () => {
     expect(
       resolveNativeMenuAvailability({
-        appOwnership: "expo",
+        appOwnership: "expo" as never,
         platform: "ios",
       })
     ).toBe(false);

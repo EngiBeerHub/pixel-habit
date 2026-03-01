@@ -78,7 +78,9 @@ describe("HomeStackLayout", () => {
       };
     };
     const headerRight = indexScreenInput.options.headerRight;
-    const headerRightElement = headerRight();
+    const headerRightElement = headerRight() as React.ReactElement<{
+      onPress: () => void;
+    }>;
     headerRightElement.props.onPress();
 
     expect(mockPush).toHaveBeenCalledWith("/graphs/create");
@@ -93,7 +95,9 @@ describe("HomeStackLayout", () => {
       };
     };
     const headerRight = indexScreenInput.options.headerRight;
-    const headerRightElement = headerRight();
+    const headerRightElement = headerRight() as React.ReactElement<{
+      onPress: () => void;
+    }>;
 
     headerRightElement.props.onPress();
     headerRightElement.props.onPress();

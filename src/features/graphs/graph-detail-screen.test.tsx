@@ -176,7 +176,17 @@ const getHeaderRightElement = () => {
     tintColor: "#111827",
   }) as ReactElement<{
     actions?: Array<{ id?: string; title: string }>;
+    children?: ReactElement<{
+      accessibilityLabel?: string;
+      accessibilityRole?: string;
+      accessible?: boolean;
+      children?: ReactElement<{ color?: string; name?: string; size?: number }>;
+      className?: string;
+    }>;
+    isAnchoredToRight?: boolean;
+    onPress?: () => void;
     onPressAction?: (event: { nativeEvent: { event: string } }) => void;
+    testID?: string;
   }>;
 };
 
@@ -365,6 +375,9 @@ describe("GraphDetailScreen", () => {
 
     const headerTriggerContainer = headerRightElement.props
       .children as ReactElement<{
+      accessibilityLabel?: string;
+      accessibilityRole?: string;
+      accessible?: boolean;
       children?: ReactElement<{ color?: string; name?: string; size?: number }>;
       className?: string;
     }>;
@@ -378,6 +391,9 @@ describe("GraphDetailScreen", () => {
     expect(headerTriggerContainer.props.accessible).toBe(true);
 
     const headerIcon = headerTriggerContainer.props.children;
+    if (!headerIcon) {
+      throw new Error("header icon is not configured");
+    }
     expect(headerIcon.props.name).toBe("ellipsis-horizontal");
     expect(headerIcon.props.size).toBe(headerActionTokens.iconSize);
   });
