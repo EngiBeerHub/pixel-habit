@@ -28,9 +28,10 @@
 **Objective:** As a habit tracker user, I want 現在の期間に対する要約統計を確認できる, so that 数値として進捗を理解できる
 
 #### Acceptance Criteria
-1. The Graph Detail Screen shall 選択中の表示モードに対応する基本的な統計情報を表示する
-2. When 表示モードが更新されたとき, the Graph Detail Screen shall 統計情報を同じ表示条件に同期して更新する
-3. If 対象表示範囲に記録が存在しない場合, the Graph Detail Screen shall 記録がないことを誤解なく示す統計表示を行う
+1. The Graph Detail Screen shall 統計情報をアイコン・値・ラベルで構成される KPI チップ群として表示する
+2. The Graph Detail Screen shall KPI チップとして少なくとも 記録日数・累計・平均・今日 の 4 指標を表示する
+3. When 表示モードが更新されたとき, the Graph Detail Screen shall 統計情報をヒートマップと同じ表示条件に同期して更新する
+4. If 対象表示範囲に記録が存在しない場合, the Graph Detail Screen shall 欠損指標をプレースホルダ付きで誤解なく表示する
 
 ### Requirement 4: 読み込み・異常時のフィードバック
 **Objective:** As a habit tracker user, I want データ取得状況や失敗理由を理解できる, so that 次に取るべき行動を判断できる
