@@ -61,13 +61,26 @@ export const GraphDetailRangeSection = ({
         <Tabs.Content value="full" />
       </Tabs>
 
-      <Text
-        className={mergeClassNames("text-sm", textTokens.secondaryClass)}
-        testID="graph-detail-range"
-      >
-        {formatPixelaDateForShortDisplay(range.from)} -{" "}
-        {formatPixelaDateForShortDisplay(range.to)}
-      </Text>
+      <View className="gap-1">
+        <Text
+          className={mergeClassNames(
+            "font-semibold text-[11px] uppercase tracking-[1px]",
+            textTokens.mutedClass
+          )}
+        >
+          期間
+        </Text>
+        <Text
+          className={mergeClassNames(
+            "font-semibold text-xl",
+            textTokens.primaryClass
+          )}
+          testID="graph-detail-range"
+        >
+          {formatPixelaDateForShortDisplay(range.from)} -{" "}
+          {formatPixelaDateForShortDisplay(range.to)}
+        </Text>
+      </View>
     </View>
   );
 };

@@ -42,13 +42,7 @@ export const GraphDetailRecordList = ({
   }
 
   return (
-    <View
-      className={mergeClassNames(
-        "overflow-hidden rounded-2xl border bg-neutral-50",
-        borderTokens.defaultClass
-      )}
-      testID="graph-detail-record-list"
-    >
+    <View className="gap-0" testID="graph-detail-record-list">
       {pixels.map((pixel, index) => {
         const memoPreview = toOptionalMemoPreview(
           pixel.optionalData,
@@ -57,10 +51,8 @@ export const GraphDetailRecordList = ({
         return (
           <Pressable
             className={mergeClassNames(
-              "px-4 py-4 active:opacity-80",
-              index === 0
-                ? undefined
-                : mergeClassNames("border-t", borderTokens.defaultClass)
+              "px-1 py-3 active:opacity-80",
+              index === 0 ? undefined : "border-neutral-100 border-t"
             )}
             key={pixel.date}
             onPress={() => {
@@ -78,10 +70,7 @@ export const GraphDetailRecordList = ({
                 {formatPixelaDateForDisplay(pixel.date)}
               </Text>
               <Text
-                className={mergeClassNames(
-                  "font-medium text-sm",
-                  textTokens.secondaryClass
-                )}
+                className={mergeClassNames("text-sm", textTokens.mutedClass)}
               >
                 {formatQuantityLabel(pixel.quantity, graphUnit)}
               </Text>

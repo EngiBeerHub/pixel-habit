@@ -1,6 +1,10 @@
 import { Button } from "heroui-native";
 import { ActivityIndicator, Text, View } from "react-native";
-import { borderTokens, textTokens } from "../../shared/config/ui-tokens";
+import {
+  borderTokens,
+  surfaceTokens,
+  textTokens,
+} from "../../shared/config/ui-tokens";
 import { mergeClassNames } from "../../shared/lib/class-name";
 import { ScreenContainer } from "../../shared/ui/screen-container";
 import { SectionCard } from "../../shared/ui/section-card";
@@ -49,7 +53,11 @@ export const GraphDetailScreen = () => {
   const resolvedColor = resolveGraphColor(graphColor);
 
   return (
-    <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
+    <ScreenContainer
+      contentClassName={mergeClassNames("gap-5", surfaceTokens.screenClass)}
+      scrollable
+      withTopInset={false}
+    >
       {/* データ取得中 */}
       {query.isPending ? (
         <View className="items-center justify-center py-6">
@@ -63,7 +71,10 @@ export const GraphDetailScreen = () => {
       {/* 取得失敗時の表示 */}
       {!query.isPending && errorMessage ? (
         <SectionCard
-          className={mergeClassNames("border", borderTokens.dangerClass)}
+          className={mergeClassNames(
+            "rounded-3xl border",
+            borderTokens.dangerClass
+          )}
           tone="danger"
         >
           <View className="gap-3">
@@ -88,9 +99,13 @@ export const GraphDetailScreen = () => {
 
       {/* 取得成功時の統計と記録一覧 */}
       {query.isPending || errorMessage ? null : (
-        <View className="gap-4">
+        <View className="gap-5">
           {/* 主表示: 期間切替・ヒートマップ・主要KPI */}
-          <SectionCard>
+          <SectionCard
+            className={mergeClassNames(
+              "rounded-3xl border border-neutral-200 bg-white"
+            )}
+          >
             <View className="gap-5">
               <GraphDetailRangeSection
                 mode={mode}
@@ -104,22 +119,26 @@ export const GraphDetailScreen = () => {
                 weeks={activeRange.weeks}
               />
 
-              <GraphDetailKpiSection summary={summary} />
+              <GraphDetailKpiSection graphUnit={graphUnit} summary={summary} />
             </View>
           </SectionCard>
 
           {/* 補助情報: グラフ情報と補助統計 */}
-          <View className="gap-3 px-1" testID="graph-detail-meta-block">
+          <View className="gap-4" testID="graph-detail-meta-block">
+            <GraphDetailStatsSection graphUnit={graphUnit} summary={summary} />
             <GraphDetailInfoSection
               graphId={graphId}
               timezone={graphTimezone}
               unit={graphUnit}
             />
-            <GraphDetailStatsSection summary={summary} />
           </View>
 
           {/* 下位情報: 記録一覧 */}
-          <SectionCard>
+          <SectionCard
+            className={mergeClassNames(
+              "rounded-3xl border border-neutral-200 bg-white"
+            )}
+          >
             <View className="gap-3">
               <Text
                 className={mergeClassNames(
@@ -127,7 +146,7 @@ export const GraphDetailScreen = () => {
                   textTokens.primaryClass
                 )}
               >
-                記録
+                最近の記録
               </Text>
 
               <GraphDetailRecordList

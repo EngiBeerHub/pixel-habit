@@ -40,41 +40,57 @@ export const GraphDetailInfoSection = ({
   return (
     <View
       className={mergeClassNames(
-        "overflow-hidden rounded-2xl border bg-neutral-50",
+        "gap-3 rounded-3xl border bg-white p-4",
         borderTokens.defaultClass
       )}
       testID="graph-detail-info"
     >
-      {items.map((item, index) => (
-        <View
-          className={mergeClassNames(
-            "flex-row items-center justify-between gap-3 px-4 py-3",
-            index === 0
-              ? undefined
-              : mergeClassNames("border-t", borderTokens.defaultClass)
-          )}
-          key={item.testID}
-          testID={item.testID}
-        >
-          <Text
+      <Text
+        className={mergeClassNames(
+          "font-semibold text-base",
+          textTokens.primaryClass
+        )}
+      >
+        グラフ情報
+      </Text>
+
+      <View
+        className={mergeClassNames(
+          "overflow-hidden rounded-2xl bg-white",
+          borderTokens.defaultClass
+        )}
+      >
+        {items.map((item, index) => (
+          <View
             className={mergeClassNames(
-              "font-medium text-[11px] uppercase",
-              textTokens.mutedClass
+              "flex-row items-center justify-between gap-3 px-0 py-3",
+              index === 0
+                ? undefined
+                : mergeClassNames("border-t", borderTokens.defaultClass)
             )}
+            key={item.testID}
+            testID={item.testID}
           >
-            {item.label}
-          </Text>
-          <Text
-            className={mergeClassNames(
-              "flex-1 text-right text-sm",
-              textTokens.secondaryClass
-            )}
-            numberOfLines={1}
-          >
-            {item.value}
-          </Text>
-        </View>
-      ))}
+            <Text
+              className={mergeClassNames(
+                "font-medium text-[11px] uppercase",
+                textTokens.mutedClass
+              )}
+            >
+              {item.label}
+            </Text>
+            <Text
+              className={mergeClassNames(
+                "flex-1 text-right font-medium text-sm",
+                textTokens.primaryClass
+              )}
+              numberOfLines={1}
+            >
+              {item.value}
+            </Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 };

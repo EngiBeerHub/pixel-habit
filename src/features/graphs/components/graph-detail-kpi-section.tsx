@@ -3,6 +3,7 @@ import { Text, View } from "react-native";
 import { borderTokens, textTokens } from "../../../shared/config/ui-tokens";
 import { mergeClassNames } from "../../../shared/lib/class-name";
 import type { GraphDetailSummary } from "../../../shared/lib/graph-detail-summary";
+import { formatQuantityLabel } from "../../../shared/lib/graph-detail-summary";
 
 interface KpiItem {
   icon: keyof typeof Ionicons.glyphMap;
@@ -15,71 +16,76 @@ interface KpiItem {
  * Graph DetailのKPIチップ行を描画する。
  */
 export interface GraphDetailKpiSectionProps {
+  graphUnit: string;
   summary: GraphDetailSummary;
 }
 
 export const GraphDetailKpiSection = ({
+  graphUnit,
   summary,
 }: GraphDetailKpiSectionProps) => {
   const items: KpiItem[] = [
     {
-      icon: "calendar-outline",
-      label: "記録",
-      testId: "graph-detail-kpi-record",
-      value: String(summary.positiveRecordCount),
-    },
-    {
       icon: "bar-chart-outline",
       label: "累計",
       testId: "graph-detail-kpi-total",
-      value: summary.totalQuantityText,
+      value: formatQuantityLabel(summary.totalQuantityText, graphUnit),
     },
     {
       icon: "trending-up-outline",
       label: "平均",
       testId: "graph-detail-kpi-average",
-      value: summary.averagePerRecordedDayText,
+      value: formatQuantityLabel(summary.averagePerRecordedDayText, graphUnit),
     },
     {
-      icon: "radio-button-on-outline",
+      icon: "time-outline",
       label: "今日",
       testId: "graph-detail-kpi-today",
-      value: summary.todayQuantityText,
+      value: formatQuantityLabel(summary.todayQuantityText, graphUnit),
+    },
+    {
+      icon: "calendar-outline",
+      label: "記録日",
+      testId: "graph-detail-kpi-record",
+      value: `${summary.positiveRecordCount}日`,
     },
   ];
 
   return (
-    <View className="flex-row gap-2" testID="graph-detail-kpi-row">
+    <View className="flex-row flex-wrap gap-2.5" testID="graph-detail-kpi-row">
       {items.map((item) => (
         <View
           className={mergeClassNames(
-            "flex-1 flex-row items-center gap-1 rounded-2xl border bg-neutral-50 px-2 py-2",
+            "w-[48%] flex-row items-start gap-2 rounded-2xl border bg-stone-50 px-3 py-3",
             borderTokens.defaultClass
           )}
           key={item.testId}
           testID={item.testId}
         >
           <Ionicons
-            color="#111827"
+            color="#6b7280"
             name={item.icon}
             size={14}
             testID={`${item.testId}-icon`}
           />
-          <View className="flex-1">
+          <View className="flex-1 gap-1">
             <Text
               className={mergeClassNames(
-                "font-semibold text-xs",
+                "font-medium text-[11px]",
+                textTokens.mutedClass
+              )}
+              testID={`${item.testId}-label`}
+            >
+              {item.label}
+            </Text>
+            <Text
+              className={mergeClassNames(
+                "font-semibold text-lg",
                 textTokens.primaryClass
               )}
               testID={`${item.testId}-value`}
             >
               {item.value}
-            </Text>
-            <Text
-              className={mergeClassNames("text-[10px]", textTokens.mutedClass)}
-              testID={`${item.testId}-label`}
-            >
-              {item.label}
             </Text>
           </View>
         </View>
