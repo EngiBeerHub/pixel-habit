@@ -1,5 +1,5 @@
 import { Text, View } from "react-native";
-import { textTokens } from "../../../shared/config/ui-tokens";
+import { borderTokens, textTokens } from "../../../shared/config/ui-tokens";
 import { mergeClassNames } from "../../../shared/lib/class-name";
 import type { GraphDetailSummary } from "../../../shared/lib/graph-detail-summary";
 
@@ -11,36 +11,55 @@ export interface GraphDetailStatsSectionProps {
 }
 
 /**
- * Graph Detailの統計情報を描画するセクション。
+ * Graph Detailの補助統計をコンパクトなグリッドで描画する。
  */
 export const GraphDetailStatsSection = ({
   summary,
 }: GraphDetailStatsSectionProps) => {
+  const items = [
+    {
+      label: "最大",
+      testID: "graph-detail-stat-max",
+      value: summary.maxQuantityText,
+    },
+    {
+      label: "現在連続",
+      testID: "graph-detail-stat-current-streak",
+      value: `${summary.currentStreakDays}日`,
+    },
+    {
+      label: "最長連続",
+      testID: "graph-detail-stat-longest-streak",
+      value: `${summary.longestStreakDays}日`,
+    },
+  ];
+
   return (
-    <View className="gap-1">
-      <Text
-        className={mergeClassNames("font-semibold", textTokens.primaryClass)}
-      >
-        統計
-      </Text>
-      <Text className="text-neutral-700 text-sm">
-        合計: {summary.totalQuantityText}
-      </Text>
-      <Text className="text-neutral-700 text-sm">
-        記録日数: {summary.positiveRecordCount}
-      </Text>
-      <Text className="text-neutral-700 text-sm">
-        最大: {summary.maxQuantityText}
-      </Text>
-      <Text className="text-neutral-700 text-sm">
-        平均(記録日): {summary.averagePerRecordedDayText}
-      </Text>
-      <Text className="text-neutral-700 text-sm">
-        現在連続日数: {summary.currentStreakDays}
-      </Text>
-      <Text className="text-neutral-700 text-sm">
-        最長連続日数: {summary.longestStreakDays}
-      </Text>
+    <View className="flex-row gap-2" testID="graph-detail-stats">
+      {items.map((item) => (
+        <View
+          className={mergeClassNames(
+            "flex-1 rounded-2xl border bg-neutral-50 px-3 py-3",
+            borderTokens.defaultClass
+          )}
+          key={item.testID}
+          testID={item.testID}
+        >
+          <Text
+            className={mergeClassNames("text-[11px]", textTokens.mutedClass)}
+          >
+            {item.label}
+          </Text>
+          <Text
+            className={mergeClassNames(
+              "mt-1 font-semibold text-base",
+              textTokens.primaryClass
+            )}
+          >
+            {item.value}
+          </Text>
+        </View>
+      ))}
     </View>
   );
 };

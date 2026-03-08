@@ -18,7 +18,7 @@ const mockSetOptions = jest.fn();
 const mockCanGoBack = jest.fn();
 const mockOpenDialog = jest.fn();
 let mockAppOwnership: "expo" | null = null;
-const SHORT_RANGE_LABEL_PATTERN = /Short \(14週\): 20251109 - 20260214/;
+const SHORT_RANGE_LABEL_PATTERN = /^2025\/11\/09 - 2026\/02\/14$/;
 const OPTIONAL_DATA_PREVIEW_PATTERN =
   /^これは とても 長い 補足メモで 一覧では 省略…$/;
 let mockRouteParams: {
@@ -260,8 +260,9 @@ describe("GraphDetailScreen", () => {
         })
       );
     });
-    expect(await screen.findByTestId("graph-detail-mode-help")).toBeTruthy();
     expect(await screen.findByText(SHORT_RANGE_LABEL_PATTERN)).toBeTruthy();
+    expect(screen.queryByText("表示範囲")).toBeNull();
+    expect(screen.queryByText("Short=14週 / Full=53週")).toBeNull();
 
     await waitFor(() => {
       expect(mockGetPixels).toHaveBeenCalledWith({
@@ -274,11 +275,7 @@ describe("GraphDetailScreen", () => {
 
   test("switches to full range", async () => {
     renderScreen();
-    await waitFor(() => {
-      expect(mockSetOptions).toHaveBeenCalled();
-    });
-
-    fireEvent.press(screen.getByTestId("graph-detail-mode-full"));
+    fireEvent.press(await screen.findByTestId("graph-detail-mode-full"));
 
     await waitFor(() => {
       expect(mockGetPixels).toHaveBeenCalledWith({
@@ -308,6 +305,8 @@ describe("GraphDetailScreen", () => {
     expect(
       await screen.findByTestId("graph-detail-kpi-today-icon")
     ).toBeTruthy();
+    expect(await screen.findByTestId("graph-detail-stats")).toBeTruthy();
+    expect(await screen.findByTestId("graph-detail-info")).toBeTruthy();
   });
 
   test("does not open quick add when heatmap cell is tapped", async () => {

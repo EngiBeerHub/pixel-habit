@@ -9,6 +9,7 @@ import { GraphDetailInfoSection } from "./components/graph-detail-info-section";
 import { GraphDetailKpiSection } from "./components/graph-detail-kpi-section";
 import { GraphDetailRangeSection } from "./components/graph-detail-range-section";
 import { GraphDetailRecordList } from "./components/graph-detail-record-list";
+import { GraphDetailStatsSection } from "./components/graph-detail-stats-section";
 import { useGraphDetailScreen } from "./hooks/use-graph-detail-screen";
 
 const GRAPH_COLORS = [
@@ -28,7 +29,7 @@ const resolveGraphColor = (color: string): (typeof GRAPH_COLORS)[number] => {
 };
 
 /**
- * Graph詳細画面。Short/Fullで記録を確認する。
+ * Graph詳細画面。Short/Fullで記録・統計・管理導線をまとめて表示する。
  */
 export const GraphDetailScreen = () => {
   const {
@@ -49,21 +50,6 @@ export const GraphDetailScreen = () => {
 
   return (
     <ScreenContainer contentClassName="gap-4" scrollable withTopInset={false}>
-      <SectionCard>
-        <View className="gap-4">
-          <GraphDetailRangeSection
-            mode={mode}
-            onChangeMode={onChangeMode}
-            range={activeRange}
-          />
-          <GraphDetailInfoSection
-            graphId={graphId}
-            timezone={graphTimezone}
-            unit={graphUnit}
-          />
-        </View>
-      </SectionCard>
-
       {/* データ取得中 */}
       {query.isPending ? (
         <View className="items-center justify-center py-6">
@@ -103,15 +89,35 @@ export const GraphDetailScreen = () => {
       {/* 取得成功時の統計と記録一覧 */}
       {query.isPending || errorMessage ? null : (
         <SectionCard>
-          <View className="gap-4">
+          <View className="gap-5">
+            {/* 期間切替と補助情報 */}
+            <View className="gap-3">
+              <GraphDetailRangeSection
+                mode={mode}
+                onChangeMode={onChangeMode}
+                range={activeRange}
+              />
+              <GraphDetailInfoSection
+                graphId={graphId}
+                timezone={graphTimezone}
+                unit={graphUnit}
+              />
+            </View>
+
+            {/* ヒートマップ本体 */}
             <CompactHeatmap
               graphColor={resolvedColor}
               pixels={pixels}
               weeks={activeRange.weeks}
             />
 
-            <GraphDetailKpiSection summary={summary} />
+            {/* 主要KPIと補助統計 */}
+            <View className="gap-2">
+              <GraphDetailKpiSection summary={summary} />
+              <GraphDetailStatsSection summary={summary} />
+            </View>
 
+            {/* 記録一覧 */}
             <View
               className={mergeClassNames(
                 "border-t pt-2",

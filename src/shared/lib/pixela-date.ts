@@ -58,6 +58,21 @@ export const formatPixelaDateForDisplay = (
 };
 
 /**
+ * `yyyyMMdd` を `yyyy/MM/dd` へ整形する。
+ */
+export const formatPixelaDateForShortDisplay = (value: string): string => {
+  const parsedDate = parsePixelaDate(value);
+  if (!parsedDate) {
+    return value;
+  }
+
+  const yyyy = value.slice(0, 4);
+  const mm = value.slice(4, 6);
+  const dd = value.slice(6, 8);
+  return `${yyyy}/${mm}/${dd}`;
+};
+
+/**
  * 現在日付を時刻00:00で返す。
  */
 export const getTodayAtMidnight = (): Date => {

@@ -1,5 +1,4 @@
 import {
-  formatGraphDetailModeLabel,
   getGraphDetailFullRange,
   getGraphDetailShortRange,
 } from "./calendar-range";
@@ -23,10 +22,5 @@ describe("calendar range", () => {
       to: "20260214",
       weeks: 53,
     });
-  });
-
-  test("formats mode label", () => {
-    expect(formatGraphDetailModeLabel("short")).toBe("Short (14週)");
-    expect(formatGraphDetailModeLabel("full")).toBe("Full (53週)");
   });
 });

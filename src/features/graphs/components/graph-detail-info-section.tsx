@@ -12,33 +12,58 @@ export interface GraphDetailInfoSectionProps {
 }
 
 /**
- * Graph情報（ID/単位/タイムゾーン）を表示するセクション。
+ * Graph情報（ID/単位/タイムゾーン）を補助情報として表示する。
  */
 export const GraphDetailInfoSection = ({
   graphId,
   timezone,
   unit,
 }: GraphDetailInfoSectionProps) => {
+  const items = [
+    {
+      label: "ID",
+      testID: "graph-detail-info-id",
+      value: graphId || "-",
+    },
+    {
+      label: "単位",
+      testID: "graph-detail-info-unit",
+      value: unit || "-",
+    },
+    {
+      label: "TZ",
+      testID: "graph-detail-info-timezone",
+      value: timezone || "-",
+    },
+  ];
+
   return (
-    <View
-      className={mergeClassNames(
-        "gap-1 rounded-xl border bg-neutral-50 px-3 py-3",
-        borderTokens.defaultClass
-      )}
-      testID="graph-detail-info"
-    >
-      <Text className={mergeClassNames("text-xs", textTokens.mutedClass)}>
-        グラフ情報
-      </Text>
-      <Text className={mergeClassNames("text-sm", textTokens.secondaryClass)}>
-        ID: {graphId || "-"}
-      </Text>
-      <Text className={mergeClassNames("text-sm", textTokens.secondaryClass)}>
-        単位: {unit || "-"}
-      </Text>
-      <Text className={mergeClassNames("text-sm", textTokens.secondaryClass)}>
-        タイムゾーン: {timezone || "-"}
-      </Text>
+    <View className="flex-row gap-2" testID="graph-detail-info">
+      {items.map((item) => (
+        <View
+          className={mergeClassNames(
+            "flex-1 rounded-2xl border bg-neutral-50 px-3 py-2",
+            borderTokens.defaultClass
+          )}
+          key={item.testID}
+          testID={item.testID}
+        >
+          <Text
+            className={mergeClassNames("text-[11px]", textTokens.mutedClass)}
+          >
+            {item.label}
+          </Text>
+          <Text
+            className={mergeClassNames(
+              "mt-1 font-medium text-sm",
+              textTokens.secondaryClass
+            )}
+            numberOfLines={1}
+          >
+            {item.value}
+          </Text>
+        </View>
+      ))}
     </View>
   );
 };

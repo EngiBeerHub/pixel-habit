@@ -1,11 +1,9 @@
 import { Tabs } from "heroui-native";
 import { Text, View } from "react-native";
 import { textTokens } from "../../../shared/config/ui-tokens";
-import {
-  type CalendarMode,
-  formatGraphDetailModeLabel,
-} from "../../../shared/lib/calendar-range";
+import type { CalendarMode } from "../../../shared/lib/calendar-range";
 import { mergeClassNames } from "../../../shared/lib/class-name";
+import { formatPixelaDateForShortDisplay } from "../../../shared/lib/pixela-date";
 
 /**
  * Graph Detailの期間切替セクションの入力値。
@@ -20,7 +18,7 @@ export interface GraphDetailRangeSectionProps {
 }
 
 /**
- * Month/Year切替と期間ラベルを表示するセクション。
+ * Short/Full切替と日付範囲を表示するセクション。
  */
 export const GraphDetailRangeSection = ({
   mode,
@@ -28,26 +26,7 @@ export const GraphDetailRangeSection = ({
   range,
 }: GraphDetailRangeSectionProps) => {
   return (
-    <View className="gap-4">
-      <View className="flex-row items-center justify-between gap-3">
-        <View className="flex-1 gap-1">
-          <Text
-            className={mergeClassNames(
-              "font-semibold text-sm",
-              textTokens.primaryClass
-            )}
-          >
-            表示範囲
-          </Text>
-          <Text
-            className={mergeClassNames("text-xs", textTokens.mutedClass)}
-            testID="graph-detail-mode-help"
-          >
-            Short=14週 / Full=53週
-          </Text>
-        </View>
-      </View>
-
+    <View className="gap-3">
       <Tabs
         onValueChange={(value) => {
           if (value === "short" || value === "full") {
@@ -82,8 +61,12 @@ export const GraphDetailRangeSection = ({
         <Tabs.Content value="full" />
       </Tabs>
 
-      <Text className="text-neutral-700 text-sm" testID="graph-detail-range">
-        {formatGraphDetailModeLabel(mode)}: {range.from} - {range.to}
+      <Text
+        className={mergeClassNames("text-sm", textTokens.secondaryClass)}
+        testID="graph-detail-range"
+      >
+        {formatPixelaDateForShortDisplay(range.from)} -{" "}
+        {formatPixelaDateForShortDisplay(range.to)}
       </Text>
     </View>
   );

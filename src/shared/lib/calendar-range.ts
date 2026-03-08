@@ -26,16 +26,6 @@ export const getGraphDetailFullRange = (baseDate = new Date()): CalendarRange =>
   buildHeatmapRange(baseDate, 53);
 
 /**
- * 表示モードに応じた期間ラベルを返す。
- */
-export const formatGraphDetailModeLabel = (mode: CalendarMode): string => {
-  if (mode === "short") {
-    return "Short (14週)";
-  }
-  return "Full (53週)";
-};
-
-/**
  * Dateの時刻情報を切り捨てて日付のみを扱う。
  */
 const normalizeDate = (date: Date): Date => {

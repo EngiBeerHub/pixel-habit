@@ -94,7 +94,8 @@
 - HomeのQuick Add成功フィードバックはToastのみに統一し、Bottom Sheet内に成功メッセージを重複表示しない
 - 記録追加導線はHomeのQuick Addに一本化し、`/graphs/[graphId]/add` は採用しない
 - Homeカードでは管理導線（`...` / 統計 / 編集 / 削除）を表示せず、管理操作はGraph詳細画面へ集約する
-- Graph詳細の `Month/Year` 期間計算は `src/shared/lib/calendar-range.ts` を使い、画面側で日付計算を再実装しない
+- Graph詳細の `Short/Full` 期間計算は `src/shared/lib/calendar-range.ts` を使い、画面側で日付計算を再実装しない
+- UI copy に設計メモや内部仕様説明（例: `Short=14週`）を直接出さず、必要なら日付範囲など観察可能な情報で表現する
 - HomeのToday専用セクションは設けず、入力導線は `セル/+/カード` の3導線に限定する
 - 確認ダイアログは `useAppDialog`（`src/shared/ui/app-dialog-provider.tsx`）を標準とし、`showAlert` の新規追加は行わない
 
