@@ -109,7 +109,7 @@ export const CompactHeatmap = ({
 
   return (
     <View
-      className="mt-3 items-center"
+      className="mt-1.5 items-center"
       onLayout={(event) => {
         const nextWidth = event.nativeEvent.layout.width;
         setContainerWidth((currentWidth) => {
