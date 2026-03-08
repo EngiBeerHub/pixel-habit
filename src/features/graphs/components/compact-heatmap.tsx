@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import type { GraphDefinition } from "../../../shared/api/graph";
 import type { Pixel } from "../../../shared/api/pixel";
 import { heatmapTokens } from "../../../shared/config/ui-tokens";
@@ -9,6 +10,9 @@ const DEFAULT_WEEKS = 14;
 const CELL_SIZE = heatmapTokens.cellSize;
 const CELL_GAP = heatmapTokens.cellGap;
 const LABEL_WIDTH = heatmapTokens.labelWidth;
+const FULL_MODE_CELL_GAP = 1;
+const FULL_MODE_MIN_CELL_SIZE = 4;
+const FULL_MODE_MONTH_LABEL_SIZE = 9;
 const ROW_KEYS = [
   "row-0",
   "row-1",
@@ -77,9 +81,17 @@ export const CompactHeatmap = ({
   pixels,
   weeks = DEFAULT_WEEKS,
 }: CompactHeatmapProps) => {
+  const { width: windowWidth } = useWindowDimensions();
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
   const today = getTodayDate();
   const startDate = resolveStartDate(today, weeks);
   const baseColor = getGraphThemeColor(graphColor);
+  const layout = useMemo(() => {
+    return resolveHeatmapLayout({
+      availableWidth: containerWidth ?? Math.max(windowWidth - 96, 0),
+      weeks,
+    });
+  }, [containerWidth, weeks, windowWidth]);
   const monthLabels = buildMonthLabels(startDate, weeks);
   const rows = buildHeatmapRows({
     pixels,
@@ -89,60 +101,88 @@ export const CompactHeatmap = ({
   });
 
   return (
-    <View className="mt-3 items-center">
-      <View style={{ width: calculateGridWidth(weeks) }}>
+    <View
+      className="mt-3 items-center"
+      onLayout={(event) => {
+        const nextWidth = event.nativeEvent.layout.width;
+        setContainerWidth((currentWidth) => {
+          if (currentWidth && Math.abs(currentWidth - nextWidth) < 1) {
+            return currentWidth;
+          }
+          return nextWidth;
+        });
+      }}
+    >
+      <View style={{ width: layout.totalWidth }}>
         {/* 上段: 週カラムに対応した月ラベル */}
         <View
           className="mb-1 flex-row"
-          style={{ width: calculateGridWidth(weeks) }}
+          style={{
+            paddingLeft: layout.showWeekdayLabels
+              ? layout.labelWidth + layout.cellGap
+              : 0,
+            width: layout.totalWidth,
+          }}
         >
           {monthLabels.map((label) => (
             <View
               className="items-center"
               key={`month-${label.weekIndex}`}
               style={{
-                marginRight: label.weekIndex === weeks - 1 ? 0 : CELL_GAP,
-                width: CELL_SIZE,
+                marginRight: label.weekIndex === weeks - 1 ? 0 : layout.cellGap,
+                width: layout.cellSize,
               }}
             >
-              <Text className="text-center text-[10px] text-neutral-500">
+              <Text
+                className="text-center text-neutral-500"
+                style={{ fontSize: layout.monthLabelFontSize }}
+              >
                 {label.label}
               </Text>
             </View>
           ))}
         </View>
 
-        <View style={{ width: calculateGridWidth(weeks) }}>
+        <View style={{ width: layout.totalWidth }}>
           {/* 左側: 曜日ラベル。グリッドの左外側へ重ねて配置する */}
-          <View
-            className="absolute"
-            style={{
-              left: -(LABEL_WIDTH + CELL_GAP),
-              rowGap: CELL_GAP,
-              top: 0,
-              width: LABEL_WIDTH,
-            }}
-          >
-            {rows.map((row, rowIndex) => (
-              <View
-                className="items-end justify-center"
-                key={`weekday-${row.id}`}
-                style={{ height: CELL_SIZE }}
-              >
-                <Text className="text-[10px] text-neutral-500">
-                  {resolveWeekdayLabel(rowIndex)}
-                </Text>
-              </View>
-            ))}
-          </View>
+          {layout.showWeekdayLabels ? (
+            <View
+              className="absolute"
+              style={{
+                left: 0,
+                rowGap: layout.cellGap,
+                top: 0,
+                width: layout.labelWidth,
+              }}
+            >
+              {rows.map((row, rowIndex) => (
+                <View
+                  className="items-end justify-center"
+                  key={`weekday-${row.id}`}
+                  style={{ height: layout.cellSize }}
+                >
+                  <Text className="text-[10px] text-neutral-500">
+                    {resolveWeekdayLabel(rowIndex)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
 
           {/* 本体: 7行xN列のヒートマップセル */}
-          <View style={{ rowGap: CELL_GAP }}>
+          <View
+            style={{
+              marginLeft: layout.showWeekdayLabels
+                ? layout.labelWidth + layout.cellGap
+                : 0,
+              rowGap: layout.cellGap,
+            }}
+          >
             {rows.map((row) => (
               <View
                 className="flex-row"
                 key={row.id}
-                style={{ columnGap: CELL_GAP }}
+                style={{ columnGap: layout.cellGap }}
               >
                 {row.cells.map((cell) => (
                   <Pressable
@@ -169,8 +209,8 @@ export const CompactHeatmap = ({
                           level: cell.level,
                         }),
                         borderRadius: 3,
-                        height: CELL_SIZE,
-                        width: CELL_SIZE,
+                        height: layout.cellSize,
+                        width: layout.cellSize,
                       }}
                     />
                   </Pressable>
@@ -298,6 +338,52 @@ const calculateGridWidth = (weeks: number): number => {
     return 0;
   }
   return weeks * CELL_SIZE + (weeks - 1) * CELL_GAP;
+};
+
+const resolveHeatmapLayout = ({
+  availableWidth,
+  weeks,
+}: {
+  availableWidth: number;
+  weeks: number;
+}): {
+  cellGap: number;
+  cellSize: number;
+  labelWidth: number;
+  monthLabelFontSize: number;
+  showWeekdayLabels: boolean;
+  totalWidth: number;
+} => {
+  if (weeks <= DEFAULT_WEEKS) {
+    const gridWidth = calculateGridWidth(weeks);
+    return {
+      cellGap: CELL_GAP,
+      cellSize: CELL_SIZE,
+      labelWidth: LABEL_WIDTH,
+      monthLabelFontSize: 10,
+      showWeekdayLabels: true,
+      totalWidth: gridWidth + LABEL_WIDTH + CELL_GAP,
+    };
+  }
+
+  const showWeekdayLabels = false;
+  const labelWidth = 0;
+  const cellGap = FULL_MODE_CELL_GAP;
+  const maxGridWidth = Math.max(availableWidth, 0);
+  const cellSize = Math.max(
+    FULL_MODE_MIN_CELL_SIZE,
+    Math.floor((maxGridWidth - cellGap * (weeks - 1)) / weeks)
+  );
+  const gridWidth = weeks * cellSize + (weeks - 1) * cellGap;
+
+  return {
+    cellGap,
+    cellSize,
+    labelWidth,
+    monthLabelFontSize: FULL_MODE_MONTH_LABEL_SIZE,
+    showWeekdayLabels,
+    totalWidth: gridWidth,
+  };
 };
 
 /**

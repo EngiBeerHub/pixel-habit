@@ -51,6 +51,8 @@ export const GraphDetailScreen = () => {
     summary,
   } = useGraphDetailScreen();
   const resolvedColor = resolveGraphColor(graphColor);
+  const hasResolvedData = query.data !== undefined;
+  const isInitialLoading = query.isPending && !hasResolvedData;
 
   return (
     <ScreenContainer
@@ -59,7 +61,7 @@ export const GraphDetailScreen = () => {
       withTopInset={false}
     >
       {/* データ取得中 */}
-      {query.isPending ? (
+      {isInitialLoading ? (
         <View className="items-center justify-center py-6">
           <ActivityIndicator />
           <Text className={mergeClassNames("mt-2", textTokens.secondaryClass)}>
@@ -98,7 +100,7 @@ export const GraphDetailScreen = () => {
       ) : null}
 
       {/* 取得成功時の統計と記録一覧 */}
-      {query.isPending || errorMessage ? null : (
+      {isInitialLoading || errorMessage ? null : (
         <View className="gap-5">
           {/* 主表示: 期間切替・ヒートマップ・主要KPI */}
           <SectionCard

@@ -1,6 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { MenuView, type NativeActionEvent } from "@react-native-menu/menu";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
@@ -98,6 +103,7 @@ export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
 
   const query = useQuery({
     enabled: Boolean(api.isAuthenticated && graphId) && status !== "loading",
+    placeholderData: keepPreviousData,
     queryFn: () => {
       if (!graphId) {
         return [];
