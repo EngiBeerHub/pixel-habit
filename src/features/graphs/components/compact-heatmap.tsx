@@ -10,9 +10,10 @@ const DEFAULT_WEEKS = 14;
 const CELL_SIZE = heatmapTokens.cellSize;
 const CELL_GAP = heatmapTokens.cellGap;
 const LABEL_WIDTH = heatmapTokens.labelWidth;
+const DEFAULT_MONTH_LABEL_SIZE = 9;
 const FULL_MODE_CELL_GAP = 1;
 const FULL_MODE_MIN_CELL_SIZE = 4;
-const FULL_MODE_MONTH_LABEL_SIZE = 9;
+const FULL_MODE_MONTH_LABEL_SIZE = 8;
 const ROW_KEYS = [
   "row-0",
   "row-1",
@@ -22,6 +23,12 @@ const ROW_KEYS = [
   "row-5",
   "row-6",
 ];
+
+interface MonthLabel {
+  label: string;
+  spanWeeks: number;
+  weekIndex: number;
+}
 
 /**
  * Compactヒートマップの入力値。
@@ -126,15 +133,21 @@ export const CompactHeatmap = ({
         >
           {monthLabels.map((label) => (
             <View
-              className="items-center"
+              className="items-start"
               key={`month-${label.weekIndex}`}
               style={{
-                marginRight: label.weekIndex === weeks - 1 ? 0 : layout.cellGap,
-                width: layout.cellSize,
+                marginRight:
+                  label.weekIndex + label.spanWeeks >= weeks
+                    ? 0
+                    : layout.cellGap,
+                width:
+                  label.spanWeeks * layout.cellSize +
+                  Math.max(label.spanWeeks - 1, 0) * layout.cellGap,
               }}
             >
               <Text
                 className="text-center text-neutral-500"
+                numberOfLines={1}
                 style={{ fontSize: layout.monthLabelFontSize }}
               >
                 {label.label}
@@ -258,11 +271,9 @@ const resolveStartDate = (today: Date, weeks: number): Date => {
 /**
  * 週カラムごとの月ラベルを生成する。
  */
-const buildMonthLabels = (
-  startDate: Date,
-  weeks: number
-): Array<{ label: string; weekIndex: number }> => {
-  const labels: Array<{ label: string; weekIndex: number }> = [];
+const buildMonthLabels = (startDate: Date, weeks: number): MonthLabel[] => {
+  const labels: MonthLabel[] = [];
+  let lastLabelIndex = -1;
 
   for (let weekIndex = 0; weekIndex < weeks; weekIndex += 1) {
     const weekStartDate = addDays(startDate, weekIndex * DAYS_PER_WEEK);
@@ -274,10 +285,21 @@ const buildMonthLabels = (
       weekIndex === 0 ||
       weekStartDate.getMonth() !== previousWeekStartDate.getMonth();
 
+    if (!shouldShowLabel) {
+      continue;
+    }
+
+    if (lastLabelIndex >= 0) {
+      labels[lastLabelIndex].spanWeeks =
+        weekIndex - labels[lastLabelIndex].weekIndex;
+    }
+
     labels.push({
-      label: shouldShowLabel ? formatMonthLabel(weekStartDate) : "",
+      label: formatMonthLabel(weekStartDate),
+      spanWeeks: weeks - weekIndex,
       weekIndex,
     });
+    lastLabelIndex = labels.length - 1;
   }
 
   return labels;
@@ -360,7 +382,7 @@ const resolveHeatmapLayout = ({
       cellGap: CELL_GAP,
       cellSize: CELL_SIZE,
       labelWidth: LABEL_WIDTH,
-      monthLabelFontSize: 10,
+      monthLabelFontSize: DEFAULT_MONTH_LABEL_SIZE,
       showWeekdayLabels: true,
       totalWidth: gridWidth + LABEL_WIDTH + CELL_GAP,
     };
@@ -465,7 +487,7 @@ const formatDate = (date: Date): string => {
  * 月表示ラベルへ変換する。
  */
 const formatMonthLabel = (date: Date): string => {
-  return `${date.getMonth() + 1}\n月`;
+  return String(date.getMonth() + 1);
 };
 
 /**
