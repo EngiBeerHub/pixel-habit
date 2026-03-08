@@ -29,7 +29,7 @@ const resolveGraphColor = (color: string): (typeof GRAPH_COLORS)[number] => {
 };
 
 /**
- * Graph詳細画面。Short/Fullで記録・統計・管理導線をまとめて表示する。
+ * Graph詳細画面。ヒートマップ中心の detail page として記録・統計・管理導線を表示する。
  */
 export const GraphDetailScreen = () => {
   const {
@@ -88,59 +88,56 @@ export const GraphDetailScreen = () => {
 
       {/* 取得成功時の統計と記録一覧 */}
       {query.isPending || errorMessage ? null : (
-        <SectionCard>
-          <View className="gap-5">
-            {/* 期間切替と補助情報 */}
-            <View className="gap-3">
+        <View className="gap-4">
+          {/* 主表示: 期間切替・ヒートマップ・主要KPI */}
+          <SectionCard>
+            <View className="gap-5">
               <GraphDetailRangeSection
                 mode={mode}
                 onChangeMode={onChangeMode}
                 range={activeRange}
               />
-              <GraphDetailInfoSection
-                graphId={graphId}
-                timezone={graphTimezone}
-                unit={graphUnit}
+
+              <CompactHeatmap
+                graphColor={resolvedColor}
+                pixels={pixels}
+                weeks={activeRange.weeks}
               />
-            </View>
 
-            {/* ヒートマップ本体 */}
-            <CompactHeatmap
-              graphColor={resolvedColor}
-              pixels={pixels}
-              weeks={activeRange.weeks}
-            />
-
-            {/* 主要KPIと補助統計 */}
-            <View className="gap-2">
               <GraphDetailKpiSection summary={summary} />
-              <GraphDetailStatsSection summary={summary} />
             </View>
+          </SectionCard>
 
-            {/* 記録一覧 */}
-            <View
-              className={mergeClassNames(
-                "border-t pt-2",
-                borderTokens.defaultClass
-              )}
-            >
+          {/* 補助情報: グラフ情報と補助統計 */}
+          <View className="gap-3 px-1" testID="graph-detail-meta-block">
+            <GraphDetailInfoSection
+              graphId={graphId}
+              timezone={graphTimezone}
+              unit={graphUnit}
+            />
+            <GraphDetailStatsSection summary={summary} />
+          </View>
+
+          {/* 下位情報: 記録一覧 */}
+          <SectionCard>
+            <View className="gap-3">
               <Text
                 className={mergeClassNames(
-                  "font-semibold",
+                  "font-semibold text-base",
                   textTokens.primaryClass
                 )}
               >
-                記録一覧
+                記録
               </Text>
-            </View>
 
-            <GraphDetailRecordList
-              graphUnit={graphUnit}
-              onPressRecord={onPressOpenPixelDetail}
-              pixels={pixels}
-            />
-          </View>
-        </SectionCard>
+              <GraphDetailRecordList
+                graphUnit={graphUnit}
+                onPressRecord={onPressOpenPixelDetail}
+                pixels={pixels}
+              />
+            </View>
+          </SectionCard>
+        </View>
       )}
     </ScreenContainer>
   );

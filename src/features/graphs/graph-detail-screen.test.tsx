@@ -307,6 +307,11 @@ describe("GraphDetailScreen", () => {
     ).toBeTruthy();
     expect(await screen.findByTestId("graph-detail-stats")).toBeTruthy();
     expect(await screen.findByTestId("graph-detail-info")).toBeTruthy();
+    expect(await screen.findByTestId("graph-detail-meta-block")).toBeTruthy();
+    expect(await screen.findByTestId("graph-detail-record-list")).toBeTruthy();
+    expect(screen.queryByText("グラフ情報")).toBeNull();
+    expect(screen.queryByText("統計")).toBeNull();
+    expect(screen.getAllByText("記録").length).toBeGreaterThan(0);
   });
 
   test("does not open quick add when heatmap cell is tapped", async () => {

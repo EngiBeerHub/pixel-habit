@@ -11,7 +11,7 @@ export interface GraphDetailStatsSectionProps {
 }
 
 /**
- * Graph Detailの補助統計をコンパクトなグリッドで描画する。
+ * Graph Detailの補助統計を grouped row 形式で描画する。
  */
 export const GraphDetailStatsSection = ({
   summary,
@@ -35,24 +35,32 @@ export const GraphDetailStatsSection = ({
   ];
 
   return (
-    <View className="flex-row gap-2" testID="graph-detail-stats">
-      {items.map((item) => (
+    <View
+      className={mergeClassNames(
+        "overflow-hidden rounded-2xl border bg-neutral-50",
+        borderTokens.defaultClass
+      )}
+      testID="graph-detail-stats"
+    >
+      {items.map((item, index) => (
         <View
           className={mergeClassNames(
-            "flex-1 rounded-2xl border bg-neutral-50 px-3 py-3",
-            borderTokens.defaultClass
+            "flex-row items-center justify-between gap-3 px-4 py-3",
+            index === 0
+              ? undefined
+              : mergeClassNames("border-t", borderTokens.defaultClass)
           )}
           key={item.testID}
           testID={item.testID}
         >
           <Text
-            className={mergeClassNames("text-[11px]", textTokens.mutedClass)}
+            className={mergeClassNames("text-sm", textTokens.secondaryClass)}
           >
             {item.label}
           </Text>
           <Text
             className={mergeClassNames(
-              "mt-1 font-semibold text-base",
+              "font-semibold text-sm",
               textTokens.primaryClass
             )}
           >

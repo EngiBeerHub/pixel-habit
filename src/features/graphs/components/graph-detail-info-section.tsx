@@ -12,7 +12,7 @@ export interface GraphDetailInfoSectionProps {
 }
 
 /**
- * Graph情報（ID/単位/タイムゾーン）を補助情報として表示する。
+ * Graph情報（ID/単位/タイムゾーン）を grouped row 形式で表示する。
  */
 export const GraphDetailInfoSection = ({
   graphId,
@@ -38,24 +38,35 @@ export const GraphDetailInfoSection = ({
   ];
 
   return (
-    <View className="flex-row gap-2" testID="graph-detail-info">
-      {items.map((item) => (
+    <View
+      className={mergeClassNames(
+        "overflow-hidden rounded-2xl border bg-neutral-50",
+        borderTokens.defaultClass
+      )}
+      testID="graph-detail-info"
+    >
+      {items.map((item, index) => (
         <View
           className={mergeClassNames(
-            "flex-1 rounded-2xl border bg-neutral-50 px-3 py-2",
-            borderTokens.defaultClass
+            "flex-row items-center justify-between gap-3 px-4 py-3",
+            index === 0
+              ? undefined
+              : mergeClassNames("border-t", borderTokens.defaultClass)
           )}
           key={item.testID}
           testID={item.testID}
         >
           <Text
-            className={mergeClassNames("text-[11px]", textTokens.mutedClass)}
+            className={mergeClassNames(
+              "font-medium text-[11px] uppercase",
+              textTokens.mutedClass
+            )}
           >
             {item.label}
           </Text>
           <Text
             className={mergeClassNames(
-              "mt-1 font-medium text-sm",
+              "flex-1 text-right text-sm",
               textTokens.secondaryClass
             )}
             numberOfLines={1}

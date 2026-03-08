@@ -18,7 +18,7 @@ export interface GraphDetailRecordListProps {
 }
 
 /**
- * Graph Detailの期間内記録一覧を表示する。
+ * Graph Detailの期間内記録一覧を grouped list 形式で表示する。
  */
 export const GraphDetailRecordList = ({
   graphUnit,
@@ -27,15 +27,29 @@ export const GraphDetailRecordList = ({
 }: GraphDetailRecordListProps) => {
   if (pixels.length === 0) {
     return (
-      <Text className="text-neutral-600 text-sm">
-        この期間の記録はまだありません。
-      </Text>
+      <View
+        className={mergeClassNames(
+          "rounded-2xl border bg-neutral-50 px-4 py-4",
+          borderTokens.defaultClass
+        )}
+        testID="graph-detail-record-list-empty"
+      >
+        <Text className={mergeClassNames("text-sm", textTokens.secondaryClass)}>
+          この期間の記録はまだありません。
+        </Text>
+      </View>
     );
   }
 
   return (
-    <View className="gap-2">
-      {pixels.map((pixel) => {
+    <View
+      className={mergeClassNames(
+        "overflow-hidden rounded-2xl border bg-neutral-50",
+        borderTokens.defaultClass
+      )}
+      testID="graph-detail-record-list"
+    >
+      {pixels.map((pixel, index) => {
         const memoPreview = toOptionalMemoPreview(
           pixel.optionalData,
           RECORD_MEMO_PREVIEW_MAX_LENGTH
@@ -43,8 +57,10 @@ export const GraphDetailRecordList = ({
         return (
           <Pressable
             className={mergeClassNames(
-              "rounded-xl border bg-neutral-50 px-3 py-3 active:opacity-80",
-              borderTokens.defaultClass
+              "px-4 py-4 active:opacity-80",
+              index === 0
+                ? undefined
+                : mergeClassNames("border-t", borderTokens.defaultClass)
             )}
             key={pixel.date}
             onPress={() => {
@@ -63,7 +79,7 @@ export const GraphDetailRecordList = ({
               </Text>
               <Text
                 className={mergeClassNames(
-                  "text-sm",
+                  "font-medium text-sm",
                   textTokens.secondaryClass
                 )}
               >
