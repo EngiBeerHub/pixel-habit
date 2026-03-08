@@ -50,3 +50,4 @@ Project memory keeps persistent guidance (steering, specs notes, component docs)
 - Load entire `.kiro/steering/` as project memory
 - Default files: `product.md`, `tech.md`, `structure.md`
 - Custom files are supported (managed via `/prompts:kiro-steering-custom`)
+- UI 文言と情報設計のルールは `.kiro/steering/ui.md` を参照し、Pencil デザインと画面実装の両方で守る
