@@ -108,6 +108,19 @@ export default function Layout() {
                     title: "記録編集",
                   }}
                 />
+                <Stack.Screen
+                  name="graphs/[graphId]/records"
+                  options={{
+                    ...resolveStandardStackBackOptions({
+                      isIos,
+                      isRootScreen: false,
+                    }),
+                    headerLargeTitle: false,
+                    headerShadowVisible: false,
+                    headerShown: true,
+                    title: "記録",
+                  }}
+                />
               </Stack>
               <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
             </AppDialogProvider>

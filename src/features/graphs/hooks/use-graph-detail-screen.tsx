@@ -47,10 +47,12 @@ export interface UseGraphDetailScreenResult {
   errorMessage: string | null;
   graphColor: string;
   graphId: string;
+  graphName: string;
   graphTimezone: string;
   graphUnit: string;
   mode: CalendarMode;
   onChangeMode: (mode: CalendarMode) => void;
+  onPressOpenRecordList: () => void;
   onPressOpenPixelDetail: (pixel: Pixel) => void;
   pixels: Pixel[];
   query: ReturnType<typeof useQuery<Pixel[]>>;
@@ -206,6 +208,20 @@ export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
       pathname: "/graphs/[graphId]/edit",
     });
   }, [graphColor, graphId, graphName, graphTimezone, graphUnit, router]);
+
+  /**
+   * 記録一覧画面へ遷移する。
+   */
+  const onPressOpenRecordList = useCallback(() => {
+    router.push({
+      params: {
+        graphId,
+        graphName,
+        unit: graphUnit,
+      },
+      pathname: "/graphs/[graphId]/records",
+    });
+  }, [graphId, graphName, graphUnit, router]);
 
   /**
    * グラフ削除確認ダイアログを表示する。
@@ -367,10 +383,12 @@ export const useGraphDetailScreen = (): UseGraphDetailScreenResult => {
     errorMessage,
     graphColor,
     graphId,
+    graphName,
     graphTimezone,
     graphUnit,
     mode,
     onChangeMode: setMode,
+    onPressOpenRecordList,
     onPressOpenPixelDetail,
     pixels,
     query,

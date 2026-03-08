@@ -19,8 +19,6 @@ const mockCanGoBack = jest.fn();
 const mockOpenDialog = jest.fn();
 let mockAppOwnership: "expo" | null = null;
 const SHORT_RANGE_LABEL_PATTERN = /^2025\/11\/09 - 2026\/02\/14$/;
-const OPTIONAL_DATA_PREVIEW_PATTERN =
-  /^これは とても 長い 補足メモで 一覧では 省略…$/;
 let mockRouteParams: {
   color?: string;
   graphId?: string;
@@ -308,11 +306,12 @@ describe("GraphDetailScreen", () => {
     expect(await screen.findByTestId("graph-detail-stats")).toBeTruthy();
     expect(await screen.findByTestId("graph-detail-info")).toBeTruthy();
     expect(await screen.findByTestId("graph-detail-meta-block")).toBeTruthy();
-    expect(await screen.findByTestId("graph-detail-record-list")).toBeTruthy();
+    expect(await screen.findByTestId("graph-detail-record-link")).toBeTruthy();
     expect(screen.queryByText("統計")).toBeNull();
     expect(screen.getByText("ハイライト")).toBeTruthy();
     expect(screen.getByText("グラフ情報")).toBeTruthy();
-    expect(screen.getByText("最近の記録")).toBeTruthy();
+    expect(screen.getByText("記録一覧を見る")).toBeTruthy();
+    expect(screen.queryByText("最近の記録")).toBeNull();
   });
 
   test("does not open quick add when heatmap cell is tapped", async () => {
@@ -330,37 +329,22 @@ describe("GraphDetailScreen", () => {
     );
   });
 
-  test("navigates to pixel detail when tapping a record row", async () => {
+  test("navigates to record list when tapping the CTA", async () => {
     renderScreen();
     await waitFor(() => {
       expect(mockSetOptions).toHaveBeenCalled();
     });
 
-    fireEvent.press(await screen.findByTestId("graph-detail-record-20260213"));
+    fireEvent.press(await screen.findByTestId("graph-detail-record-link"));
 
     expect(mockPush).toHaveBeenCalledWith({
       params: {
-        date: "20260213",
         graphId: "sleep",
         graphName: "Sleep",
-        optionalData:
-          "これは\nとても\n長い\n補足メモで\n一覧では\n省略表示される想定です",
-        quantity: "2",
+        unit: "hour",
       },
-      pathname: "/graphs/[graphId]/pixels/[date]",
+      pathname: "/graphs/[graphId]/records",
     });
-  });
-
-  test("shows memo summary only when optionalData exists", async () => {
-    renderScreen();
-
-    expect(
-      await screen.findByTestId("graph-detail-record-memo-20260213")
-    ).toBeTruthy();
-    expect(screen.getByText(OPTIONAL_DATA_PREVIEW_PATTERN)).toBeTruthy();
-    expect(
-      screen.queryByTestId("graph-detail-record-memo-20260211")
-    ).toBeNull();
   });
 
   test("shows error and allows retry", async () => {

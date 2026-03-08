@@ -12,7 +12,7 @@ import { CompactHeatmap } from "./components/compact-heatmap";
 import { GraphDetailInfoSection } from "./components/graph-detail-info-section";
 import { GraphDetailKpiSection } from "./components/graph-detail-kpi-section";
 import { GraphDetailRangeSection } from "./components/graph-detail-range-section";
-import { GraphDetailRecordList } from "./components/graph-detail-record-list";
+import { GraphDetailRecordLink } from "./components/graph-detail-record-link";
 import { GraphDetailStatsSection } from "./components/graph-detail-stats-section";
 import { useGraphDetailScreen } from "./hooks/use-graph-detail-screen";
 
@@ -45,7 +45,7 @@ export const GraphDetailScreen = () => {
     graphUnit,
     mode,
     onChangeMode,
-    onPressOpenPixelDetail,
+    onPressOpenRecordList,
     pixels,
     query,
     summary,
@@ -135,28 +135,13 @@ export const GraphDetailScreen = () => {
             />
           </View>
 
-          {/* 下位情報: 記録一覧 */}
+          {/* 下位情報: 記録一覧への導線 */}
           <SectionCard
             className={mergeClassNames(
               "rounded-3xl border border-neutral-200 bg-white"
             )}
           >
-            <View className="gap-3">
-              <Text
-                className={mergeClassNames(
-                  "font-semibold text-base",
-                  textTokens.primaryClass
-                )}
-              >
-                最近の記録
-              </Text>
-
-              <GraphDetailRecordList
-                graphUnit={graphUnit}
-                onPressRecord={onPressOpenPixelDetail}
-                pixels={pixels}
-              />
-            </View>
+            <GraphDetailRecordLink onPress={onPressOpenRecordList} />
           </SectionCard>
         </View>
       )}
